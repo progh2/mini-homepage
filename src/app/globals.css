@@ -620,7 +620,7 @@ body.lt-intro-open {
   text-decoration: underline;
 }
 
-/* 미요툰 회차 목록 */
+/* 연재물 회차 목록 */
 .cy-episode-grid {
   list-style: none;
   padding: 0;
@@ -704,7 +704,7 @@ body.lt-intro-open {
   display: block;
 }
 
-/* 미요툰 스토리 목록 */
+/* 연재물 스토리 목록 */
 .cy-story-list {
   list-style: none;
   padding: 0;
@@ -1175,7 +1175,7 @@ body.lt-intro-open {
     grid-template-columns: repeat(2, 1fr);
   }
 
-  /* 미요앱 미리보기 카드가 좁은 폭에서 눌리지 않게 썸네일을 줄입니다. */
+  /* 게시판 미리보기 카드가 좁은 폭에서 눌리지 않게 썸네일을 줄입니다. */
   .cy-board-preview {
     width: 72px;
     height: 72px;
