@@ -1036,6 +1036,27 @@ body.lt-intro-open {
   cursor: default;
 }
 
+/* 비밀글 체크박스와 목록의 자물쇠 표시 */
+.cy-gb-secret {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  flex-shrink: 0;
+  font-size: 0.72rem;
+  color: #777;
+  cursor: pointer;
+  user-select: none;
+}
+.cy-gb-secret input {
+  margin: 0;
+  cursor: pointer;
+  accent-color: #9CBBA6;
+}
+.cg-lock {
+  margin-right: 2px;
+  font-size: 0.7rem;
+}
+
 /* 방명록: 구글 로그인 안내와 로그인한 사람의 입력 줄 */
 .cy-gb-signin {
   display: flex;

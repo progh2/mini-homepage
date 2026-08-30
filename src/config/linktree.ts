@@ -247,6 +247,14 @@ export const bgmTracks: BgmTrack[] = [
   { id: "pippin-the-hunchback", title: "Pippin the Hunchback", artist: "Kevin MacLeod", videoId: "W4lM5cBIj6w" }
 ];
 
+/* 비밀글을 볼 수 있는 주인장의 Firebase 계정 uid 입니다.
+   Firebase 콘솔의 Authentication > Users 에서 확인할 수 있습니다.
+   비워 두면 비밀글 체크박스가 아예 나오지 않습니다.
+
+   여기 적은 값은 firestore.rules 의 ownerUid() 와 반드시 같아야 합니다.
+   화면만 고치고 규칙을 안 고치면 비밀글이 실제로는 공개됩니다. */
+export const ownerUid = "hIWd40GYSIgauA0cCOlIea8sOvx1";
+
 /* 왼쪽 위 "TODAY IS.." 에 보여 줄 날씨의 기준 위치입니다.
    Open-Meteo 를 키 없이 쓰므로 좌표만 있으면 됩니다.
    내 동네 좌표는 지도 앱에서 확인하거나 https://open-meteo.com 에서 찾으면 됩니다. */

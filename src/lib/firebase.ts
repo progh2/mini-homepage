@@ -3,6 +3,7 @@
    Firebase 웹 설정값은 비밀키가 아니라 프로젝트 식별자이며, 배포된 JS 에 그대로 들어가는 것이
    정상적인 사용법입니다. 실제 접근 제어는 firestore.rules 가 담당합니다. */
 import { initializeApp, getApps, type FirebaseApp } from "firebase/app";
+import { ownerUid } from "@/config/linktree";
 import {
   GoogleAuthProvider,
   getAuth,
@@ -51,7 +52,24 @@ export type RemoteEntry = {
   date: string;
   /* "17:42" */
   time: string;
+  /* 주인장만 보는 글인지. 두 컬렉션을 합칠 때 정렬과 표시에 씁니다. */
+  secret: boolean;
+  /* 정렬용 밀리초. 화면에는 쓰지 않습니다. */
+  at: number;
 };
+
+/* 공개글과 비밀글은 컬렉션을 나눕니다. 한 컬렉션에 secret 필드를 두면
+   공개 목록 질의에 복합 색인이 필요하고, 규칙을 조금만 잘못 써도 비밀글이
+   새어 나갑니다. 컬렉션을 나누면 경계가 규칙 한 줄로 끝납니다. */
+export const GUESTBOOK_OPEN = "guestbook";
+export const GUESTBOOK_SECRET = "guestbookSecret";
+
+/* linktree.ts 의 ownerUid 가 비어 있으면 비밀글 기능을 쓰지 않습니다. */
+export const isSecretGuestbookEnabled = Boolean(ownerUid);
+
+export function isOwner(user: SignedInUser | null | undefined) {
+  return Boolean(user && ownerUid && user.uid === ownerUid);
+}
 
 let app: FirebaseApp | null = null;
 let db: Firestore | null = null;
@@ -189,39 +207,61 @@ export async function recordVisit(): Promise<VisitCounts> {
   });
 }
 
-/* 한줄평을 실시간으로 구독합니다. 정리 함수를 돌려줍니다. */
+/* 한줄평을 실시간으로 구독합니다. 정리 함수를 돌려줍니다.
+
+   includeSecret 이 참이면 비밀글 컬렉션도 함께 구독해 시각순으로 합칩니다.
+   주인장이 아니면 비밀글 구독은 규칙에서 막히므로 아예 걸지 않습니다. */
 export function subscribeGuestbook(
   count: number,
+  includeSecret: boolean,
   onData: (entries: RemoteEntry[]) => void,
   onError: (error: Error) => void
 ) {
   const store = getDb();
   if (!store) return () => {};
 
-  const q = query(collection(store, "guestbook"), orderBy("createdAt", "desc"), fsLimit(count));
-  return onSnapshot(
-    q,
-    snapshot => {
-      onData(
-        snapshot.docs.map(doc => {
+  /* 두 컬렉션이 각자 따로 도착하므로 마지막 결과를 들고 있다가 합칩니다. */
+  const latest: Record<string, RemoteEntry[]> = {};
+
+  const publish = () => {
+    const merged = [...(latest[GUESTBOOK_OPEN] ?? []), ...(latest[GUESTBOOK_SECRET] ?? [])]
+      .sort((a, b) => b.at - a.at)
+      .slice(0, count);
+    onData(merged);
+  };
+
+  const watch = (name: string, secret: boolean) => {
+    const q = query(collection(store, name), orderBy("createdAt", "desc"), fsLimit(count));
+    return onSnapshot(
+      q,
+      snapshot => {
+        latest[name] = snapshot.docs.map(doc => {
           const data = doc.data();
           return {
             id: doc.id,
             author: String(data.author ?? ""),
             text: String(data.text ?? ""),
             date: formatDate(data.createdAt),
-            time: formatTime(data.createdAt)
+            time: formatTime(data.createdAt),
+            secret,
+            at: toDate(data.createdAt).getTime()
           };
-        })
-      );
-    },
-    error => onError(error as Error)
-  );
+        });
+        publish();
+      },
+      error => onError(error as Error)
+    );
+  };
+
+  const stops = [watch(GUESTBOOK_OPEN, false)];
+  if (includeSecret && isSecretGuestbookEnabled) stops.push(watch(GUESTBOOK_SECRET, true));
+
+  return () => stops.forEach(stop => stop());
 }
 
 /* 이름은 받지 않습니다. 로그인한 구글 계정에서 가져옵니다.
    firestore.rules 도 uid 가 로그인 uid 와 같을 때만 쓰기를 허용합니다. */
-export async function addGuestbookEntry(text: string) {
+export async function addGuestbookEntry(text: string, secret = false) {
   const store = getDb();
   const instance = getAuthOrNull();
   if (!store || !instance) throw new Error("한줄평 기능이 설정되지 않았습니다.");
@@ -233,9 +273,11 @@ export async function addGuestbookEntry(text: string) {
   if (!trimmedText) throw new Error("한줄평을 적어 주세요.");
   if (trimmedText.length > GUESTBOOK_LIMITS.text) throw new Error(`한줄평은 ${GUESTBOOK_LIMITS.text}자까지 쓸 수 있어요.`);
 
+  const target = secret && isSecretGuestbookEnabled ? GUESTBOOK_SECRET : GUESTBOOK_OPEN;
+
   /* approved 는 지금은 항상 true 입니다. 나중에 승인제로 바꾸려면
      이 값을 false 로 두고 firestore.rules 의 read 조건만 바꾸면 됩니다. */
-  await addDoc(collection(store, "guestbook"), {
+  await addDoc(collection(store, target), {
     uid: me.uid,
     author: me.name,
     text: trimmedText,

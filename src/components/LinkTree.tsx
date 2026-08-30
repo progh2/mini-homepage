@@ -9,6 +9,8 @@ import {
   addGuestbookEntry,
   isCounterEnabled,
   isGuestbookEnabled,
+  isOwner,
+  isSecretGuestbookEnabled,
   recordVisit,
   signInWithGoogle,
   signOutOfGoogle,
@@ -308,6 +310,7 @@ function GuestbookSignIn() {
 /* 로그인한 사람에게 보이는 입력 줄입니다. 이름 칸은 없습니다. */
 function GuestbookForm({ me }: { me: SignedInUser }) {
   const [text, setText] = useState("");
+  const [secret, setSecret] = useState(false);
   const [sending, setSending] = useState(false);
   const [message, setMessage] = useState<{ kind: "ok" | "error"; text: string } | null>(null);
 
@@ -317,9 +320,16 @@ function GuestbookForm({ me }: { me: SignedInUser }) {
     setSending(true);
     setMessage(null);
     try {
-      await addGuestbookEntry(text);
+      await addGuestbookEntry(text, secret);
       setText("");
-      setMessage({ kind: "ok", text: "한줄평을 남겼어요. 고맙습니다!" });
+      /* 비밀글은 주인장이 아니면 목록에 다시 나타나지 않습니다.
+         안 남겨진 것으로 오해하지 않게 그 사실을 알려 줍니다. */
+      setMessage(
+        secret && !isOwner(me)
+          ? { kind: "ok", text: "비밀글로 남겼어요. 주인장만 볼 수 있어요." }
+          : { kind: "ok", text: "한줄평을 남겼어요. 고맙습니다!" }
+      );
+      setSecret(false);
     } catch (error) {
       setMessage({ kind: "error", text: error instanceof Error ? error.message : "남기지 못했어요. 잠시 뒤 다시 시도해 주세요." });
     } finally {
@@ -340,6 +350,16 @@ function GuestbookForm({ me }: { me: SignedInUser }) {
       <button className="cy-gb-submit" type="submit" disabled={sending}>
         {sending ? "전송중" : "남기기"}
       </button>
+      {isSecretGuestbookEnabled ? (
+        <label className="cy-gb-secret">
+          <input
+            type="checkbox"
+            checked={secret}
+            onChange={e => setSecret(e.target.checked)}
+          />
+          비밀글
+        </label>
+      ) : null}
       <span className="cy-gb-who">
         {me.name} 님
         <button type="button" className="cy-gb-signout" onClick={() => signOutOfGoogle()}>
@@ -364,10 +384,13 @@ function GuestbookList() {
   /* 로그인 상태입니다. undefined 는 아직 확인 전, null 은 로그아웃입니다. */
   const [me, setMe] = useState<SignedInUser | null | undefined>(undefined);
 
+  /* 주인장으로 로그인하면 비밀글 컬렉션까지 구독합니다. 로그인 상태가 바뀌면
+     구독을 다시 겁니다. 주인장이 아닐 때 비밀글을 구독하면 규칙에서 막힙니다. */
+  const viewerIsOwner = isOwner(me);
   useEffect(() => {
     if (!isGuestbookEnabled) return;
-    return subscribeGuestbook(GUESTBOOK_FETCH_LIMIT, setRemote, () => setFailed(true));
-  }, []);
+    return subscribeGuestbook(GUESTBOOK_FETCH_LIMIT, viewerIsOwner, setRemote, () => setFailed(true));
+  }, [viewerIsOwner]);
 
   useEffect(() => {
     if (!isGuestbookEnabled) return;
@@ -375,7 +398,7 @@ function GuestbookList() {
   }, []);
 
   const live = isGuestbookEnabled && !failed;
-  const entries: { key: string; author: string; text: string; date: string; time?: string }[] =
+  const entries: { key: string; author: string; text: string; date: string; time?: string; secret?: boolean }[] =
     live && remote
       ? remote.map(e => ({ key: e.id, ...e }))
       : guestbook.map(e => ({ key: String(e.id), ...e }));
@@ -401,6 +424,7 @@ function GuestbookList() {
           pageEntries.map(c => (
             <div key={c.key} className="cy-guestbook-item">
               <span className="cg-author">
+                {c.secret ? <span className="cg-lock" title="주인장만 보이는 비밀글">🔒</span> : null}
                 {c.author} <span className="cg-colon">:</span>{" "}
               </span>
               <span className="cg-text">{c.text}</span>
