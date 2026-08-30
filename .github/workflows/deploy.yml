@@ -28,6 +28,12 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      # 배포를 막지 않습니다. 결과는 로그에서 확인하세요.
+      # 규칙이 자리를 잡으면 continue-on-error 를 지워 실패 시 배포를 멈추게 하세요.
+      - name: Lint
+        run: npm run lint
+        continue-on-error: true
+
       - name: Build static site
         env:
           # 저장소 이름과 계정에 맞춰 자동으로 계산합니다 (직접 고칠 필요 없음).
