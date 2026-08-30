@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useImperativeHandle, useRef, useState, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useId, useImperativeHandle, useRef, useState, useSyncExternalStore } from "react";
 import { bgmCredit, bgmTracks } from "@/config/linktree";
 import { PLAYER_STATE, loadYouTubeApi, type YouTubePlayer } from "@/lib/youtube";
 
@@ -42,6 +42,9 @@ function clock(seconds: number) {
 }
 
 export default function BgmPlayer({ ref }: { ref?: React.Ref<BgmHandle> }) {
+  /* 브라우저가 입력 칸을 알아보려면 id 나 name 이 있어야 합니다.
+     한 화면에 여러 번 그려질 수 있으니 useId 로 겹치지 않게 만듭니다. */
+  const fieldId = useId();
   const [index, setIndex] = useState(0);
   const [playing, setPlaying] = useState(false);
   const [muted, setMuted] = useState(false);
@@ -295,6 +298,8 @@ export default function BgmPlayer({ ref }: { ref?: React.Ref<BgmHandle> }) {
           {muted ? "🔇" : "🔊"}
         </button>
         <input
+          id={`${fieldId}-volume`}
+          name="bgm-volume"
           type="range"
           min={0}
           max={100}
