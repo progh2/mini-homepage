@@ -24,7 +24,9 @@ import {
   query,
   runTransaction,
   serverTimestamp,
+  where,
   type Firestore,
+  type QueryConstraint,
   type Timestamp
 } from "firebase/firestore";
 
@@ -209,11 +211,21 @@ export async function recordVisit(): Promise<VisitCounts> {
 
 /* 한줄평을 실시간으로 구독합니다. 정리 함수를 돌려줍니다.
 
-   includeSecret 이 참이면 비밀글 컬렉션도 함께 구독해 시각순으로 합칩니다.
-   주인장이 아니면 비밀글 구독은 규칙에서 막히므로 아예 걸지 않습니다. */
+   비밀글은 보는 사람에 따라 질의를 달리합니다. Firestore 규칙은 목록 질의의
+   필터가 아니라서, 문서마다 달라지는 조건(resource.data.uid == 내 uid)으로는
+   컬렉션 전체를 훑는 질의가 통째로 거부됩니다. 질의 쪽에서 조건을 맞춰 줘야
+   규칙이 통과시킵니다.
+
+     주인장            orderBy(createdAt) + limit   (주인장 조건은 문서와 무관하게 참)
+     로그인한 다른 사람  where(uid == 내 uid) + limit  (규칙 조건과 필터가 일치)
+     로그아웃           질의하지 않음
+
+   where 에 orderBy 를 붙이면 복합 색인을 배포해야 해서, 본인 글은 정렬 없이
+   가져와 아래에서 시각순으로 정렬합니다. 본인이 남긴 비밀글 수는 적으므로
+   limit 안에서 충분히 담깁니다. */
 export function subscribeGuestbook(
   count: number,
-  includeSecret: boolean,
+  viewer: SignedInUser | null,
   onData: (entries: RemoteEntry[]) => void,
   onError: (error: Error) => void
 ) {
@@ -230,37 +242,41 @@ export function subscribeGuestbook(
     onData(merged);
   };
 
-  const watch = (name: string, secret: boolean) => {
-    const q = query(collection(store, name), orderBy("createdAt", "desc"), fsLimit(count));
+  const toEntry = (id: string, data: Record<string, unknown>, secret: boolean): RemoteEntry => ({
+    id,
+    author: String(data.author ?? ""),
+    text: String(data.text ?? ""),
+    date: formatDate(data.createdAt),
+    time: formatTime(data.createdAt),
+    secret,
+    at: toDate(data.createdAt).getTime()
+  });
+
+  const watch = (name: string, secret: boolean, constraints: QueryConstraint[]) => {
+    const q = query(collection(store, name), ...constraints, fsLimit(count));
     return onSnapshot(
       q,
       snapshot => {
-        latest[name] = snapshot.docs.map(doc => {
-          const data = doc.data();
-          return {
-            id: doc.id,
-            author: String(data.author ?? ""),
-            text: String(data.text ?? ""),
-            date: formatDate(data.createdAt),
-            time: formatTime(data.createdAt),
-            secret,
-            at: toDate(data.createdAt).getTime()
-          };
-        });
+        latest[name] = snapshot.docs.map(doc => toEntry(doc.id, doc.data(), secret));
         publish();
       },
       error => onError(error as Error)
     );
   };
 
-  const stops = [watch(GUESTBOOK_OPEN, false)];
-  if (includeSecret && isSecretGuestbookEnabled) stops.push(watch(GUESTBOOK_SECRET, true));
+  const stops = [watch(GUESTBOOK_OPEN, false, [orderBy("createdAt", "desc")])];
+
+  if (viewer && isSecretGuestbookEnabled) {
+    stops.push(
+      isOwner(viewer)
+        ? watch(GUESTBOOK_SECRET, true, [orderBy("createdAt", "desc")])
+        : watch(GUESTBOOK_SECRET, true, [where("uid", "==", viewer.uid)])
+    );
+  }
 
   return () => stops.forEach(stop => stop());
 }
 
-/* 이름은 받지 않습니다. 로그인한 구글 계정에서 가져옵니다.
-   firestore.rules 도 uid 가 로그인 uid 와 같을 때만 쓰기를 허용합니다. */
 export async function addGuestbookEntry(text: string, secret = false) {
   const store = getDb();
   const instance = getAuthOrNull();

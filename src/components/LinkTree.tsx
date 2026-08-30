@@ -322,11 +322,9 @@ function GuestbookForm({ me }: { me: SignedInUser }) {
     try {
       await addGuestbookEntry(text, secret);
       setText("");
-      /* 비밀글은 주인장이 아니면 목록에 다시 나타나지 않습니다.
-         안 남겨진 것으로 오해하지 않게 그 사실을 알려 줍니다. */
       setMessage(
         secret && !isOwner(me)
-          ? { kind: "ok", text: "비밀글로 남겼어요. 주인장만 볼 수 있어요." }
+          ? { kind: "ok", text: "비밀글로 남겼어요. 주인장과 나만 볼 수 있어요." }
           : { kind: "ok", text: "한줄평을 남겼어요. 고맙습니다!" }
       );
       setSecret(false);
@@ -384,13 +382,13 @@ function GuestbookList() {
   /* 로그인 상태입니다. undefined 는 아직 확인 전, null 은 로그아웃입니다. */
   const [me, setMe] = useState<SignedInUser | null | undefined>(undefined);
 
-  /* 주인장으로 로그인하면 비밀글 컬렉션까지 구독합니다. 로그인 상태가 바뀌면
-     구독을 다시 겁니다. 주인장이 아닐 때 비밀글을 구독하면 규칙에서 막힙니다. */
-  const viewerIsOwner = isOwner(me);
+  /* 로그인 상태가 바뀌면 구독을 다시 겁니다. 주인장은 비밀글 전체를, 그 외
+     로그인한 사람은 자기가 쓴 비밀글만 받습니다. 로그아웃이면 공개글만 받습니다. */
+  const viewer = me ?? null;
   useEffect(() => {
     if (!isGuestbookEnabled) return;
-    return subscribeGuestbook(GUESTBOOK_FETCH_LIMIT, viewerIsOwner, setRemote, () => setFailed(true));
-  }, [viewerIsOwner]);
+    return subscribeGuestbook(GUESTBOOK_FETCH_LIMIT, viewer, setRemote, () => setFailed(true));
+  }, [viewer]);
 
   useEffect(() => {
     if (!isGuestbookEnabled) return;
@@ -424,7 +422,7 @@ function GuestbookList() {
           pageEntries.map(c => (
             <div key={c.key} className="cy-guestbook-item">
               <span className="cg-author">
-                {c.secret ? <span className="cg-lock" title="주인장만 보이는 비밀글">🔒</span> : null}
+                {c.secret ? <span className="cg-lock" title="주인장과 작성자만 보이는 비밀글">🔒</span> : null}
                 {c.author} <span className="cg-colon">:</span>{" "}
               </span>
               <span className="cg-text">{c.text}</span>
