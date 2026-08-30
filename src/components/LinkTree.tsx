@@ -24,6 +24,7 @@ import {
   waveLinks
 } from "@/config/linktree";
 import { theme } from "@/config/theme";
+import { FALLBACK_WEATHER, fetchSeoulWeather, formatTodayWeather } from "@/lib/weather";
 
 const ALL_TABS = ["home", "profile", "story", "board", "photo"] as const;
 type TabName = (typeof ALL_TABS)[number];
@@ -384,6 +385,30 @@ function GuestbookList() {
 
 /* 미니홈피 왼쪽 위 방문 수입니다. 들어올 때마다 한 번 기록하고 그 결과를 보여 줍니다.
    Firestore 가 설정되지 않았거나 아직 못 받았으면 숫자 자리를 - 로 둡니다. */
+function TodayWeather() {
+  const [label, setLabel] = useState(`${FALLBACK_WEATHER.label} ${FALLBACK_WEATHER.emoji}`);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetchSeoulWeather()
+      .then(weather => {
+        if (!cancelled) setLabel(formatTodayWeather(weather));
+      })
+      .catch(() => {
+        if (!cancelled) setLabel(`${FALLBACK_WEATHER.label} ${FALLBACK_WEATHER.emoji}`);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  return (
+    <div className="cy-today-is">
+      TODAY IS.. <span className="text-orange">{label}</span>
+    </div>
+  );
+}
+
 function VisitCounter() {
   const [counts, setCounts] = useState<VisitCounts | null>(null);
   /* 개발 모드에서 효과가 두 번 실행돼 2씩 오르는 것을 막습니다. */
@@ -472,7 +497,7 @@ export default function LinkTree() {
                 <VisitCounter />
               </div>
               <div className="cy-left-content">
-                <div className="cy-today-is">TODAY IS.. <span className="text-orange">맑음 ☀️</span></div>
+                <TodayWeather />
 
                 <div className="cy-profile-pic">
                   <img src={asset(profile.photo.src)} alt={profile.photo.alt} />

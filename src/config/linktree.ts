@@ -45,7 +45,7 @@ export const profileSections: ProfileSection[] = [
         lines: [
           "미림마이스터고등학교 정보·컴퓨터 교사입니다. 지루한 것에서 벗어나 재미난 것 속으로 풍덩~☆",
           "도름스에서는 교사 인증을 마친 @평온나날로 활동합니다. 서울 · 고등학교 · 정보·컴퓨터.",
-          "BGM: Suonatore di Liuto — Kevin MacLeod (incompetech.com), CC BY 3.0"
+          "BGM: Kevin MacLeod (incompetech.com), CC BY 3.0"
         ]
       },
       {
@@ -231,12 +231,11 @@ export function secondsAt(timestamp: string): number {
 }
 
 export const bgmTracks: BgmTrack[] = [
-  {
-    id: "suonatore-di-liuto",
-    title: "Suonatore di Liuto — Kevin MacLeod (incompetech.com), CC BY 3.0",
-    artist: "Kevin MacLeod",
-    videoId: "ZffDOCZy_bA"
-  }
+  { id: "suonatore-di-liuto", title: "Suonatore di Liuto", artist: "Kevin MacLeod", videoId: "ZffDOCZy_bA" },
+  { id: "midnight-tale", title: "Midnight Tale", artist: "Kevin MacLeod", videoId: "qWmfZlw3EFI" },
+  { id: "folk-round", title: "Folk Round", artist: "Kevin MacLeod", videoId: "VOwN8oR4Fhg" },
+  { id: "village-consort", title: "Village Consort", artist: "Kevin MacLeod", videoId: "-_n0ib4fA0g" },
+  { id: "pippin-the-hunchback", title: "Pippin the Hunchback", artist: "Kevin MacLeod", videoId: "W4lM5cBIj6w" }
 ];
 
 /* 홈 탭 아래쪽 한마디입니다. */
