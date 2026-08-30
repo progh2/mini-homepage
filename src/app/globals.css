@@ -1395,24 +1395,26 @@ body.lt-intro-open {
   margin-top: 6px;
 }
 
+/* 색 24개를 6칸씩 네 줄로. 회색 한 줄에 색상 세 줄입니다. */
 .cy-oe-colors {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 3px;
   margin-bottom: 6px;
 }
 
 .cy-oe-color {
-  width: 24px;
-  height: 24px;
+  aspect-ratio: 1 / 1;
   padding: 0;
-  border: 2px solid #ddd;
-  border-radius: 4px;
+  border: 1px solid #ccc;
+  border-radius: 3px;
   cursor: pointer;
 }
 .cy-oe-color.is-on {
   border-color: var(--point);
-  box-shadow: 0 0 0 1px var(--point);
+  box-shadow: 0 0 0 2px var(--point);
+  position: relative;
+  z-index: 1;
 }
 
 .cy-oe-row {
@@ -1445,6 +1447,75 @@ body.lt-intro-open {
   background: var(--mint-tint);
 }
 
+/* 지우개와 되돌리기는 아이콘이라 글자 버튼보다 좁습니다. */
+.cy-oe-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background: #fff;
+  color: #555;
+  font-family: inherit;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+.cy-oe-icon:hover:not(:disabled) {
+  border-color: var(--frame);
+  color: var(--point);
+}
+.cy-oe-icon:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+.cy-oe-icon.is-on {
+  border-color: var(--point);
+  background: var(--mint-tint);
+  color: var(--point);
+}
+
+/* ----- 레이어 ----- */
+.cy-oe-layers {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: auto;
+}
+.cy-oe-layer {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background: #fafafa;
+  overflow: hidden;
+}
+.cy-oe-layer-pick,
+.cy-oe-layer-eye,
+.cy-oe-layer-del {
+  padding: 0 4px;
+  height: 24px;
+  border: none;
+  background: none;
+  color: #666;
+  font-family: inherit;
+  font-size: 0.68rem;
+  cursor: pointer;
+}
+.cy-oe-layer-pick.is-on {
+  background: var(--point);
+  color: #fff;
+  font-weight: bold;
+}
+.cy-oe-layer-eye.is-off {
+  color: #ccc;
+}
+.cy-oe-layer-del:hover {
+  color: var(--danger);
+}
+
 .cy-oe-btn {
   padding: 4px 8px;
   border: 1px solid #ccc;
@@ -1463,11 +1534,6 @@ body.lt-intro-open {
   opacity: 0.5;
   cursor: default;
 }
-.cy-oe-btn.is-on {
-  border-color: var(--point);
-  background: var(--mint-tint);
-  color: var(--point);
-}
 
 .cy-oe-comment {
   flex: 1;
@@ -1485,33 +1551,31 @@ body.lt-intro-open {
   border-color: var(--frame);
 }
 
-.cy-oe-grid {
+/* ----- 목록: 한 줄에 그림 하나, 옆에 글쓴이와 제목과 덧글 ----- */
+.cy-oe-list {
   list-style: none;
-  margin: 8px 0 0;
+  margin: 10px 0 0;
   padding: 0;
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
 }
 
 .cy-oe-item {
+  display: flex;
+  gap: 10px;
+  padding: 10px 0;
+  border-top: 1px solid #eee;
+}
+
+.cy-oe-thumb {
+  position: relative;
+  flex-shrink: 0;
+  width: 116px;
+  padding: 0;
   border: 1px solid #e0e0e0;
   border-radius: 4px;
   background: #fff;
-  overflow: hidden;
-}
-
-/* 카드 전체가 버튼입니다. 눌러서 크게 보고 댓글을 답니다. */
-.cy-oe-thumb {
-  position: relative;
-  display: block;
-  width: 100%;
-  padding: 0;
-  border: none;
-  background: none;
   cursor: pointer;
-  text-align: left;
-  font: inherit;
+  overflow: hidden;
+  align-self: flex-start;
 }
 .cy-oe-thumb img {
   display: block;
@@ -1519,48 +1583,95 @@ body.lt-intro-open {
   aspect-ratio: 1 / 1;
   object-fit: contain;
   background: #fff;
-  border-bottom: 1px solid #eee;
 }
-.cy-oe-thumb:hover img {
-  background: var(--mint-tint);
+.cy-oe-thumb:hover {
+  border-color: var(--frame);
 }
 .cy-oe-thumb:focus-visible {
   outline: 2px solid var(--accent);
-  outline-offset: -2px;
+  outline-offset: 1px;
 }
 
 /* 가려진 그림은 주인장에게만 보이므로 표시를 답니다. */
 .cy-oe-badge {
   position: absolute;
-  top: 4px;
-  left: 4px;
+  top: 3px;
+  left: 3px;
   padding: 1px 5px;
   border-radius: 3px;
   background: rgba(0, 0, 0, 0.6);
   color: #fff;
-  font-size: 0.6rem;
+  font-size: 0.58rem;
 }
 
-.cy-oe-meta {
+.cy-oe-side {
+  flex: 1;
+  min-width: 0;
+}
+.cy-oe-side-head {
   display: flex;
   flex-direction: column;
   gap: 2px;
-  padding: 5px 6px;
+  margin-bottom: 5px;
+}
+.cy-oe-title {
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--heading);
+  font-family: inherit;
+  font-size: 0.82rem;
+  font-weight: bold;
+  text-align: left;
+  cursor: pointer;
+  word-break: break-word;
+}
+.cy-oe-title:hover {
+  color: var(--point);
+}
+.cy-oe-title.is-empty {
+  color: #aaa;
+  font-weight: normal;
 }
 .cy-oe-author {
-  font-size: 0.7rem;
+  font-size: 0.72rem;
+  font-weight: bold;
+  color: var(--sub-ink);
+}
+.cy-oe-title-text {
+  font-size: 0.85rem;
   font-weight: bold;
   color: var(--heading);
 }
-.cy-oe-comment-text {
-  font-size: 0.7rem;
-  color: #555;
-  line-height: 1.35;
+.cy-oe-date {
+  font-size: 0.63rem;
+  color: #999;
+}
+
+.cy-oe-reply-preview {
+  list-style: none;
+  margin: 0 0 4px;
+  padding: 4px 0 0;
+  border-top: 1px dotted #eee;
+}
+.cy-oe-reply-preview li {
+  font-size: 0.72rem;
+  line-height: 1.5;
   word-break: break-word;
 }
-.cy-oe-date {
-  font-size: 0.62rem;
+
+.cy-oe-more {
+  padding: 0;
+  border: none;
+  background: none;
   color: #999;
+  font-family: inherit;
+  font-size: 0.68rem;
+  cursor: pointer;
+}
+.cy-oe-more:hover {
+  color: var(--point);
+  text-decoration: underline;
 }
 
 /* ----- 상세 보기 ----- */
@@ -1612,7 +1723,7 @@ body.lt-intro-open {
   word-break: break-word;
 }
 
-/* 좁은 화면: 캔버스와 상세 이미지는 폭에 맞춰 늘어나고, 격자는 두 칸으로 */
+/* 좁은 화면: 캔버스와 상세 이미지는 폭에 맞춰 늘어납니다. */
 @media (max-width: 900px) {
   .cy-oe-canvas,
   .cy-oe-tools,
@@ -1623,20 +1734,21 @@ body.lt-intro-open {
 }
 
 @media (max-width: 480px) {
-  .cy-oe-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 8px;
+  /* 색은 12칸에서 6칸 두 줄 늘어난 배치로 바꿔 하나하나를 키웁니다. */
+  .cy-oe-colors {
+    grid-template-columns: repeat(8, 1fr);
+    gap: 4px;
   }
   /* 손가락으로 누를 수 있는 크기를 지킵니다. */
-  .cy-oe-color {
-    width: 30px;
-    height: 30px;
-  }
-  .cy-oe-width {
+  .cy-oe-width,
+  .cy-oe-icon {
     width: 32px;
     height: 32px;
   }
-  .cy-oe-btn {
-    padding: 6px 9px;
+  .cy-oe-layers {
+    margin-left: 0;
+  }
+  .cy-oe-thumb {
+    width: 92px;
   }
 }
