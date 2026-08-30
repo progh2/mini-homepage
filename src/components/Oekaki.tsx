@@ -829,6 +829,47 @@ function OekakiPad({
    그림으로 바꿔서 마지막 장면은 늘 정확합니다.
    --------------------------------------------------------------- */
 const REPLAY_SECONDS = 6;
+/* 도형은 시작점과 끝점만 기록되어 있어 그대로 그리면 한 프레임에 튀어나옵니다.
+   테두리를 이만큼으로 나눠 조금씩 그어 펜과 속도를 맞춥니다. */
+const SHAPE_STEPS = 20;
+
+/* 사각형 테두리를 한 줄로 편 좌표입니다. 모서리를 도는 선으로 그리면
+   부분만 그리기가 쉽습니다. */
+function rectPath(x1: number, y1: number, x2: number, y2: number) {
+  const l = Math.min(x1, x2), r = Math.max(x1, x2);
+  const t = Math.min(y1, y2), b = Math.max(y1, y2);
+  return [
+    [l, t],
+    [r, t],
+    [r, b],
+    [l, b],
+    [l, t]
+  ] as [number, number][];
+}
+
+/* 이어진 선을 앞에서부터 비율만큼만 그립니다. */
+function partialPolyline(c: CanvasRenderingContext2D, pts: [number, number][], t: number) {
+  const lens = pts.slice(1).map((p, i) => Math.hypot(p[0] - pts[i][0], p[1] - pts[i][1]));
+  const total = lens.reduce((a, b) => a + b, 0);
+  if (total === 0) return;
+  let left = total * t;
+
+  c.beginPath();
+  c.moveTo(pts[0][0], pts[0][1]);
+  for (let i = 0; i < lens.length && left > 0; i++) {
+    const [ax, ay] = pts[i];
+    const [bx, by] = pts[i + 1];
+    if (left >= lens[i]) {
+      c.lineTo(bx, by);
+      left -= lens[i];
+    } else {
+      const k = left / lens[i];
+      c.lineTo(ax + (bx - ax) * k, ay + (by - ay) * k);
+      left = 0;
+    }
+  }
+  c.stroke();
+}
 
 function OekakiPlayer({ image, ops }: { image: string; ops: ReplayOp[] }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -836,70 +877,122 @@ function OekakiPlayer({ image, ops }: { image: string; ops: ReplayOp[] }) {
   const [round, setRound] = useState(0);
 
   useEffect(() => {
-    const c = canvasRef.current?.getContext("2d");
-    if (!c) return;
+    const view = canvasRef.current?.getContext("2d");
+    if (!view) return;
     let raf = 0;
     let stopped = false;
     setDone(false);
 
-    c.globalAlpha = 1;
-    c.globalCompositeOperation = "source-over";
-    c.fillStyle = BACKGROUND;
-    c.fillRect(0, 0, SIZE, SIZE);
+    /* 한 획을 그리는 동안에는 그 획을 시작하기 직전 그림을 base 에 두고,
+       매 프레임 base 를 깔고 그 위에 지금까지 그은 만큼을 얹습니다.
+       매 프레임 덧그리기만 하면 농도가 낮을 때 겹쳐서 점점 짙어집니다. */
+    const make = () => {
+      const c = document.createElement("canvas");
+      c.width = SIZE;
+      c.height = SIZE;
+      return c;
+    };
+    const base = make();
+    const temp = make();
+    const baseC = base.getContext("2d");
+    const tempC = temp.getContext("2d");
+    if (!baseC || !tempC) return;
 
-    /* 획 하나를 통째로 그리지 않고 점 단위로 나눠야 손으로 긋는 느낌이 납니다. */
-    const total = ops.reduce((n, o) => n + Math.max(1, (o.p?.length ?? 2) / 2 - 1), 0);
+    const clear = (c: CanvasRenderingContext2D) => c.clearRect(0, 0, SIZE, SIZE);
+
+    baseC.fillStyle = BACKGROUND;
+    baseC.fillRect(0, 0, SIZE, SIZE);
+
+    const segmentsOf = (o: ReplayOp) => {
+      if (o.k === OP.blur) return 0;
+      if (o.k === OP.fill) return 1;
+      if (o.k === OP.pen || o.k === OP.eraser) return Math.max(1, (o.p?.length ?? 2) / 2 - 1);
+      return SHAPE_STEPS;
+    };
+    const total = ops.reduce((n, o) => n + segmentsOf(o), 0);
     const perFrame = Math.max(1, Math.ceil(total / (60 * REPLAY_SECONDS)));
 
     let opIdx = 0;
     let segIdx = 0;
 
-    const strokePath = (o: ReplayOp, upto: number) => {
-      const p = o.p ?? [];
-      if (p.length < 2) return;
-      c.globalAlpha = (o.o ?? 100) / 100;
-      c.globalCompositeOperation = o.k === OP.eraser ? "destination-out" : "source-over";
-      c.strokeStyle = o.c ?? "#000000";
-      c.lineWidth = o.k === OP.eraser ? (o.w ?? 7) * 2 : o.w ?? 7;
-      c.lineCap = "round";
-      c.lineJoin = "round";
+    /* 지금 획을 임시 판에 불투명으로 그립니다. 농도는 얹을 때 한 번만 씁니다. */
+    const paintTemp = (o: ReplayOp, upto: number) => {
+      clear(tempC);
+      tempC.strokeStyle = o.c ?? "#000000";
+      tempC.fillStyle = o.c ?? "#000000";
+      tempC.lineWidth = o.k === OP.eraser ? (o.w ?? 7) * 2 : o.w ?? 7;
+      tempC.lineCap = "round";
+      tempC.lineJoin = "round";
 
-      let x = p[0], y = p[1];
-      c.beginPath();
-      c.moveTo(x, y);
-      if (p.length === 2) c.lineTo(x + 0.01, y);
-      for (let i = 2; i <= upto * 2 && i < p.length; i += 2) {
-        x += p[i];
-        y += p[i + 1];
-        c.lineTo(x, y);
+      const p = o.p ?? [];
+      if (o.k === OP.pen || o.k === OP.eraser) {
+        if (p.length < 2) return;
+        let x = p[0], y = p[1];
+        tempC.beginPath();
+        tempC.moveTo(x, y);
+        if (p.length === 2) tempC.lineTo(x + 0.01, y);
+        for (let i = 2; i <= upto * 2 && i < p.length; i += 2) {
+          x += p[i];
+          y += p[i + 1];
+          tempC.lineTo(x, y);
+        }
+        tempC.stroke();
+        return;
       }
-      c.stroke();
-      c.globalAlpha = 1;
-      c.globalCompositeOperation = "source-over";
-    };
 
-    const shape = (o: ReplayOp) => {
-      const p = o.p ?? [];
       if (p.length < 4) return;
       const [x1, y1, x2, y2] = p;
-      c.globalAlpha = (o.o ?? 100) / 100;
-      c.strokeStyle = o.c ?? "#000000";
-      c.fillStyle = o.c ?? "#000000";
-      c.lineWidth = o.w ?? 7;
-      c.lineCap = "round";
-      c.lineJoin = "round";
-      c.beginPath();
-      if (o.k === OP.line) {
-        c.moveTo(x1, y1);
-        c.lineTo(x2, y2);
-      } else if (o.k === OP.rect) {
-        c.rect(Math.min(x1, x2), Math.min(y1, y2), Math.abs(x2 - x1), Math.abs(y2 - y1));
-      } else {
-        c.ellipse((x1 + x2) / 2, (y1 + y2) / 2, Math.abs(x2 - x1) / 2, Math.abs(y2 - y1) / 2, 0, 0, Math.PI * 2);
+      const t = Math.min(1, upto / SHAPE_STEPS);
+
+      /* 채움은 테두리를 다 두른 뒤에 칠합니다. 그리다 만 도형을 칠하면
+         엉뚱한 모양이 잠깐 보입니다. */
+      if (o.f && t >= 1) {
+        tempC.beginPath();
+        if (o.k === OP.rect) {
+          tempC.rect(Math.min(x1, x2), Math.min(y1, y2), Math.abs(x2 - x1), Math.abs(y2 - y1));
+        } else {
+          tempC.ellipse((x1 + x2) / 2, (y1 + y2) / 2, Math.abs(x2 - x1) / 2, Math.abs(y2 - y1) / 2, 0, 0, Math.PI * 2);
+        }
+        tempC.fill();
       }
-      if (o.f) c.fill();
-      c.stroke();
-      c.globalAlpha = 1;
+
+      if (o.k === OP.line) {
+        partialPolyline(tempC, [[x1, y1], [x2, y2]], t);
+      } else if (o.k === OP.rect) {
+        partialPolyline(tempC, rectPath(x1, y1, x2, y2), t);
+      } else {
+        /* 타원은 위에서 시작해 시계 방향으로 돌립니다. */
+        tempC.beginPath();
+        tempC.ellipse(
+          (x1 + x2) / 2,
+          (y1 + y2) / 2,
+          Math.abs(x2 - x1) / 2,
+          Math.abs(y2 - y1) / 2,
+          0,
+          -Math.PI / 2,
+          -Math.PI / 2 + Math.PI * 2 * t
+        );
+        tempC.stroke();
+      }
+    };
+
+    /* base 를 깔고 그 위에 지금 획을 농도만큼 얹어 화면을 만듭니다. */
+    const show = (o: ReplayOp | null) => {
+      view.globalAlpha = 1;
+      view.globalCompositeOperation = "source-over";
+      view.clearRect(0, 0, SIZE, SIZE);
+      view.drawImage(base, 0, 0);
+      if (!o) return;
+      view.globalAlpha = (o.o ?? 100) / 100;
+      view.globalCompositeOperation = o.k === OP.eraser ? "destination-out" : "source-over";
+      view.drawImage(temp, 0, 0);
+      view.globalAlpha = 1;
+      view.globalCompositeOperation = "source-over";
+    };
+
+    const keep = () => {
+      clear(baseC);
+      baseC.drawImage(canvasRef.current as HTMLCanvasElement, 0, 0);
     };
 
     const step = () => {
@@ -913,10 +1006,12 @@ function OekakiPlayer({ image, ops }: { image: string; ops: ReplayOp[] }) {
           opIdx += 1;
           continue;
         }
+
         if (o.k === OP.fill) {
+          show(null);
           const p = o.p ?? [];
-          const mask = floodMask(c.getImageData(0, 0, SIZE, SIZE), p[0], p[1]);
-          const img = c.getImageData(0, 0, SIZE, SIZE);
+          const mask = floodMask(view.getImageData(0, 0, SIZE, SIZE), p[0], p[1]);
+          const img = view.getImageData(0, 0, SIZE, SIZE);
           const { r, g, b } = hexToRgb(o.c ?? "#000000");
           for (let i = 0; i < mask.length; i++) {
             if (!mask[i]) continue;
@@ -926,23 +1021,21 @@ function OekakiPlayer({ image, ops }: { image: string; ops: ReplayOp[] }) {
             img.data[q + 2] = b;
             img.data[q + 3] = 255;
           }
-          c.putImageData(img, 0, 0);
-          opIdx += 1;
-          budget -= 1;
-          continue;
-        }
-        if (o.k !== OP.pen && o.k !== OP.eraser) {
-          shape(o);
+          view.putImageData(img, 0, 0);
+          keep();
           opIdx += 1;
           budget -= 1;
           continue;
         }
 
-        const segs = Math.max(1, (o.p?.length ?? 2) / 2 - 1);
+        const segs = segmentsOf(o);
         segIdx += 1;
-        strokePath(o, segIdx);
+        paintTemp(o, segIdx);
+        show(o);
         budget -= 1;
+
         if (segIdx >= segs) {
+          keep();
           opIdx += 1;
           segIdx = 0;
         }
@@ -955,6 +1048,7 @@ function OekakiPlayer({ image, ops }: { image: string; ops: ReplayOp[] }) {
       raf = requestAnimationFrame(step);
     };
 
+    show(null);
     raf = requestAnimationFrame(step);
     return () => {
       stopped = true;
@@ -964,13 +1058,19 @@ function OekakiPlayer({ image, ops }: { image: string; ops: ReplayOp[] }) {
 
   return (
     <div className="cy-oe-player">
-      {/* 재생이 끝나면 저장된 그림으로 바꿉니다. 흐리게처럼 재현하지 않는 것이
-          있어도 마지막 장면은 늘 정확합니다. */}
-      {done ? (
-        <img className="cy-oe-big" src={image} alt="다 그려진 그림" />
-      ) : (
-        <canvas ref={canvasRef} width={SIZE} height={SIZE} className="cy-oe-big" />
-      )}
+      {/* 재생이 끝나면 저장된 그림을 위에 얹습니다. 흐리게처럼 재현하지 않는
+          것이 있어도 마지막 장면은 늘 정확합니다.
+
+          캔버스를 그림으로 바꿔치우면 DOM 에서 빠져 참조가 사라집니다.
+          그러면 다시 재생을 눌러도 그릴 대상이 없어 아무 일도 안 일어납니다.
+          그래서 감추기만 하고 자리에 남겨 둡니다. */}
+      <canvas
+        ref={canvasRef}
+        width={SIZE}
+        height={SIZE}
+        className={"cy-oe-big" + (done ? " is-hidden" : "")}
+      />
+      {done ? <img className="cy-oe-big" src={image} alt="다 그려진 그림" /> : null}
       <button type="button" className="cy-oe-btn" onClick={() => setRound(r => r + 1)}>
         {done ? "다시 재생" : "처음부터"}
       </button>

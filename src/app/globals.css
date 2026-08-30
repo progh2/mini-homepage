@@ -1833,3 +1833,9 @@ body.lt-intro-open {
   color: var(--point);
   font-weight: bold;
 }
+
+/* 재생이 끝나면 캔버스는 감추기만 하고 자리에 남겨 둡니다.
+   DOM 에서 빼면 다시 재생할 때 그릴 대상이 없어집니다. */
+.cy-oe-big.is-hidden {
+  display: none;
+}
