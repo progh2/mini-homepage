@@ -45,8 +45,12 @@ const MAX_UNDO = 15;
    경계에 흰 테가 남습니다. */
 const FILL_TOLERANCE = 48;
 
-type Tool = "pen" | "eraser" | "fill" | "pick";
+type Tool = "pen" | "eraser" | "fill" | "pick" | "line" | "rect" | "ellipse" | "blur";
 type LayerMeta = { id: number; visible: boolean };
+
+/* 흐리게 붓의 반지름입니다. 캔버스 기준이라 화면이 줄어도 비율이 같습니다. */
+const BLUR_RADIUS = 18;
+const BLUR_STRENGTH = 4;
 
 function hexToRgb(hex: string) {
   return {
@@ -128,6 +132,39 @@ function PickIcon() {
     </svg>
   );
 }
+function LineIcon() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+         strokeWidth="2.2" strokeLinecap="round" aria-hidden="true">
+      <path d="M4 20 20 4" />
+    </svg>
+  );
+}
+function RectIcon() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+         strokeWidth="2.2" strokeLinejoin="round" aria-hidden="true">
+      <rect x="4" y="6" width="16" height="12" rx="1" />
+    </svg>
+  );
+}
+function EllipseIcon() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+         strokeWidth="2.2" aria-hidden="true">
+      <ellipse cx="12" cy="12" rx="8.5" ry="6.5" />
+    </svg>
+  );
+}
+function BlurIcon() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+         strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+      <path d="M12 3.5c3.5 4 5.5 6.6 5.5 9a5.5 5.5 0 0 1-11 0c0-2.4 2-5 5.5-9Z" opacity="0.55" />
+      <path d="M9.5 13.5a2.5 2.5 0 0 0 2.5 2.5" />
+    </svg>
+  );
+}
 function UndoIcon({ flip = false }: { flip?: boolean }) {
   return (
     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -158,6 +195,13 @@ function OekakiPad({
 }) {
   const viewRef = useRef<HTMLCanvasElement>(null);
   const layerRef = useRef<Map<number, HTMLCanvasElement>>(new Map());
+  /* 지금 그리는 획만 담는 임시 판입니다. 획이 끝나면 한 번에 레이어로 옮깁니다.
+     선분마다 반투명하게 칠하면 겹치는 자리가 짙어져 얼룩덜룩해집니다.
+     임시 판에 불투명으로 그린 뒤 통째로 옅게 얹으면 농도가 고릅니다. */
+  const tempRef = useRef<HTMLCanvasElement | null>(null);
+  /* 도형 도구가 끌기 시작한 지점, 흐리게가 쓸 미리 흐려 둔 판입니다. */
+  const startRef = useRef<{ x: number; y: number } | null>(null);
+  const blurRef = useRef<HTMLCanvasElement | null>(null);
   const undoRef = useRef<{ layerId: number; data: ImageData }[]>([]);
   const redoRef = useRef<{ layerId: number; data: ImageData }[]>([]);
   const lastRef = useRef<{ x: number; y: number } | null>(null);
@@ -167,6 +211,7 @@ function OekakiPad({
   const [tool, setTool] = useState<Tool>("pen");
   const [color, setColor] = useState(COLORS[0]);
   const [width, setWidth] = useState(WIDTHS[1]);
+  const [opacity, setOpacity] = useState(1);
   const [comment, setComment] = useState("");
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -185,18 +230,36 @@ function OekakiPad({
     return c;
   }, []);
 
+  const scratch = useCallback((ref: React.RefObject<HTMLCanvasElement | null>) => {
+    if (!ref.current) {
+      const c = document.createElement("canvas");
+      c.width = SIZE;
+      c.height = SIZE;
+      ref.current = c;
+    }
+    return ref.current;
+  }, []);
+
   /* 흰 바탕 위에 보이는 레이어를 순서대로 얹습니다. 그리는 동안에도 매번
-     불러서, 아래쪽 레이어에 그려도 위 레이어에 가려지는 순서가 지켜집니다. */
+     불러서, 아래쪽 레이어에 그려도 위 레이어에 가려지는 순서가 지켜집니다.
+     그리는 중인 획은 선택한 레이어 바로 위에 설정한 농도로 얹습니다. */
   const composite = useCallback(() => {
     const view = viewRef.current?.getContext("2d");
     if (!view) return;
+    view.globalAlpha = 1;
     view.globalCompositeOperation = "source-over";
     view.fillStyle = BACKGROUND;
     view.fillRect(0, 0, SIZE, SIZE);
     layers.forEach(l => {
-      if (l.visible) view.drawImage(layerCanvas(l.id), 0, 0);
+      if (!l.visible) return;
+      view.drawImage(layerCanvas(l.id), 0, 0);
+      if (l.id === activeId && tempRef.current) {
+        view.globalAlpha = opacity;
+        view.drawImage(tempRef.current, 0, 0);
+        view.globalAlpha = 1;
+      }
     });
-  }, [layers, layerCanvas]);
+  }, [layers, layerCanvas, activeId, opacity]);
 
   useEffect(() => {
     composite();
@@ -230,14 +293,44 @@ function OekakiPad({
     };
   };
 
-  const strokeTo = (from: { x: number; y: number }, to: { x: number; y: number }) => {
+  /* 임시 판에 획을 이어 그립니다. 농도는 합칠 때 한 번에 적용합니다. */
+  const drawOnTemp = (draw: (c: CanvasRenderingContext2D) => void) => {
+    const c = scratch(tempRef).getContext("2d");
+    if (!c) return;
+    c.strokeStyle = color;
+    c.fillStyle = color;
+    c.lineWidth = width;
+    c.lineCap = "round";
+    c.lineJoin = "round";
+    draw(c);
+    composite();
+  };
+
+  const clearTemp = () => {
+    const c = tempRef.current?.getContext("2d");
+    c?.clearRect(0, 0, SIZE, SIZE);
+  };
+
+  /* 획이 끝나면 임시 판을 레이어에 한 번에 옮깁니다. */
+  const commitTemp = () => {
+    const temp = tempRef.current;
+    const c = layerCanvas(activeId).getContext("2d");
+    if (!temp || !c) return;
+    c.globalAlpha = opacity;
+    c.globalCompositeOperation = "source-over";
+    c.drawImage(temp, 0, 0);
+    c.globalAlpha = 1;
+    clearTemp();
+    composite();
+  };
+
+  /* 지우개는 흰색 덧칠이 아니라 투명 지우기입니다. 흰색으로 칠하면
+     아래 레이어까지 가려집니다. 임시 판을 거치지 않고 바로 지웁니다. */
+  const eraseTo = (from: { x: number; y: number }, to: { x: number; y: number }) => {
     const c = layerCanvas(activeId).getContext("2d");
     if (!c) return;
-    /* 지우개는 흰색 덧칠이 아니라 투명 지우기입니다. 흰색으로 칠하면
-       아래 레이어까지 가려집니다. */
-    c.globalCompositeOperation = tool === "eraser" ? "destination-out" : "source-over";
-    c.strokeStyle = color;
-    c.lineWidth = tool === "eraser" ? width * 2 : width;
+    c.globalCompositeOperation = "destination-out";
+    c.lineWidth = width * 2;
     c.lineCap = "round";
     c.lineJoin = "round";
     c.beginPath();
@@ -246,6 +339,47 @@ function OekakiPad({
     c.stroke();
     c.globalCompositeOperation = "source-over";
     composite();
+  };
+
+  /* 흐리게는 획을 시작할 때 레이어를 한 번 흐려 두고, 지나가는 자리에만
+     그 결과를 동그랗게 찍습니다. 매번 흐리면 느리고, 같은 자리를 여러 번
+     지나도 한없이 뭉개지지 않아 다루기 쉽습니다. */
+  const blurAt = (p: { x: number; y: number }) => {
+    const src = blurRef.current;
+    const c = layerCanvas(activeId).getContext("2d");
+    if (!src || !c) return;
+    c.save();
+    c.beginPath();
+    c.arc(p.x, p.y, BLUR_RADIUS, 0, Math.PI * 2);
+    c.clip();
+    c.clearRect(p.x - BLUR_RADIUS, p.y - BLUR_RADIUS, BLUR_RADIUS * 2, BLUR_RADIUS * 2);
+    c.drawImage(src, 0, 0);
+    c.restore();
+    composite();
+  };
+
+  const drawShape = (a: { x: number; y: number }, b: { x: number; y: number }) => {
+    clearTemp();
+    drawOnTemp(c => {
+      c.beginPath();
+      if (tool === "line") {
+        c.moveTo(a.x, a.y);
+        c.lineTo(b.x, b.y);
+      } else if (tool === "rect") {
+        c.rect(Math.min(a.x, b.x), Math.min(a.y, b.y), Math.abs(b.x - a.x), Math.abs(b.y - a.y));
+      } else {
+        c.ellipse(
+          (a.x + b.x) / 2,
+          (a.y + b.y) / 2,
+          Math.abs(b.x - a.x) / 2,
+          Math.abs(b.y - a.y) / 2,
+          0,
+          0,
+          Math.PI * 2
+        );
+      }
+      c.stroke();
+    });
   };
 
   const doFill = (p: { x: number; y: number }) => {
@@ -278,11 +412,14 @@ function OekakiPad({
     setTool("pen");
   };
 
+  const SHAPES: Tool[] = ["line", "rect", "ellipse"];
+
   const onDown = (e: React.PointerEvent<HTMLCanvasElement>) => {
     const layer = layers.find(l => l.id === activeId);
     if (!layer?.visible) return;
     const p = toCanvas(e);
 
+    /* 스포이드는 그림을 바꾸지 않으므로 되돌리기 단계를 남기지 않습니다. */
     if (tool === "pick") {
       doPick(p);
       return;
@@ -290,27 +427,71 @@ function OekakiPad({
 
     pushUndo();
     setDirty(true);
+    e.currentTarget.setPointerCapture(e.pointerId);
 
     if (tool === "fill") {
       doFill(p);
       return;
     }
 
-    e.currentTarget.setPointerCapture(e.pointerId);
+    if (tool === "blur") {
+      /* 획을 시작할 때 한 번만 흐린 판을 만들어 둡니다. */
+      const src = layerCanvas(activeId);
+      const dst = scratch(blurRef).getContext("2d");
+      if (dst) {
+        dst.clearRect(0, 0, SIZE, SIZE);
+        dst.filter = `blur(${BLUR_STRENGTH}px)`;
+        dst.drawImage(src, 0, 0);
+        dst.filter = "none";
+      }
+      lastRef.current = p;
+      blurAt(p);
+      return;
+    }
+
+    clearTemp();
+    startRef.current = p;
     lastRef.current = p;
-    strokeTo(p, p);
+
+    if (SHAPES.includes(tool)) {
+      drawShape(p, p);
+    } else {
+      drawOnTemp(c => {
+        c.beginPath();
+        c.moveTo(p.x, p.y);
+        c.lineTo(p.x + 0.01, p.y);
+        c.stroke();
+      });
+    }
   };
 
   const onMove = (e: React.PointerEvent<HTMLCanvasElement>) => {
     const from = lastRef.current;
     if (!from) return;
     const p = toCanvas(e);
-    strokeTo(from, p);
+
+    if (tool === "eraser") {
+      eraseTo(from, p);
+    } else if (tool === "blur") {
+      blurAt(p);
+    } else if (SHAPES.includes(tool)) {
+      /* 도형은 끌 때마다 시작점에서 다시 그립니다. 임시 판이라 지우기 쉽습니다. */
+      if (startRef.current) drawShape(startRef.current, p);
+    } else {
+      drawOnTemp(c => {
+        c.beginPath();
+        c.moveTo(from.x, from.y);
+        c.lineTo(p.x, p.y);
+        c.stroke();
+      });
+    }
     lastRef.current = p;
   };
 
   const onUp = () => {
     lastRef.current = null;
+    startRef.current = null;
+    if (tool !== "eraser" && tool !== "blur" && tool !== "fill") commitTemp();
   };
 
   const addLayer = () => {
@@ -358,9 +539,13 @@ function OekakiPad({
   const activeVisible = layers.find(l => l.id === activeId)?.visible ?? true;
   const TOOLS: { id: Tool; label: string; icon: React.ReactNode }[] = [
     { id: "pen", label: "펜", icon: <PenIcon /> },
-    { id: "eraser", label: "지우개", icon: <EraserIcon /> },
+    { id: "line", label: "직선", icon: <LineIcon /> },
+    { id: "rect", label: "사각형", icon: <RectIcon /> },
+    { id: "ellipse", label: "원", icon: <EllipseIcon /> },
     { id: "fill", label: "채우기", icon: <BucketIcon /> },
-    { id: "pick", label: "스포이드", icon: <PickIcon /> }
+    { id: "blur", label: "흐리게", icon: <BlurIcon /> },
+    { id: "pick", label: "스포이드", icon: <PickIcon /> },
+    { id: "eraser", label: "지우개", icon: <EraserIcon /> }
   ];
 
   return (
@@ -419,6 +604,19 @@ function OekakiPad({
               <span style={{ width: w + 2, height: w + 2 }} />
             </button>
           ))}
+
+          <label className="cy-oe-opacity" title={`농도 ${Math.round(opacity * 100)}%`}>
+            <span aria-hidden="true">농도</span>
+            <input
+              type="range"
+              min={10}
+              max={100}
+              step={10}
+              value={Math.round(opacity * 100)}
+              onChange={e => setOpacity(Number(e.target.value) / 100)}
+              aria-label={`농도 ${Math.round(opacity * 100)}퍼센트`}
+            />
+          </label>
 
           <button
             type="button"
@@ -792,7 +990,8 @@ export default function Oekaki() {
             잘 그릴 필요 없습니다. 낙서가 제 맛입니다. 지나간 자리에 그림 한 장 남겨 주세요.
           </p>
           <p className="cy-oe-help-tip">
-            펜으로 그리고, 채우기로 안쪽을 칠하고, 스포이드로 이미 쓴 색을 다시 집습니다.
+            펜·직선·사각형·원으로 그리고, 채우기로 안쪽을 칠합니다. 스포이드는 이미 쓴 색을
+            다시 집고, 흐리게는 지나간 자리를 부드럽게 만듭니다. 농도를 낮추면 수채처럼 겹쳐집니다.
             레이어를 나누면 밑그림 위에 덧그렸다가 밑그림만 끌 수 있어요.
           </p>
         </div>

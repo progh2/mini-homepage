@@ -1796,3 +1796,21 @@ body.lt-intro-open {
 .cy-oe-help-tip {
   color: var(--sub-ink) !important;
 }
+
+/* 농도 슬라이더 */
+.cy-oe-opacity {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.66rem;
+  color: #777;
+}
+.cy-oe-opacity input {
+  width: 62px;
+  accent-color: var(--point);
+}
+@media (max-width: 480px) {
+  .cy-oe-opacity input {
+    width: 78px;
+  }
+}
