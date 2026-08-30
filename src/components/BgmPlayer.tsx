@@ -304,7 +304,12 @@ export default function BgmPlayer({ ref }: { ref?: React.Ref<BgmHandle> }) {
         />
       </div>
 
-      {current.artist ? <div className="cy-bgm-artist">{current.artist}</div> : null}
+      {/* 크레딧 문구가 이미 이 아티스트 이름을 담고 있으면 같은 이름이 두 줄로 겹칩니다.
+          그럴 때는 아티스트 줄을 접습니다. 서로 다른 아티스트를 섞어 쓰는 경우에는
+          이름이 크레딧과 다르므로 그대로 나옵니다. */}
+      {current.artist && !bgmCredit.includes(current.artist) ? (
+        <div className="cy-bgm-artist">{current.artist}</div>
+      ) : null}
       {bgmCredit ? <div className="cy-bgm-credit">{bgmCredit}</div> : null}
 
       {failed ? (

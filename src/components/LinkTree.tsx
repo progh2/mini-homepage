@@ -10,8 +10,12 @@ import {
   isCounterEnabled,
   isGuestbookEnabled,
   recordVisit,
+  signInWithGoogle,
+  signOutOfGoogle,
   subscribeGuestbook,
+  subscribeUser,
   type RemoteEntry,
+  type SignedInUser,
   type VisitCounts
 } from "@/lib/firebase";
 import {
@@ -272,8 +276,37 @@ function BoardTab() {
   );
 }
 
-function GuestbookForm() {
-  const [author, setAuthor] = useState("");
+/* 로그인 안 한 사람에게 보이는 줄입니다. 입력 칸 대신 안내와 로그인 버튼만 둡니다. */
+function GuestbookSignIn() {
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const login = async () => {
+    if (busy) return;
+    setBusy(true);
+    setError(null);
+    try {
+      await signInWithGoogle();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "로그인하지 못했어요.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="cy-gb-signin">
+      <button type="button" className="cy-gb-google" onClick={login} disabled={busy}>
+        {busy ? "여는 중" : "구글 로그인"}
+      </button>
+      <span className="cy-gb-signin-text">하면 한마디를 남길 수 있어요.</span>
+      {error ? <span className="cy-gb-message is-error">{error}</span> : null}
+    </div>
+  );
+}
+
+/* 로그인한 사람에게 보이는 입력 줄입니다. 이름 칸은 없습니다. */
+function GuestbookForm({ me }: { me: SignedInUser }) {
   const [text, setText] = useState("");
   const [sending, setSending] = useState(false);
   const [message, setMessage] = useState<{ kind: "ok" | "error"; text: string } | null>(null);
@@ -284,8 +317,7 @@ function GuestbookForm() {
     setSending(true);
     setMessage(null);
     try {
-      await addGuestbookEntry(author, text);
-      setAuthor("");
+      await addGuestbookEntry(text);
       setText("");
       setMessage({ kind: "ok", text: "한줄평을 남겼어요. 고맙습니다!" });
     } catch (error) {
@@ -298,24 +330,22 @@ function GuestbookForm() {
   return (
     <form className="cy-guestbook-form" onSubmit={submit}>
       <input
-        className="cy-gb-author"
-        value={author}
-        onChange={e => setAuthor(e.target.value)}
-        placeholder="이름"
-        maxLength={GUESTBOOK_LIMITS.author}
-        aria-label="이름"
-      />
-      <input
         className="cy-gb-text"
         value={text}
         onChange={e => setText(e.target.value)}
-        placeholder="한줄평을 남겨주세요"
+        placeholder={`${me.name} 님으로 한마디 남기기`}
         maxLength={GUESTBOOK_LIMITS.text}
         aria-label="한줄평"
       />
       <button className="cy-gb-submit" type="submit" disabled={sending}>
         {sending ? "전송중" : "남기기"}
       </button>
+      <span className="cy-gb-who">
+        {me.name} 님
+        <button type="button" className="cy-gb-signout" onClick={() => signOutOfGoogle()}>
+          로그아웃
+        </button>
+      </span>
       {message ? (
         <span className={`cy-gb-message${message.kind === "error" ? " is-error" : ""}`}>{message.text}</span>
       ) : null}
@@ -331,16 +361,24 @@ function GuestbookList() {
   const [remote, setRemote] = useState<RemoteEntry[] | null>(null);
   const [failed, setFailed] = useState(false);
   const [page, setPage] = useState(0);
+  /* 로그인 상태입니다. undefined 는 아직 확인 전, null 은 로그아웃입니다. */
+  const [me, setMe] = useState<SignedInUser | null | undefined>(undefined);
 
   useEffect(() => {
     if (!isGuestbookEnabled) return;
     return subscribeGuestbook(GUESTBOOK_FETCH_LIMIT, setRemote, () => setFailed(true));
   }, []);
 
+  useEffect(() => {
+    if (!isGuestbookEnabled) return;
+    return subscribeUser(setMe);
+  }, []);
+
   const live = isGuestbookEnabled && !failed;
-  const entries = live && remote
-    ? remote.map(e => ({ key: e.id, ...e }))
-    : guestbook.map(e => ({ key: String(e.id), ...e }));
+  const entries: { key: string; author: string; text: string; date: string; time?: string }[] =
+    live && remote
+      ? remote.map(e => ({ key: e.id, ...e }))
+      : guestbook.map(e => ({ key: String(e.id), ...e }));
 
   const pageCount = Math.max(1, Math.ceil(entries.length / GUESTBOOK_PAGE_SIZE));
   const currentPage = Math.min(page, pageCount - 1);
@@ -366,7 +404,7 @@ function GuestbookList() {
                 {c.author} <span className="cg-colon">:</span>{" "}
               </span>
               <span className="cg-text">{c.text}</span>
-              <span className="cg-date">({c.date})</span>
+              <span className="cg-date">({c.time ? `${c.date} ${c.time}` : c.date})</span>
             </div>
           ))
         )}
@@ -388,7 +426,13 @@ function GuestbookList() {
         </div>
       ) : null}
 
-      {live ? <GuestbookForm /> : null}
+      {/* 로그인해야 남길 수 있습니다. 확인 전(undefined)에는 아무것도 그리지 않아
+          안내 문구가 잠깐 깜빡였다 사라지는 일을 막습니다. */}
+      {live && me !== undefined
+        ? me
+          ? <GuestbookForm me={me} />
+          : <GuestbookSignIn />
+        : null}
     </>
   );
 }
