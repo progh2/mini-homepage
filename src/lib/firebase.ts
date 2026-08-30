@@ -559,9 +559,17 @@ export async function addOekaki(image: string, comment: string, replay?: OekakiR
         count: replay.count,
         createdAt: serverTimestamp()
       });
-    } catch {
-      /* 재생은 덤입니다. 실패해도 그림 남기기를 실패로 만들지 않습니다. */
+    } catch (error) {
+      /* 재생은 덤입니다. 실패해도 그림 남기기를 실패로 만들지 않습니다.
+         다만 조용히 삼키면 왜 재생이 안 되는지 알 길이 없어서 남깁니다. */
+      console.warn("[오에카키] 그리는 과정을 저장하지 못했습니다.", error);
     }
+  } else if (replay && replay.count === 0) {
+    console.warn("[오에카키] 기록된 획이 없어 재생을 저장하지 않았습니다.");
+  } else if (replay) {
+    console.warn(
+      `[오에카키] 기록이 너무 커서 재생을 저장하지 않았습니다. ${replay.ops.length}자`
+    );
   }
 }
 
