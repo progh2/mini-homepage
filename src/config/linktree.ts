@@ -107,7 +107,7 @@ export const boardPosts: BoardPost[] = [
     title: "캣모아",
     summary: "교사 일정 수집 고양이. 한글·PDF·스크린샷에서 일정 추출",
     date: "2026-08-29",
-    href: "https://progh2.github.io/catmoa/#how",
+    href: "https://progh2.github.io/catmoa/",
     preview: { src: "/assets/apps/catmoa.webp", alt: "캣모아" }
   },
   {

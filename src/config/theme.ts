@@ -67,7 +67,7 @@ export const theme: LinkTreeTheme = {
     paper: "#FFFDF5",
     ink: "#2E4057",
     accent: "#3E7CB1",
-    spiralFront: "#FFC93C",
+    spiralFront: "#93C4E8",
 
     pageTop: "#DCEEFA",
     pageMid: "#BEDDF3",
