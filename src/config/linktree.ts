@@ -14,7 +14,7 @@ export const profile = {
   boardLabel: "게시판",
   boardSubtitle: "앱과 게시글",
   boardEmptyText: "아직 올린 글이 없습니다.",
-  photoLabel: "오에카키",
+  photoLabel: "낙서장",
   photoSubtitlePrefix: "사진",
   /* 오른쪽 위, 옛날 싸이월드 주소창을 흉내 낸 문구입니다. */
   displayUrl: "progh2.github.io/mini-homepage"

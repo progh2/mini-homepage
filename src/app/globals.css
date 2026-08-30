@@ -1752,3 +1752,47 @@ body.lt-intro-open {
     width: 92px;
   }
 }
+
+/* 오에카키가 뭔지 모르는 사람을 위한 설명 */
+.cy-oe-help-btn {
+  width: 16px;
+  height: 16px;
+  margin-left: 5px;
+  padding: 0;
+  border: 1px solid var(--frame-strong);
+  border-radius: 50%;
+  background: #fff;
+  color: var(--sub-ink);
+  font-family: inherit;
+  font-size: 0.62rem;
+  font-weight: bold;
+  line-height: 1;
+  cursor: pointer;
+  vertical-align: middle;
+}
+.cy-oe-help-btn:hover,
+.cy-oe-help-btn[aria-expanded="true"] {
+  background: var(--point);
+  border-color: var(--point);
+  color: #fff;
+}
+
+.cy-oe-help {
+  margin: 8px 0;
+  padding: 8px 10px;
+  border: 1px solid var(--frame);
+  border-radius: 4px;
+  background: var(--mint-tint);
+}
+.cy-oe-help p {
+  margin: 0 0 5px;
+  font-size: 0.73rem;
+  line-height: 1.6;
+  color: #444;
+}
+.cy-oe-help p:last-child {
+  margin-bottom: 0;
+}
+.cy-oe-help-tip {
+  color: var(--sub-ink) !important;
+}

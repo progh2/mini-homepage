@@ -39,21 +39,66 @@ const BACKGROUND = "#ffffff";
 const MAX_LAYERS = 4;
 /* 한 쪽에 보이는 그림 수입니다. 항목마다 덧글 구독이 붙으므로 작게 둡니다. */
 const PAGE_SIZE = 5;
+/* 되돌리기 한 단계가 360x360 RGBA 로 518KB 입니다. 15단계면 약 7.8MB 입니다. */
+const MAX_UNDO = 15;
+/* 채우기 허용 오차입니다. 선 가장자리가 부드럽게 처리돼 있어 0 이면
+   경계에 흰 테가 남습니다. */
+const FILL_TOLERANCE = 48;
 
-type Point = { x: number; y: number };
-type Stroke = { color: string; width: number; points: Point[] };
-type Layer = { id: number; visible: boolean; strokes: Stroke[] };
+type Tool = "pen" | "eraser" | "fill" | "pick";
+type LayerMeta = { id: number; visible: boolean };
 
-function UndoIcon() {
+function hexToRgb(hex: string) {
+  return {
+    r: parseInt(hex.slice(1, 3), 16),
+    g: parseInt(hex.slice(3, 5), 16),
+    b: parseInt(hex.slice(5, 7), 16)
+  };
+}
+
+/* 화면에 보이는 그림(합쳐진 결과)에서 누른 지점과 이어진 영역을 찾습니다.
+   찾은 영역만 1 로 표시한 배열을 돌려주고, 실제 색칠은 선택한 레이어에 합니다.
+   그래야 선이 다른 레이어에 있어도 그 안쪽이 칠해집니다. */
+function floodMask(src: ImageData, startX: number, startY: number) {
+  const { width: w, height: h, data } = src;
+  const at = (x: number, y: number) => (y * w + x) * 4;
+  const s = at(startX, startY);
+  const sr = data[s], sg = data[s + 1], sb = data[s + 2];
+
+  const mask = new Uint8Array(w * h);
+  const seen = new Uint8Array(w * h);
+  const stack: number[] = [startY * w + startX];
+  seen[startY * w + startX] = 1;
+
+  while (stack.length) {
+    const idx = stack.pop() as number;
+    const x = idx % w;
+    const y = (idx - x) / w;
+    const p = idx * 4;
+    /* 세 채널 차이의 합으로 견줍니다. 사람 눈에 충분하고 계산이 쌉니다. */
+    const diff =
+      Math.abs(data[p] - sr) + Math.abs(data[p + 1] - sg) + Math.abs(data[p + 2] - sb);
+    if (diff > FILL_TOLERANCE) continue;
+
+    mask[idx] = 1;
+
+    if (x > 0 && !seen[idx - 1]) { seen[idx - 1] = 1; stack.push(idx - 1); }
+    if (x < w - 1 && !seen[idx + 1]) { seen[idx + 1] = 1; stack.push(idx + 1); }
+    if (y > 0 && !seen[idx - w]) { seen[idx - w] = 1; stack.push(idx - w); }
+    if (y < h - 1 && !seen[idx + w]) { seen[idx + w] = 1; stack.push(idx + w); }
+  }
+  return mask;
+}
+
+function PenIcon() {
   return (
     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
          strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="M3 7v6h6" />
-      <path d="M3.5 13a9 9 0 1 0 2.3-6.4L3 9" />
+      <path d="M12 19h8" />
+      <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4Z" />
     </svg>
   );
 }
-
 function EraserIcon() {
   return (
     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -63,13 +108,46 @@ function EraserIcon() {
     </svg>
   );
 }
+function BucketIcon() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+         strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M8 3.5 3.8 7.7a2 2 0 0 0 0 2.8l5.7 5.7a2 2 0 0 0 2.8 0l4.2-4.2Z" />
+      <path d="M6 5.5 12.5 12" />
+      <path d="M20 13.5s2 2.6 2 4a2 2 0 1 1-4 0c0-1.4 2-4 2-4Z" />
+    </svg>
+  );
+}
+function PickIcon() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+         strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="m19 3-1.5 1.5" />
+      <path d="M17.5 4.5 20 7l-8.5 8.5-3.5 1 1-3.5Z" />
+      <path d="M6 16.5 3.5 19 5 20.5 7.5 18" />
+    </svg>
+  );
+}
+function UndoIcon({ flip = false }: { flip?: boolean }) {
+  return (
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+         strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"
+         style={flip ? { transform: "scaleX(-1)" } : undefined}>
+      <path d="M3 7v6h6" />
+      <path d="M3.5 13a9 9 0 1 0 2.3-6.4L3 9" />
+    </svg>
+  );
+}
 
 /* ---------------------------------------------------------------
    그림판
 
-   획 목록을 레이어별로 나눠 들고 있다가, 보이는 레이어를 순서대로 한 캔버스에
-   그립니다. 캔버스를 여러 장 겹치지 않아도 되고, 되돌리기도 목록에서 하나 빼면
-   끝입니다. 캔버스 스냅샷을 쌓는 방식은 한 장이 500KB 라 금세 메모리를 씁니다.
+   레이어마다 투명한 오프스크린 캔버스를 하나씩 두고, 화면 캔버스에는
+   흰 바탕 위로 보이는 레이어를 순서대로 합쳐 올립니다.
+
+   앞서는 획 목록을 다시 그리는 방식이었는데, 채우기는 이미 칠해진 픽셀을
+   보고 번져 나가는 연산이라 "획"으로 적어 둘 수가 없어 바꿨습니다.
+   되돌리기는 연산 직전 레이어 픽셀을 저장해 두었다가 복원합니다.
    --------------------------------------------------------------- */
 function OekakiPad({
   onDone,
@@ -78,120 +156,187 @@ function OekakiPad({
   onDone: (dataUrl: string, comment: string) => Promise<void>;
   onCancel: () => void;
 }) {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [layers, setLayers] = useState<Layer[]>([{ id: 1, visible: true, strokes: [] }]);
+  const viewRef = useRef<HTMLCanvasElement>(null);
+  const layerRef = useRef<Map<number, HTMLCanvasElement>>(new Map());
+  const undoRef = useRef<{ layerId: number; data: ImageData }[]>([]);
+  const redoRef = useRef<{ layerId: number; data: ImageData }[]>([]);
+  const lastRef = useRef<{ x: number; y: number } | null>(null);
+
+  const [layers, setLayers] = useState<LayerMeta[]>([{ id: 1, visible: true }]);
   const [activeId, setActiveId] = useState(1);
-  const liveRef = useRef<Stroke | null>(null);
+  const [tool, setTool] = useState<Tool>("pen");
   const [color, setColor] = useState(COLORS[0]);
   const [width, setWidth] = useState(WIDTHS[1]);
-  const [erasing, setErasing] = useState(false);
   const [comment, setComment] = useState("");
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [dirty, setDirty] = useState(false);
+  /* 되돌리기 버튼 활성 상태를 다시 그리게 하려고 둡니다. */
+  const [steps, setSteps] = useState({ undo: 0, redo: 0 });
 
-  const ctx = () => canvasRef.current?.getContext("2d") ?? null;
-  const active = layers.find(l => l.id === activeId) ?? layers[0];
+  const layerCanvas = useCallback((id: number) => {
+    let c = layerRef.current.get(id);
+    if (!c) {
+      c = document.createElement("canvas");
+      c.width = SIZE;
+      c.height = SIZE;
+      layerRef.current.set(id, c);
+    }
+    return c;
+  }, []);
 
-  const paint = useCallback((c: CanvasRenderingContext2D, s: Stroke) => {
-    c.strokeStyle = s.color;
-    c.lineWidth = s.width;
+  /* 흰 바탕 위에 보이는 레이어를 순서대로 얹습니다. 그리는 동안에도 매번
+     불러서, 아래쪽 레이어에 그려도 위 레이어에 가려지는 순서가 지켜집니다. */
+  const composite = useCallback(() => {
+    const view = viewRef.current?.getContext("2d");
+    if (!view) return;
+    view.globalCompositeOperation = "source-over";
+    view.fillStyle = BACKGROUND;
+    view.fillRect(0, 0, SIZE, SIZE);
+    layers.forEach(l => {
+      if (l.visible) view.drawImage(layerCanvas(l.id), 0, 0);
+    });
+  }, [layers, layerCanvas]);
+
+  useEffect(() => {
+    composite();
+  }, [composite]);
+
+  const pushUndo = () => {
+    const c = layerCanvas(activeId).getContext("2d");
+    if (!c) return;
+    undoRef.current.push({ layerId: activeId, data: c.getImageData(0, 0, SIZE, SIZE) });
+    if (undoRef.current.length > MAX_UNDO) undoRef.current.shift();
+    redoRef.current = [];
+    setSteps({ undo: undoRef.current.length, redo: 0 });
+  };
+
+  const restore = (from: typeof undoRef, to: typeof redoRef) => {
+    const step = from.current.pop();
+    if (!step) return;
+    const c = layerCanvas(step.layerId).getContext("2d");
+    if (!c) return;
+    to.current.push({ layerId: step.layerId, data: c.getImageData(0, 0, SIZE, SIZE) });
+    c.putImageData(step.data, 0, 0);
+    setSteps({ undo: undoRef.current.length, redo: redoRef.current.length });
+    composite();
+  };
+
+  const toCanvas = (e: React.PointerEvent<HTMLCanvasElement>) => {
+    const r = e.currentTarget.getBoundingClientRect();
+    return {
+      x: Math.floor(((e.clientX - r.left) / r.width) * SIZE),
+      y: Math.floor(((e.clientY - r.top) / r.height) * SIZE)
+    };
+  };
+
+  const strokeTo = (from: { x: number; y: number }, to: { x: number; y: number }) => {
+    const c = layerCanvas(activeId).getContext("2d");
+    if (!c) return;
+    /* 지우개는 흰색 덧칠이 아니라 투명 지우기입니다. 흰색으로 칠하면
+       아래 레이어까지 가려집니다. */
+    c.globalCompositeOperation = tool === "eraser" ? "destination-out" : "source-over";
+    c.strokeStyle = color;
+    c.lineWidth = tool === "eraser" ? width * 2 : width;
     c.lineCap = "round";
     c.lineJoin = "round";
     c.beginPath();
-    s.points.forEach((p, i) => (i === 0 ? c.moveTo(p.x, p.y) : c.lineTo(p.x, p.y)));
-    /* 점 하나만 찍은 경우에도 보이도록 같은 자리를 한 번 더 잇습니다. */
-    if (s.points.length === 1) c.lineTo(s.points[0].x + 0.01, s.points[0].y);
+    c.moveTo(from.x, from.y);
+    c.lineTo(to.x, to.y);
     c.stroke();
-  }, []);
+    c.globalCompositeOperation = "source-over";
+    composite();
+  };
 
-  /* 레이어가 확정될 때(그리기 끝, 되돌리기, 켜고 끄기)만 전체를 다시 그립니다.
-     그리는 도중에는 아래 onMove 가 선분만 덧그려 반응이 즉각적입니다. */
-  useEffect(() => {
-    const c = ctx();
-    if (!c) return;
-    c.fillStyle = BACKGROUND;
-    c.fillRect(0, 0, SIZE, SIZE);
-    layers.forEach(layer => {
-      if (layer.visible) layer.strokes.forEach(s => paint(c, s));
-    });
-  }, [layers, paint]);
+  const doFill = (p: { x: number; y: number }) => {
+    const view = viewRef.current?.getContext("2d");
+    const c = layerCanvas(activeId).getContext("2d");
+    if (!view || !c) return;
 
-  /* 화면에서 줄어든 만큼 좌표를 캔버스 기준으로 되돌립니다. */
-  const toCanvas = (e: React.PointerEvent<HTMLCanvasElement>): Point => {
-    const r = e.currentTarget.getBoundingClientRect();
-    return {
-      x: ((e.clientX - r.left) / r.width) * SIZE,
-      y: ((e.clientY - r.top) / r.height) * SIZE
-    };
+    const mask = floodMask(view.getImageData(0, 0, SIZE, SIZE), p.x, p.y);
+    const target = c.getImageData(0, 0, SIZE, SIZE);
+    const { r, g, b } = hexToRgb(color);
+    for (let i = 0; i < mask.length; i++) {
+      if (!mask[i]) continue;
+      const q = i * 4;
+      target.data[q] = r;
+      target.data[q + 1] = g;
+      target.data[q + 2] = b;
+      target.data[q + 3] = 255;
+    }
+    c.putImageData(target, 0, 0);
+    composite();
+  };
+
+  const doPick = (p: { x: number; y: number }) => {
+    const view = viewRef.current?.getContext("2d");
+    if (!view) return;
+    const d = view.getImageData(p.x, p.y, 1, 1).data;
+    const hex =
+      "#" + [d[0], d[1], d[2]].map(v => v.toString(16).padStart(2, "0")).join("");
+    setColor(hex);
+    setTool("pen");
   };
 
   const onDown = (e: React.PointerEvent<HTMLCanvasElement>) => {
-    if (!active.visible) return;
+    const layer = layers.find(l => l.id === activeId);
+    if (!layer?.visible) return;
+    const p = toCanvas(e);
+
+    if (tool === "pick") {
+      doPick(p);
+      return;
+    }
+
+    pushUndo();
+    setDirty(true);
+
+    if (tool === "fill") {
+      doFill(p);
+      return;
+    }
+
     e.currentTarget.setPointerCapture(e.pointerId);
-    liveRef.current = {
-      color: erasing ? BACKGROUND : color,
-      width: erasing ? width * 2 : width,
-      points: [toCanvas(e)]
-    };
-    const c = ctx();
-    if (c) paint(c, liveRef.current);
+    lastRef.current = p;
+    strokeTo(p, p);
   };
 
   const onMove = (e: React.PointerEvent<HTMLCanvasElement>) => {
-    const live = liveRef.current;
-    const c = ctx();
-    if (!live || !c) return;
+    const from = lastRef.current;
+    if (!from) return;
     const p = toCanvas(e);
-    const last = live.points[live.points.length - 1];
-    live.points.push(p);
-    c.strokeStyle = live.color;
-    c.lineWidth = live.width;
-    c.lineCap = "round";
-    c.lineJoin = "round";
-    c.beginPath();
-    c.moveTo(last.x, last.y);
-    c.lineTo(p.x, p.y);
-    c.stroke();
+    strokeTo(from, p);
+    lastRef.current = p;
   };
 
-  /* 손을 떼면 선택한 레이어에 획을 넣습니다. 이때 전체가 다시 그려지므로
-     아래쪽 레이어에 그린 획이 제 순서(위 레이어 밑)로 돌아갑니다. */
   const onUp = () => {
-    const live = liveRef.current;
-    liveRef.current = null;
-    if (!live) return;
-    setLayers(prev =>
-      prev.map(l => (l.id === activeId ? { ...l, strokes: [...l.strokes, live] } : l))
-    );
+    lastRef.current = null;
   };
-
-  const undo = () =>
-    setLayers(prev =>
-      prev.map(l => (l.id === activeId ? { ...l, strokes: l.strokes.slice(0, -1) } : l))
-    );
 
   const addLayer = () => {
     if (layers.length >= MAX_LAYERS) return;
     const id = Math.max(...layers.map(l => l.id)) + 1;
-    setLayers(prev => [...prev, { id, visible: true, strokes: [] }]);
+    setLayers(prev => [...prev, { id, visible: true }]);
     setActiveId(id);
   };
 
   const removeLayer = (id: number) => {
     if (layers.length <= 1) return;
+    layerRef.current.delete(id);
+    undoRef.current = undoRef.current.filter(s => s.layerId !== id);
+    redoRef.current = redoRef.current.filter(s => s.layerId !== id);
+    setSteps({ undo: undoRef.current.length, redo: redoRef.current.length });
     setLayers(prev => prev.filter(l => l.id !== id));
     if (activeId === id) setActiveId(layers.find(l => l.id !== id)!.id);
   };
 
-  const hasDrawing = layers.some(l => l.strokes.length > 0);
-
   const submit = async () => {
     if (sending) return;
-    if (!hasDrawing) {
+    if (!dirty) {
       setError("그림을 그려 주세요.");
       return;
     }
-    const canvas = canvasRef.current;
+    const canvas = viewRef.current;
     if (!canvas) return;
 
     setSending(true);
@@ -210,10 +355,18 @@ function OekakiPad({
     }
   };
 
+  const activeVisible = layers.find(l => l.id === activeId)?.visible ?? true;
+  const TOOLS: { id: Tool; label: string; icon: React.ReactNode }[] = [
+    { id: "pen", label: "펜", icon: <PenIcon /> },
+    { id: "eraser", label: "지우개", icon: <EraserIcon /> },
+    { id: "fill", label: "채우기", icon: <BucketIcon /> },
+    { id: "pick", label: "스포이드", icon: <PickIcon /> }
+  ];
+
   return (
     <div className="cy-oe-pad">
       <canvas
-        ref={canvasRef}
+        ref={viewRef}
         width={SIZE}
         height={SIZE}
         className="cy-oe-canvas"
@@ -230,19 +383,30 @@ function OekakiPad({
             <button
               key={c}
               type="button"
-              className={"cy-oe-color" + (!erasing && c === color ? " is-on" : "")}
+              className={"cy-oe-color" + (c === color ? " is-on" : "")}
               style={{ background: c }}
-              onClick={() => {
-                setColor(c);
-                setErasing(false);
-              }}
+              onClick={() => setColor(c)}
               aria-label={`색 ${c}`}
-              aria-pressed={!erasing && c === color}
+              aria-pressed={c === color}
             />
           ))}
         </div>
 
         <div className="cy-oe-row">
+          {TOOLS.map(t => (
+            <button
+              key={t.id}
+              type="button"
+              className={"cy-oe-icon" + (tool === t.id ? " is-on" : "")}
+              onClick={() => setTool(t.id)}
+              aria-pressed={tool === t.id}
+              aria-label={t.label}
+              title={t.label}
+            >
+              {t.icon}
+            </button>
+          ))}
+
           {WIDTHS.map(w => (
             <button
               key={w}
@@ -255,27 +419,30 @@ function OekakiPad({
               <span style={{ width: w + 2, height: w + 2 }} />
             </button>
           ))}
+
           <button
             type="button"
-            className={"cy-oe-icon" + (erasing ? " is-on" : "")}
-            onClick={() => setErasing(v => !v)}
-            aria-pressed={erasing}
-            aria-label="지우개"
-            title="지우개"
+            className="cy-oe-icon"
+            onClick={() => restore(undoRef, redoRef)}
+            disabled={steps.undo === 0}
+            aria-label="되돌리기"
+            title="되돌리기"
           >
-            <EraserIcon />
+            <UndoIcon />
           </button>
           <button
             type="button"
             className="cy-oe-icon"
-            onClick={undo}
-            disabled={active.strokes.length === 0}
-            aria-label="되돌리기"
-            title="되돌리기 (선택한 레이어)"
+            onClick={() => restore(redoRef, undoRef)}
+            disabled={steps.redo === 0}
+            aria-label="다시하기"
+            title="다시하기"
           >
-            <UndoIcon />
+            <UndoIcon flip />
           </button>
+        </div>
 
+        <div className="cy-oe-row">
           <span className="cy-oe-layers">
             {layers.map((l, i) => (
               <span key={l.id} className="cy-oe-layer">
@@ -322,7 +489,7 @@ function OekakiPad({
           </span>
         </div>
 
-        {!active.visible ? (
+        {!activeVisible ? (
           <p className="cy-oe-hidden-note">선택한 레이어가 숨겨져 있어 그릴 수 없어요.</p>
         ) : null}
 
@@ -567,6 +734,7 @@ export default function Oekaki() {
   const [open, setOpen] = useState(false);
   const [openId, setOpenId] = useState<string | null>(null);
   const [page, setPage] = useState(0);
+  const [help, setHelp] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
 
   const viewer = me ?? null;
@@ -601,8 +769,34 @@ export default function Oekaki() {
     <div className="cy-content-box">
       <div className="cy-section-title">
         오에카키
-        <span className="cy-sub-text">그림 남기기</span>
+        <span className="cy-sub-text">그림으로 남기는 방명록</span>
+        <button
+          type="button"
+          className="cy-oe-help-btn"
+          onClick={() => setHelp(v => !v)}
+          aria-expanded={help}
+          aria-label="오에카키가 무엇인지 보기"
+          title="이게 뭔가요?"
+        >
+          ?
+        </button>
       </div>
+
+      {help ? (
+        <div className="cy-oe-help">
+          <p>
+            <b>오에카키(お絵かき)</b>는 2000년대 초 게시판에서 유행하던 그림 방명록입니다.
+            따로 프로그램을 깔지 않고 웹페이지에서 바로 그려 올리고, 서로 덧글을 달았습니다.
+          </p>
+          <p>
+            잘 그릴 필요 없습니다. 낙서가 제 맛입니다. 지나간 자리에 그림 한 장 남겨 주세요.
+          </p>
+          <p className="cy-oe-help-tip">
+            펜으로 그리고, 채우기로 안쪽을 칠하고, 스포이드로 이미 쓴 색을 다시 집습니다.
+            레이어를 나누면 밑그림 위에 덧그렸다가 밑그림만 끌 수 있어요.
+          </p>
+        </div>
+      ) : null}
 
       {viewing ? (
         <OekakiDetail
