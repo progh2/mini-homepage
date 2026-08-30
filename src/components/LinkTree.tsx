@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { Spiral, type SpiralProps } from "@paper-design/shaders-react";
 import { asset } from "@/lib/asset";
 import BgmPlayer, { type BgmHandle } from "@/components/BgmPlayer";
@@ -332,6 +332,8 @@ function GuestbookSignIn() {
 
 /* 로그인한 사람에게 보이는 입력 줄입니다. 이름 칸은 없습니다. */
 function GuestbookForm({ me }: { me: SignedInUser }) {
+  /* 브라우저가 입력 칸을 알아보려면 id 나 name 이 있어야 합니다. */
+  const fieldId = useId();
   const [text, setText] = useState("");
   const [secret, setSecret] = useState(false);
   const [sending, setSending] = useState(false);
@@ -361,6 +363,8 @@ function GuestbookForm({ me }: { me: SignedInUser }) {
   return (
     <form className="cy-guestbook-form" onSubmit={submit}>
       <input
+        id={`${fieldId}-text`}
+        name="guestbook-text"
         className="cy-gb-text"
         value={text}
         onChange={e => setText(e.target.value)}
@@ -374,6 +378,8 @@ function GuestbookForm({ me }: { me: SignedInUser }) {
       {isSecretGuestbookEnabled ? (
         <label className="cy-gb-secret">
           <input
+            id={`${fieldId}-secret`}
+            name="guestbook-secret"
             type="checkbox"
             checked={secret}
             onChange={e => setSecret(e.target.checked)}
@@ -410,6 +416,8 @@ type ListEntry = {
 /* 한줄평 한 줄입니다. 볼 수 있는 사람에게만 수정·삭제 버튼을 답니다.
    실제 권한은 firestore.rules 가 정합니다. 여기 판단은 화면 편의일 뿐입니다. */
 function GuestbookItem({ entry, viewer }: { entry: ListEntry; viewer: SignedInUser | null }) {
+  /* 목록에 여러 줄이 그려지므로 줄마다 다른 id 가 필요합니다. */
+  const fieldId = useId();
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(entry.text);
   const [busy, setBusy] = useState(false);
@@ -449,6 +457,8 @@ function GuestbookItem({ entry, viewer }: { entry: ListEntry; viewer: SignedInUs
       {editing ? (
         <span className="cg-edit">
           <input
+            id={`${fieldId}-edit`}
+            name="guestbook-edit"
             className="cg-edit-input"
             value={draft}
             onChange={e => setDraft(e.target.value)}

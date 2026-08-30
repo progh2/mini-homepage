@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useRef, useState } from "react";
 import {
   OEKAKI_LIMITS,
   addOekaki,
@@ -216,6 +216,8 @@ function OekakiPad({
   onDone: (dataUrl: string, comment: string, replay: OekakiReplay) => Promise<void>;
   onCancel: () => void;
 }) {
+  /* 브라우저가 입력 칸을 알아보려면 id 나 name 이 있어야 합니다. */
+  const fieldId = useId();
   const viewRef = useRef<HTMLCanvasElement>(null);
   const layerRef = useRef<Map<number, HTMLCanvasElement>>(new Map());
   /* 지금 그리는 획만 담는 임시 판입니다. 획이 끝나면 한 번에 레이어로 옮깁니다.
@@ -715,6 +717,8 @@ function OekakiPad({
           <label className="cy-oe-opacity" title={`농도 ${Math.round(opacity * 100)}%`}>
             <span aria-hidden="true">농도</span>
             <input
+              id={`${fieldId}-opacity`}
+              name="oekaki-opacity"
               type="range"
               min={10}
               max={100}
@@ -800,6 +804,8 @@ function OekakiPad({
 
         <div className="cy-oe-row">
           <input
+            id={`${fieldId}-title`}
+            name="oekaki-title"
             className="cy-oe-comment"
             value={comment}
             onChange={e => setComment(e.target.value)}
@@ -1160,6 +1166,7 @@ function OekakiDetail({
   onClose: () => void;
   onDeleted: () => void;
 }) {
+  const fieldId = useId();
   const [replies, setReplies] = useState<OekakiReply[] | null>(null);
   const [text, setText] = useState("");
   const [busy, setBusy] = useState(false);
@@ -1295,6 +1302,8 @@ function OekakiDetail({
       {viewer ? (
         <div className="cy-oe-row">
           <input
+            id={`${fieldId}-reply`}
+            name="oekaki-reply"
             className="cy-oe-comment"
             value={text}
             onChange={e => setText(e.target.value)}
