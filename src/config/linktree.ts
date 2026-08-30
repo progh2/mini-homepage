@@ -6,9 +6,9 @@ export const profile = {
   catalogTitle: "함쌤 작업실",
   catalogDescription: "미림마이스터고등학교 정보·컴퓨터 교사",
   /* 왼쪽 프로필 사진입니다. public/assets/ 안에 파일을 넣고 경로를 적으세요. */
-  photo: { src: "/assets/profile.png", alt: "함쌤" },
+  photo: { src: "/assets/profile.webp", alt: "함쌤" },
   /* 홈 탭 위쪽 미니룸 이미지입니다. public/assets/ 안에 파일을 넣고 경로를 적으세요. */
-  miniroom: { src: "/assets/miniroom.png", alt: "함쌤 작업실 미니룸" },
+  miniroom: { src: "/assets/miniroom.webp", alt: "함쌤 작업실 미니룸" },
   /* 아래는 탭 이름표입니다. 나만의 이름으로 바꿔도 되고, 안 바꾸면 기본값 그대로 나옵니다. */
   storyLabel: "연재물",
   boardLabel: "게시판",
@@ -109,7 +109,7 @@ export const boardPosts: BoardPost[] = [
     summary: "교사 일정 수집 고양이. 한글·PDF·스크린샷에서 일정 추출",
     date: "2026-08-29",
     href: "https://progh2.github.io/catmoa/#how",
-    preview: { src: "/assets/apps/catmoa.png", alt: "캣모아" }
+    preview: { src: "/assets/apps/catmoa.webp", alt: "캣모아" }
   },
   {
     id: "schoollunchmemo",
@@ -118,7 +118,7 @@ export const boardPosts: BoardPost[] = [
     summary: "학교 급식·학사일정을 포스트잇처럼 바탕화면에",
     date: "2026-08-27",
     href: "https://progh2.github.io/schoollunchmemo/",
-    preview: { src: "/assets/apps/schoollunchmemo.jpeg", alt: "급식쪽지" }
+    preview: { src: "/assets/apps/schoollunchmemo.webp", alt: "급식쪽지" }
   },
   {
     id: "stat-lab",
@@ -127,7 +127,7 @@ export const boardPosts: BoardPost[] = [
     summary: "숫자로 데이터 읽기",
     date: "2026-08-26",
     href: "https://progh2.github.io/stat-lab/",
-    preview: { src: "/assets/apps/stat-lab.png", alt: "기초 통계량 실험실" }
+    preview: { src: "/assets/apps/stat-lab.webp", alt: "기초 통계량 실험실" }
   },
   {
     id: "meal-converter",
@@ -136,7 +136,7 @@ export const boardPosts: BoardPost[] = [
     summary: "서울시교육청 연구정보원 학교 홈페이지 mlsvTmplat",
     date: "2026-08-25",
     href: "https://progh2.github.io/mirim-meal-converter/",
-    preview: { src: "/assets/apps/meal-converter.png", alt: "급식 식단 업로드 양식 생성기" }
+    preview: { src: "/assets/apps/meal-converter.webp", alt: "급식 식단 업로드 양식 생성기" }
   },
   {
     id: "ai-interview",
@@ -145,7 +145,7 @@ export const boardPosts: BoardPost[] = [
     summary: "학과·면접 유형 선택 후 AI 면접관 질문/피드백",
     date: "2026-08-24",
     href: "https://partyrock.aws/u/hamteacher/ksGF_z3I_3/AI",
-    preview: { src: "/assets/apps/ai-interview.png", alt: "직업계고 AI 면접 모의고사 시뮬레이터" }
+    preview: { src: "/assets/apps/ai-interview.webp", alt: "직업계고 AI 면접 모의고사 시뮬레이터" }
   },
   {
     id: "internet-lag-tips",
@@ -154,7 +154,7 @@ export const boardPosts: BoardPost[] = [
     summary: "클릭 한 번으로 랙 설정 적용 GUI",
     date: "2026-08-24",
     href: "https://github.com/progh2/internet-lag-tips",
-    preview: { src: "/assets/apps/internet-lag-tips.png", alt: "인터넷 랙 줄여주는 팁" }
+    preview: { src: "/assets/apps/internet-lag-tips.webp", alt: "인터넷 랙 줄여주는 팁" }
   },
   {
     id: "repo-manager",
@@ -163,7 +163,7 @@ export const boardPosts: BoardPost[] = [
     summary: "깃허브 저장소 관리 프로그램",
     date: "2026-08-24",
     href: "https://github.com/progh2/repomanager",
-    preview: { src: "/assets/apps/repo-manager.png", alt: "깃허브 레포 매니저" }
+    preview: { src: "/assets/apps/repo-manager.webp", alt: "깃허브 레포 매니저" }
   }
 ];
 
@@ -175,9 +175,9 @@ export type PhotoItem = {
 };
 
 export const photos: PhotoItem[] = [
-  { id: "classroom", name: "컴퓨터실", src: "/assets/album-classroom.png" },
-  { id: "desk", name: "코딩 책상", src: "/assets/album-desk.png" },
-  { id: "afternoon", name: "오후 실습실", src: "/assets/album-afternoon.png" }
+  { id: "classroom", name: "컴퓨터실", src: "/assets/album-classroom.webp" },
+  { id: "desk", name: "코딩 책상", src: "/assets/album-desk.webp" },
+  { id: "afternoon", name: "오후 실습실", src: "/assets/album-afternoon.webp" }
 ];
 
 /* 왼쪽 아래 파도타기 목록입니다.

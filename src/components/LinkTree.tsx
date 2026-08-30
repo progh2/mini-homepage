@@ -24,7 +24,7 @@ import {
   waveLinks
 } from "@/config/linktree";
 import { theme } from "@/config/theme";
-import { FALLBACK_WEATHER, fetchSeoulWeather, formatTodayWeather } from "@/lib/weather";
+import { UNKNOWN_WEATHER, fetchSeoulWeather, formatTodayWeather } from "@/lib/weather";
 
 const ALL_TABS = ["home", "profile", "story", "board", "photo"] as const;
 type TabName = (typeof ALL_TABS)[number];
@@ -348,7 +348,10 @@ function GuestbookList() {
 
       <div className="cy-guestbook-list">
         {entries.length === 0 ? (
-          <div className="cy-gb-loading">아직 한줄평이 없어요. 첫 줄을 남겨 주세요!</div>
+          /* 남기는 폼은 live 일 때만 나옵니다. 폼이 없는데 남기라고 하면 안 됩니다. */
+          <div className="cy-gb-loading">
+            {live ? "아직 한줄평이 없어요. 첫 줄을 남겨 주세요!" : "아직 한줄평이 없어요."}
+          </div>
         ) : (
           pageEntries.map(c => (
             <div key={c.key} className="cy-guestbook-item">
@@ -386,7 +389,8 @@ function GuestbookList() {
 /* 미니홈피 왼쪽 위 방문 수입니다. 들어올 때마다 한 번 기록하고 그 결과를 보여 줍니다.
    Firestore 가 설정되지 않았거나 아직 못 받았으면 숫자 자리를 - 로 둡니다. */
 function TodayWeather() {
-  const [label, setLabel] = useState(`${FALLBACK_WEATHER.label} ${FALLBACK_WEATHER.emoji}`);
+  /* 불러오기 전과 실패한 경우 모두 중립 표시입니다. 특정 날씨로 단정하지 않습니다. */
+  const [label, setLabel] = useState<string>(UNKNOWN_WEATHER);
 
   useEffect(() => {
     let cancelled = false;
@@ -395,7 +399,7 @@ function TodayWeather() {
         if (!cancelled) setLabel(formatTodayWeather(weather));
       })
       .catch(() => {
-        if (!cancelled) setLabel(`${FALLBACK_WEATHER.label} ${FALLBACK_WEATHER.emoji}`);
+        if (!cancelled) setLabel(UNKNOWN_WEATHER);
       });
     return () => {
       cancelled = true;
