@@ -37,6 +37,7 @@ export default function BgmPlayer({ ref }: { ref?: React.Ref<BgmHandle> }) {
 
   const stageRef = useRef<HTMLDivElement>(null);
   const playerRef = useRef<YouTubePlayer | null>(null);
+  const indexRef = useRef(0);
   /* 플레이어가 준비되기 전에 인트로 버튼을 누른 경우를 기억해 둡니다. */
   const wantsPlayRef = useRef(false);
   const blockTimerRef = useRef<number | null>(null);
@@ -80,12 +81,14 @@ export default function BgmPlayer({ ref }: { ref?: React.Ref<BgmHandle> }) {
               } else if (event.data === PLAYER_STATE.paused) {
                 setPlaying(false);
               } else if (event.data === PLAYER_STATE.ended) {
-                /* 영상이 끝났습니다. 처음 곡으로 돌아가 다시 틉니다. */
-                setIndex(0);
-                loadedVideoRef.current = bgmTracks[0].videoId;
+                /* 영상이 끝났습니다. 다음 곡으로 넘어가고, 마지막이면 처음으로 돌아갑니다. */
+                const next = (indexRef.current + 1) % bgmTracks.length;
+                const track = bgmTracks[next];
+                setIndex(next);
+                loadedVideoRef.current = track.videoId;
                 playerRef.current?.loadVideoById({
-                  videoId: bgmTracks[0].videoId,
-                  startSeconds: bgmTracks[0].startAt ?? 0
+                  videoId: track.videoId,
+                  startSeconds: track.startAt ?? 0
                 });
               }
             },
@@ -157,6 +160,10 @@ export default function BgmPlayer({ ref }: { ref?: React.Ref<BgmHandle> }) {
   }, [watchForBlock]);
 
   useImperativeHandle(ref, () => ({ start }), [start]);
+
+  useEffect(() => {
+    indexRef.current = index;
+  }, [index]);
 
   const toggle = () => {
     const player = playerRef.current;
@@ -274,6 +281,7 @@ export default function BgmPlayer({ ref }: { ref?: React.Ref<BgmHandle> }) {
       </div>
 
       {current.artist ? <div className="cy-bgm-artist">{current.artist}</div> : null}
+      <div className="cy-bgm-credit">Kevin MacLeod (incompetech.com), CC BY 3.0</div>
 
       {failed ? (
         <div className="cy-bgm-note">

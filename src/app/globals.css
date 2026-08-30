@@ -403,6 +403,13 @@ body.lt-intro-open {
   text-overflow: ellipsis;
 }
 
+.cy-bgm-credit {
+  margin-top: 2px;
+  font-size: 0.6rem;
+  color: #aaa;
+  line-height: 1.35;
+}
+
 .cy-bgm-note {
   margin-top: 4px;
   font-size: 0.65rem;
