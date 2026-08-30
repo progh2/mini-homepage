@@ -67,6 +67,8 @@ type ReplayOp = {
   /* 펜과 지우개는 첫 점만 절대좌표이고 나머지는 차분입니다. 값이 작아
      그대로 적을 때보다 절반으로 줄어듭니다. 도형은 [x1,y1,x2,y2] 입니다. */
   p?: number[];
+  /* 도형을 속까지 칠했는지. 테두리만이면 없습니다. */
+  f?: 1;
 };
 
 /* 3px 넘게 움직였을 때만 점을 남깁니다. 이보다 촘촘하면 기록만 커집니다. */
@@ -236,6 +238,8 @@ function OekakiPad({
   const [color, setColor] = useState(COLORS[0]);
   const [width, setWidth] = useState(WIDTHS[1]);
   const [opacity, setOpacity] = useState(1);
+  /* 사각형과 원을 속까지 칠할지입니다. 도형 도구를 고를 때만 보입니다. */
+  const [filled, setFilled] = useState(false);
   const [comment, setComment] = useState("");
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -411,6 +415,9 @@ function OekakiPad({
           Math.PI * 2
         );
       }
+      /* 채울 때도 같은 색으로 테두리를 한 번 더 그립니다. 가장자리가
+         부드럽게 처리돼 속만 칠하면 경계가 거칠어 보입니다. */
+      if (filled && tool !== "line") c.fill();
       c.stroke();
     });
   };
@@ -560,7 +567,8 @@ function OekakiPad({
         c: color,
         w: width,
         o: Math.round(opacity * 100),
-        p: [start.x, start.y, end.x, end.y]
+        p: [start.x, start.y, end.x, end.y],
+        ...(filled && tool !== "line" ? { f: 1 as const } : {})
       });
     } else if (tool === "pen") {
       pushOp({
@@ -690,6 +698,18 @@ function OekakiPad({
               <span style={{ width: w + 2, height: w + 2 }} />
             </button>
           ))}
+
+          {tool === "rect" || tool === "ellipse" ? (
+            <button
+              type="button"
+              className={"cy-oe-btn" + (filled ? " is-on" : "")}
+              onClick={() => setFilled(v => !v)}
+              aria-pressed={filled}
+              title="도형 속까지 칠하기"
+            >
+              채움
+            </button>
+          ) : null}
 
           <label className="cy-oe-opacity" title={`농도 ${Math.round(opacity * 100)}%`}>
             <span aria-hidden="true">농도</span>
@@ -863,6 +883,7 @@ function OekakiPlayer({ image, ops }: { image: string; ops: ReplayOp[] }) {
       const [x1, y1, x2, y2] = p;
       c.globalAlpha = (o.o ?? 100) / 100;
       c.strokeStyle = o.c ?? "#000000";
+      c.fillStyle = o.c ?? "#000000";
       c.lineWidth = o.w ?? 7;
       c.lineCap = "round";
       c.lineJoin = "round";
@@ -875,6 +896,7 @@ function OekakiPlayer({ image, ops }: { image: string; ops: ReplayOp[] }) {
       } else {
         c.ellipse((x1 + x2) / 2, (y1 + y2) / 2, Math.abs(x2 - x1) / 2, Math.abs(y2 - y1) / 2, 0, 0, Math.PI * 2);
       }
+      if (o.f) c.fill();
       c.stroke();
       c.globalAlpha = 1;
     };
@@ -1265,7 +1287,7 @@ export default function Oekaki() {
             잘 그릴 필요 없습니다. 낙서가 제 맛입니다. 지나간 자리에 그림 한 장 남겨 주세요.
           </p>
           <p className="cy-oe-help-tip">
-            펜·직선·사각형·원으로 그리고, 채우기로 안쪽을 칠합니다. 스포이드는 이미 쓴 색을
+            펜·직선·사각형·원으로 그리고, 채우기로 안쪽을 칠합니다. 사각형과 원은 채움을 켜면 속까지 칠해집니다. 스포이드는 이미 쓴 색을
             다시 집고, 흐리게는 지나간 자리를 부드럽게 만듭니다. 농도를 낮추면 수채처럼 겹쳐집니다.
             레이어를 나누면 밑그림 위에 덧그렸다가 밑그림만 끌 수 있어요.
           </p>
