@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { Spiral, type SpiralProps } from "@paper-design/shaders-react";
 import { asset } from "@/lib/asset";
 import BgmPlayer, { type BgmHandle } from "@/components/BgmPlayer";
+import Oekaki from "@/components/Oekaki";
 import {
   GUESTBOOK_LIMITS,
   addGuestbookEntry,
@@ -632,18 +633,24 @@ function VisitCounter() {
 
 function PhotoTab() {
   return (
-    <div className="cy-content-box">
-      <SectionTitle title={profile.photoLabel} sub={`${profile.photoSubtitlePrefix} ${photos.length}컷`} />
-      <ul className="cy-photo-grid">
-        {photos.map(photo => (
-          <li key={photo.id} className="cy-photo-item">
-            <div className="cy-photo-frame">
-              <img src={asset(photo.src)} alt={photo.name} loading="lazy" />
-            </div>
-          </li>
-        ))}
-      </ul>
-    </div>
+    <>
+      {photos.length > 0 ? (
+        <div className="cy-content-box">
+          <SectionTitle title={profile.photoLabel} sub={`${profile.photoSubtitlePrefix} ${photos.length}컷`} />
+          <ul className="cy-photo-grid">
+            {photos.map(photo => (
+              <li key={photo.id} className="cy-photo-item">
+                <div className="cy-photo-frame">
+                  <img src={asset(photo.src)} alt={photo.name} loading="lazy" />
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
+      {/* Firebase 가 연결돼 있을 때만 스스로 나타납니다. */}
+      <Oekaki />
+    </>
   );
 }
 
