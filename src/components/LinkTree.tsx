@@ -473,6 +473,10 @@ export default function LinkTree() {
     const tab = new URLSearchParams(window.location.search).get("tab");
     const found = TABS.find(t => t === tab);
     if (found) {
+      /* output: "export" 라 HTML 은 홈 탭으로 미리 만들어집니다. 주소창의 ?tab= 은
+         브라우저에만 있으므로 하이드레이션 뒤에 읽어 맞출 수밖에 없습니다.
+         렌더 중에 읽으면 서버 HTML 과 달라져 하이드레이션이 어긋납니다. */
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setActiveTab(found);
       setIntroSkipped(true);
     }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useImperativeHandle, useRef, useState } from "react";
+import { useCallback, useEffect, useImperativeHandle, useRef, useState, useSyncExternalStore } from "react";
 import { bgmCredit, bgmTracks } from "@/config/linktree";
 import { PLAYER_STATE, loadYouTubeApi, type YouTubePlayer } from "@/lib/youtube";
 
@@ -9,6 +9,23 @@ import { PLAYER_STATE, loadYouTubeApi, type YouTubePlayer } from "@/lib/youtube"
 export type BgmHandle = { start: () => void };
 
 const DEFAULT_VOLUME = 40;
+/* globals.css 의 모바일 분기와 같은 경계입니다. 둘을 같이 바꿔야 합니다. */
+const NARROW_QUERY = "(max-width: 900px)";
+
+/* 좁은 화면인지를 구독합니다. 폰을 돌리거나 창을 줄이면 따라갑니다.
+   서버 렌더에는 창이 없으므로 넓은 화면으로 보고, 하이드레이션 뒤 실제 값으로 맞춰집니다. */
+function subscribeNarrow(onChange: () => void) {
+  const query = window.matchMedia(NARROW_QUERY);
+  query.addEventListener("change", onChange);
+  return () => query.removeEventListener("change", onChange);
+}
+const readNarrow = () => window.matchMedia(NARROW_QUERY).matches;
+const readNarrowOnServer = () => false;
+
+/* 같은 영상을 두 곡 이상이 나눠 쓰는 설정인지입니다.
+   설정은 빌드 시점에 고정이므로 한 번만 계산합니다. */
+const HAS_MULTI_TRACK_VIDEO =
+  new Set(bgmTracks.map(track => track.videoId)).size < bgmTracks.length;
 /* 재생을 걸어 놓고 이만큼 지켜봐도 실제로 재생되지 않으면 막힌 것으로 봅니다.
    버퍼링만 하다 멈추는 경우가 있어서 한 번만 보지 않고 여러 번 확인합니다. */
 const BLOCK_CHECK_MS = 900;
@@ -32,8 +49,8 @@ export default function BgmPlayer({ ref }: { ref?: React.Ref<BgmHandle> }) {
   const [blocked, setBlocked] = useState(false);
   const [failed, setFailed] = useState(false);
   const [errorCode, setErrorCode] = useState<number | null>(null);
-  /* 좁은 화면에서는 유튜브 화면을 실제로 보여 줍니다. 아래 마운트 효과에서 정합니다. */
-  const [showStage, setShowStage] = useState(false);
+  /* 좁은 화면에서는 유튜브 화면을 실제로 보여 줍니다. 폭이 바뀌면 따라 바뀝니다. */
+  const showStage = useSyncExternalStore(subscribeNarrow, readNarrow, readNarrowOnServer);
 
   const stageRef = useRef<HTMLDivElement>(null);
   const playerRef = useRef<YouTubePlayer | null>(null);
@@ -52,9 +69,12 @@ export default function BgmPlayer({ ref }: { ref?: React.Ref<BgmHandle> }) {
 
     /* 인스타그램 같은 앱 안의 브라우저는 다른 사이트 iframe 안의 영상을
        직접 탭해야만 재생을 허용합니다. 부모 페이지의 버튼은 인정되지 않습니다.
-       그래서 좁은 화면에서는 유튜브 화면을 보여 주고 재생 버튼도 켭니다. */
-    const narrow = window.matchMedia("(max-width: 900px)").matches;
-    setShowStage(narrow);
+       그래서 좁은 화면에서는 유튜브 화면을 보여 주고 재생 버튼도 켭니다.
+
+       컨트롤 표시 여부는 iframe 을 만들 때 한 번 정해집니다. 나중에 폭이 바뀌어도
+       플레이어를 다시 만들지 않아야 재생이 끊기지 않으므로 이 값만 고정입니다.
+       화면 표시(showStage)와 안내 문구는 위 useSyncExternalStore 가 따라갑니다. */
+    const narrow = readNarrow();
 
     loadYouTubeApi()
       .then(api => {
@@ -113,9 +133,13 @@ export default function BgmPlayer({ ref }: { ref?: React.Ref<BgmHandle> }) {
   }, []);
 
   /* 한 영상 안에 여러 곡이 들어 있는 경우, 재생이 흘러가는 대로 현재 곡 표시를 옮깁니다.
-     같은 영상의 곡들은 startAt 이 작은 것부터 차례로 적혀 있다고 봅니다. */
+     같은 영상의 곡들은 startAt 이 작은 것부터 차례로 적혀 있다고 봅니다.
+
+     곡마다 영상이 다르면 이 추적은 할 일이 없습니다. 그때는 videoId 가 일치하는
+     트랙이 하나뿐이라 매초 같은 인덱스를 다시 계산하기만 합니다. 그런 설정에서는
+     타이머를 아예 걸지 않습니다. */
   useEffect(() => {
-    if (!playing) return;
+    if (!playing || !HAS_MULTI_TRACK_VIDEO) return;
 
     const timer = window.setInterval(() => {
       const player = playerRef.current;
