@@ -16,7 +16,9 @@ import {
 import {
   addDoc,
   collection,
+  deleteDoc,
   doc,
+  updateDoc,
   getFirestore,
   limit as fsLimit,
   onSnapshot,
@@ -54,8 +56,12 @@ export type RemoteEntry = {
   date: string;
   /* "17:42" */
   time: string;
+  /* 글쓴이의 계정 uid 입니다. 수정·삭제 권한을 판단하는 데 씁니다. */
+  uid: string;
   /* 주인장만 보는 글인지. 두 컬렉션을 합칠 때 정렬과 표시에 씁니다. */
   secret: boolean;
+  /* 한 번이라도 고친 글인지. 화면에 "(수정됨)" 을 붙입니다. */
+  edited: boolean;
   /* 정렬용 밀리초. 화면에는 쓰지 않습니다. */
   at: number;
 };
@@ -244,6 +250,8 @@ export function subscribeGuestbook(
 
   const toEntry = (id: string, data: Record<string, unknown>, secret: boolean): RemoteEntry => ({
     id,
+    uid: String(data.uid ?? ""),
+    edited: Boolean(data.editedAt),
     author: String(data.author ?? ""),
     text: String(data.text ?? ""),
     date: formatDate(data.createdAt),
@@ -300,4 +308,44 @@ export async function addGuestbookEntry(text: string, secret = false) {
     approved: true,
     createdAt: serverTimestamp()
   });
+}
+
+/* ---------------------------------------------------------------
+   한줄평 수정과 삭제입니다.
+
+     수정  작성자 본인만. 바꿀 수 있는 건 본문뿐입니다.
+     삭제  작성자 본인과 주인장.
+
+   주인장에게 수정 권한을 주지 않은 이유는, 남이 한 말의 내용을 바꾸면 그
+   사람이 하지 않은 말이 그 사람 이름으로 남기 때문입니다. 부적절한 글은
+   지우는 것으로 충분합니다. firestore.rules 도 같은 선을 긋습니다.
+   --------------------------------------------------------------- */
+
+function entryRef(id: string, secret: boolean) {
+  const store = getDb();
+  if (!store) throw new Error("한줄평 기능이 설정되지 않았습니다.");
+  return doc(store, secret ? GUESTBOOK_SECRET : GUESTBOOK_OPEN, id);
+}
+
+export function canEditEntry(viewer: SignedInUser | null | undefined, entryUid: string) {
+  return Boolean(viewer && entryUid && viewer.uid === entryUid);
+}
+
+export function canDeleteEntry(viewer: SignedInUser | null | undefined, entryUid: string) {
+  return canEditEntry(viewer, entryUid) || isOwner(viewer);
+}
+
+export async function updateGuestbookEntry(id: string, secret: boolean, text: string) {
+  const trimmedText = text.trim();
+  if (!trimmedText) throw new Error("한줄평을 적어 주세요.");
+  if (trimmedText.length > GUESTBOOK_LIMITS.text) {
+    throw new Error(`한줄평은 ${GUESTBOOK_LIMITS.text}자까지 쓸 수 있어요.`);
+  }
+
+  /* uid, author, createdAt 은 손대지 않습니다. 규칙도 이 셋의 변경을 막습니다. */
+  await updateDoc(entryRef(id, secret), { text: trimmedText, editedAt: serverTimestamp() });
+}
+
+export async function deleteGuestbookEntry(id: string, secret: boolean) {
+  await deleteDoc(entryRef(id, secret));
 }

@@ -1036,6 +1036,48 @@ body.lt-intro-open {
   cursor: default;
 }
 
+/* 항목별 수정·삭제 버튼과 인라인 편집 */
+.cg-act {
+  margin-left: 5px;
+  padding: 0 3px;
+  border: none;
+  background: none;
+  color: #aaa;
+  font-family: inherit;
+  font-size: 0.68rem;
+  cursor: pointer;
+}
+.cg-act:hover:not(:disabled) {
+  color: #ff6600;
+  text-decoration: underline;
+}
+.cg-act:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.cg-edit {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  width: 100%;
+  margin-top: 3px;
+}
+.cg-edit-input {
+  flex: 1;
+  min-width: 80px;
+  font-family: inherit;
+  font-size: 0.75rem;
+  padding: 3px 6px;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  color: #444;
+  background: #fff;
+}
+.cg-edit-input:focus {
+  outline: none;
+  border-color: #9CBBA6;
+}
+
 /* 비밀글 체크박스와 목록의 자물쇠 표시 */
 .cy-gb-secret {
   display: inline-flex;
