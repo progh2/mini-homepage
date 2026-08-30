@@ -16,7 +16,7 @@ Optional (skip whichever they don't want, leave the array empty):
 - Left-side profile photo and mini-room image (image files, placed under `public/assets/`)
 - Profile intro sections (bio text, activity list, contact)
 - Board tab — its display name and app/post links with date and optional preview image
-- Photo gallery tab — its display name and photos
+- Doodle tab (photo list plus the oekaki drawing board) — its display name and photos. Tab labels wider than four Korean characters overflow the tab button
 - Additional "wave" quick-links (beyond the required DoRms one)
 - Mini-homepage BGM player (YouTube video id plus per-track start times)
 - Seed guestbook entries
