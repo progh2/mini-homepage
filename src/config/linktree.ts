@@ -173,11 +173,8 @@ export type PhotoItem = {
   src: string;
 };
 
-export const photos: PhotoItem[] = [
-  { id: "classroom", name: "컴퓨터실", src: "/assets/album-classroom.webp" },
-  { id: "desk", name: "코딩 책상", src: "/assets/album-desk.webp" },
-  { id: "afternoon", name: "오후 실습실", src: "/assets/album-afternoon.webp" }
-];
+/* 비워 두면 사진 구역이 통째로 사라지고 오에카키만 남습니다. */
+export const photos: PhotoItem[] = [];
 
 /* 왼쪽 아래 파도타기 목록입니다.
    고정 규칙: 첫 번째 항목은 반드시 "도름스 커뮤니티 나의 활동" 링크입니다. 지우지 마세요. */
