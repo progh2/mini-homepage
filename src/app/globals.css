@@ -227,13 +227,16 @@ body.lt-intro-open {
   align-items: center;
 }
 
+/* 곡이 늘어나면서 왼쪽 패널 내용이 다이어리 아래로 15px 정도 넘쳤습니다.
+   책 높이(640px)가 고정이라 어딘가에서 그만큼을 덜어내야 합니다.
+   날씨 줄 아래 여백이 가장 덜 아쉬운 자리라 여기서 뺐습니다. */
 .cy-today-is {
   width: 100%;
   color: #555;
   font-size: 0.75rem;
   border-bottom: 1px solid #eee;
   padding-bottom: 5px;
-  margin-bottom: 15px;
+  margin-bottom: 0;
 }
 
 .cy-profile-pic {
