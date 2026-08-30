@@ -129,6 +129,25 @@ service cloud.firestore {
 
       allow delete: if canDelete();
 
+      /* 그리는 과정 기록입니다. 그림이 가려지면 이것도 못 읽어야 합니다.
+         부모 문서를 get() 으로 확인하느라 읽기가 한 번 더 들지만, 재생은
+         자주 눌리지 않아 부담이 작습니다. */
+      match /replay/{docId} {
+        allow read: if get(/databases/$(database)/documents/oekaki/$(drawingId)).data.hidden == false
+          || (request.auth != null && request.auth.uid == ownerUid());
+
+        allow create: if request.auth != null
+          && request.resource.data.keys().hasOnly(['uid', 'ops', 'count', 'createdAt'])
+          && request.resource.data.uid == request.auth.uid
+          && request.resource.data.ops is string
+          && request.resource.data.ops.size() <= 400000
+          && request.resource.data.count is int
+          && request.resource.data.createdAt == request.time;
+
+        allow update: if false;
+        allow delete: if canDelete();
+      }
+
       /* 그림에 달리는 댓글입니다. */
       match /comments/{commentId} {
         allow read: if true;

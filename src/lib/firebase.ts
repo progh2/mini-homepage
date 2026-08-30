@@ -18,6 +18,8 @@ import {
   collection,
   deleteDoc,
   doc,
+  getDoc,
+  setDoc,
   updateDoc,
   getFirestore,
   limit as fsLimit,
@@ -369,7 +371,7 @@ export const OEKAKI = "oekaki";
 
 /* image 는 data URL 문자열 길이 상한입니다. 300000자면 실제 이미지로는
    약 220KB 이고, 웬만큼 복잡한 그림도 여유 있게 들어갑니다. */
-export const OEKAKI_LIMITS = { comment: 60, image: 300000, reply: 100 } as const;
+export const OEKAKI_LIMITS = { comment: 60, image: 300000, reply: 100, replay: 400000 } as const;
 
 export type OekakiEntry = {
   id: string;
@@ -510,7 +512,21 @@ export async function setOekakiHidden(id: string, hidden: boolean) {
   await updateDoc(doc(store, OEKAKI, id), { hidden });
 }
 
-export async function addOekaki(image: string, comment: string) {
+/* 그리는 과정 기록입니다. 그림 문서가 아니라 하위 문서에 따로 둡니다.
+   같은 문서에 넣으면 목록을 볼 때마다 딸려와서, 재생을 안 눌러도 매번
+   받게 됩니다. 하위 문서면 재생을 누른 사람만 받습니다. */
+export type OekakiReplay = { ops: string; count: number };
+
+export async function getOekakiReplay(drawingId: string): Promise<OekakiReplay | null> {
+  const store = getDb();
+  if (!store) return null;
+  const snap = await getDoc(doc(store, OEKAKI, drawingId, "replay", "data"));
+  if (!snap.exists()) return null;
+  const data = snap.data();
+  return { ops: String(data.ops ?? ""), count: Number(data.count ?? 0) };
+}
+
+export async function addOekaki(image: string, comment: string, replay?: OekakiReplay) {
   const store = getDb();
   const instance = getAuthOrNull();
   if (!store || !instance) throw new Error("그림 기능이 설정되지 않았습니다.");
@@ -525,7 +541,7 @@ export async function addOekaki(image: string, comment: string) {
 
   const trimmed = comment.trim().slice(0, OEKAKI_LIMITS.comment);
 
-  await addDoc(collection(store, OEKAKI), {
+  const created = await addDoc(collection(store, OEKAKI), {
     uid: me.uid,
     author: me.name,
     comment: trimmed,
@@ -533,6 +549,20 @@ export async function addOekaki(image: string, comment: string) {
     hidden: false,
     createdAt: serverTimestamp()
   });
+
+  /* 기록이 상한을 넘으면 재생만 포기합니다. 그림은 이미 저장됐습니다. */
+  if (replay && replay.ops.length <= OEKAKI_LIMITS.replay && replay.count > 0) {
+    try {
+      await setDoc(doc(store, OEKAKI, created.id, "replay", "data"), {
+        uid: me.uid,
+        ops: replay.ops,
+        count: replay.count,
+        createdAt: serverTimestamp()
+      });
+    } catch {
+      /* 재생은 덤입니다. 실패해도 그림 남기기를 실패로 만들지 않습니다. */
+    }
+  }
 }
 
 /* 삭제 권한은 한줄평과 같습니다. 작성자 본인과 주인장. */

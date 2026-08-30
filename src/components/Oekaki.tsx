@@ -8,6 +8,7 @@ import {
   canDeleteEntry,
   deleteOekaki,
   deleteOekakiReply,
+  getOekakiReplay,
   isGuestbookEnabled,
   isOwner,
   setOekakiHidden,
@@ -51,6 +52,25 @@ type LayerMeta = { id: number; visible: boolean };
 /* 흐리게 붓의 반지름입니다. 캔버스 기준이라 화면이 줄어도 비율이 같습니다. */
 const BLUR_RADIUS = 18;
 const BLUR_STRENGTH = 4;
+
+/* 그리는 과정 기록입니다. 도구마다 번호를 붙여 짧게 적습니다.
+   흐리게(6)는 자리만 남기고 재생 때 건너뜁니다. 위치를 다 적어야 하고
+   브라우저마다 결과가 미묘하게 달라서, 값에 비해 비쌉니다.
+   대신 재생이 끝나면 저장된 그림으로 바꿔서 마지막 장면은 늘 정확합니다. */
+const OP = { pen: 0, line: 1, rect: 2, ellipse: 3, eraser: 4, fill: 5, blur: 6 } as const;
+type ReplayOp = {
+  k: number;
+  l: number;
+  c?: string;
+  w?: number;
+  o?: number;
+  /* 펜과 지우개는 첫 점만 절대좌표이고 나머지는 차분입니다. 값이 작아
+     그대로 적을 때보다 절반으로 줄어듭니다. 도형은 [x1,y1,x2,y2] 입니다. */
+  p?: number[];
+};
+
+/* 3px 넘게 움직였을 때만 점을 남깁니다. 이보다 촘촘하면 기록만 커집니다. */
+const POINT_GAP = 3;
 
 function hexToRgb(hex: string) {
   return {
@@ -190,7 +210,7 @@ function OekakiPad({
   onDone,
   onCancel
 }: {
-  onDone: (dataUrl: string, comment: string) => Promise<void>;
+  onDone: (dataUrl: string, comment: string, replay: { ops: string; count: number }) => Promise<void>;
   onCancel: () => void;
 }) {
   const viewRef = useRef<HTMLCanvasElement>(null);
@@ -202,6 +222,10 @@ function OekakiPad({
   /* 도형 도구가 끌기 시작한 지점, 흐리게가 쓸 미리 흐려 둔 판입니다. */
   const startRef = useRef<{ x: number; y: number } | null>(null);
   const blurRef = useRef<HTMLCanvasElement | null>(null);
+  /* 그리는 과정 기록입니다. 되돌리기와 개수가 어긋나면 안 되므로 같이 움직입니다. */
+  const opsRef = useRef<ReplayOp[]>([]);
+  const redoOpsRef = useRef<ReplayOp[]>([]);
+  const pointsRef = useRef<number[]>([]);
   const undoRef = useRef<{ layerId: number; data: ImageData }[]>([]);
   const redoRef = useRef<{ layerId: number; data: ImageData }[]>([]);
   const lastRef = useRef<{ x: number; y: number } | null>(null);
@@ -271,12 +295,21 @@ function OekakiPad({
     undoRef.current.push({ layerId: activeId, data: c.getImageData(0, 0, SIZE, SIZE) });
     if (undoRef.current.length > MAX_UNDO) undoRef.current.shift();
     redoRef.current = [];
+    redoOpsRef.current = [];
     setSteps({ undo: undoRef.current.length, redo: 0 });
   };
+
+  /* 되돌리기 한 번에 기록도 하나 빠집니다. 흐리게처럼 재현하지 않는 것도
+     자리를 차지해야 개수가 어긋나지 않습니다. */
+  const pushOp = (op: ReplayOp) => opsRef.current.push(op);
 
   const restore = (from: typeof undoRef, to: typeof redoRef) => {
     const step = from.current.pop();
     if (!step) return;
+    const fromOps = from === undoRef ? opsRef : redoOpsRef;
+    const toOps = from === undoRef ? redoOpsRef : opsRef;
+    const movedOp = fromOps.current.pop();
+    if (movedOp) toOps.current.push(movedOp);
     const c = layerCanvas(step.layerId).getContext("2d");
     if (!c) return;
     to.current.push({ layerId: step.layerId, data: c.getImageData(0, 0, SIZE, SIZE) });
@@ -413,6 +446,23 @@ function OekakiPad({
   };
 
   const SHAPES: Tool[] = ["line", "rect", "ellipse"];
+  const layerIndex = () => layers.findIndex(l => l.id === activeId);
+
+  /* 점을 3px 마다만 모으고 차분으로 적습니다. */
+  const trackPoint = (p: { x: number; y: number }) => {
+    const buf = pointsRef.current;
+    if (buf.length === 0) {
+      buf.push(p.x, p.y);
+      return;
+    }
+    let ax = buf[0], ay = buf[1];
+    for (let i = 2; i < buf.length; i += 2) {
+      ax += buf[i];
+      ay += buf[i + 1];
+    }
+    if (Math.abs(p.x - ax) + Math.abs(p.y - ay) < POINT_GAP) return;
+    buf.push(p.x - ax, p.y - ay);
+  };
 
   const onDown = (e: React.PointerEvent<HTMLCanvasElement>) => {
     const layer = layers.find(l => l.id === activeId);
@@ -430,11 +480,13 @@ function OekakiPad({
     e.currentTarget.setPointerCapture(e.pointerId);
 
     if (tool === "fill") {
+      pushOp({ k: OP.fill, l: layerIndex(), c: color, p: [p.x, p.y] });
       doFill(p);
       return;
     }
 
     if (tool === "blur") {
+      pushOp({ k: OP.blur, l: layerIndex() });
       /* 획을 시작할 때 한 번만 흐린 판을 만들어 둡니다. */
       const src = layerCanvas(activeId);
       const dst = scratch(blurRef).getContext("2d");
@@ -452,6 +504,8 @@ function OekakiPad({
     clearTemp();
     startRef.current = p;
     lastRef.current = p;
+    pointsRef.current = [];
+    trackPoint(p);
 
     if (SHAPES.includes(tool)) {
       drawShape(p, p);
@@ -471,6 +525,7 @@ function OekakiPad({
     const p = toCanvas(e);
 
     if (tool === "eraser") {
+      trackPoint(p);
       eraseTo(from, p);
     } else if (tool === "blur") {
       blurAt(p);
@@ -478,6 +533,7 @@ function OekakiPad({
       /* 도형은 끌 때마다 시작점에서 다시 그립니다. 임시 판이라 지우기 쉽습니다. */
       if (startRef.current) drawShape(startRef.current, p);
     } else {
+      trackPoint(p);
       drawOnTemp(c => {
         c.beginPath();
         c.moveTo(from.x, from.y);
@@ -489,8 +545,35 @@ function OekakiPad({
   };
 
   const onUp = () => {
+    const start = startRef.current;
+    const end = lastRef.current;
     lastRef.current = null;
     startRef.current = null;
+
+    if (tool === "eraser") {
+      pushOp({ k: OP.eraser, l: layerIndex(), w: width, p: [...pointsRef.current] });
+    } else if (SHAPES.includes(tool) && start && end) {
+      const k = tool === "line" ? OP.line : tool === "rect" ? OP.rect : OP.ellipse;
+      pushOp({
+        k,
+        l: layerIndex(),
+        c: color,
+        w: width,
+        o: Math.round(opacity * 100),
+        p: [start.x, start.y, end.x, end.y]
+      });
+    } else if (tool === "pen") {
+      pushOp({
+        k: OP.pen,
+        l: layerIndex(),
+        c: color,
+        w: width,
+        o: Math.round(opacity * 100),
+        p: [...pointsRef.current]
+      });
+    }
+    pointsRef.current = [];
+
     if (tool !== "eraser" && tool !== "blur" && tool !== "fill") commitTemp();
   };
 
@@ -528,7 +611,10 @@ function OekakiPad({
       if (dataUrl.length > OEKAKI_LIMITS.image) {
         throw new Error("그림이 너무 복잡해요. 조금 지우고 다시 남겨 주세요.");
       }
-      await onDone(dataUrl, comment);
+      /* 숨긴 레이어에 그린 획은 결과에 없으므로 기록에서도 뺍니다. */
+      const shown = new Set(layers.map((l, i) => (l.visible ? i : -1)).filter(i => i >= 0));
+      const ops = opsRef.current.filter(o => shown.has(o.l));
+      await onDone(dataUrl, comment, { ops: JSON.stringify(ops), count: ops.length });
     } catch (e) {
       setError(e instanceof Error ? e.message : "남기지 못했어요.");
     } finally {
@@ -715,6 +801,161 @@ function OekakiPad({
 }
 
 /* ---------------------------------------------------------------
+   그리는 과정 재생
+
+   기록에는 벡터로 되는 도구만 담겨 있습니다. 흐리게는 자리만 있고 건너뜁니다.
+   그래서 도중 화면이 최종 그림과 조금 다를 수 있는데, 재생이 끝나면 저장된
+   그림으로 바꿔서 마지막 장면은 늘 정확합니다.
+   --------------------------------------------------------------- */
+const REPLAY_SECONDS = 6;
+
+function OekakiPlayer({ image, ops }: { image: string; ops: ReplayOp[] }) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [done, setDone] = useState(false);
+  const [round, setRound] = useState(0);
+
+  useEffect(() => {
+    const c = canvasRef.current?.getContext("2d");
+    if (!c) return;
+    let raf = 0;
+    let stopped = false;
+    setDone(false);
+
+    c.globalAlpha = 1;
+    c.globalCompositeOperation = "source-over";
+    c.fillStyle = BACKGROUND;
+    c.fillRect(0, 0, SIZE, SIZE);
+
+    /* 획 하나를 통째로 그리지 않고 점 단위로 나눠야 손으로 긋는 느낌이 납니다. */
+    const total = ops.reduce((n, o) => n + Math.max(1, (o.p?.length ?? 2) / 2 - 1), 0);
+    const perFrame = Math.max(1, Math.ceil(total / (60 * REPLAY_SECONDS)));
+
+    let opIdx = 0;
+    let segIdx = 0;
+
+    const strokePath = (o: ReplayOp, upto: number) => {
+      const p = o.p ?? [];
+      if (p.length < 2) return;
+      c.globalAlpha = (o.o ?? 100) / 100;
+      c.globalCompositeOperation = o.k === OP.eraser ? "destination-out" : "source-over";
+      c.strokeStyle = o.c ?? "#000000";
+      c.lineWidth = o.k === OP.eraser ? (o.w ?? 7) * 2 : o.w ?? 7;
+      c.lineCap = "round";
+      c.lineJoin = "round";
+
+      let x = p[0], y = p[1];
+      c.beginPath();
+      c.moveTo(x, y);
+      if (p.length === 2) c.lineTo(x + 0.01, y);
+      for (let i = 2; i <= upto * 2 && i < p.length; i += 2) {
+        x += p[i];
+        y += p[i + 1];
+        c.lineTo(x, y);
+      }
+      c.stroke();
+      c.globalAlpha = 1;
+      c.globalCompositeOperation = "source-over";
+    };
+
+    const shape = (o: ReplayOp) => {
+      const p = o.p ?? [];
+      if (p.length < 4) return;
+      const [x1, y1, x2, y2] = p;
+      c.globalAlpha = (o.o ?? 100) / 100;
+      c.strokeStyle = o.c ?? "#000000";
+      c.lineWidth = o.w ?? 7;
+      c.lineCap = "round";
+      c.lineJoin = "round";
+      c.beginPath();
+      if (o.k === OP.line) {
+        c.moveTo(x1, y1);
+        c.lineTo(x2, y2);
+      } else if (o.k === OP.rect) {
+        c.rect(Math.min(x1, x2), Math.min(y1, y2), Math.abs(x2 - x1), Math.abs(y2 - y1));
+      } else {
+        c.ellipse((x1 + x2) / 2, (y1 + y2) / 2, Math.abs(x2 - x1) / 2, Math.abs(y2 - y1) / 2, 0, 0, Math.PI * 2);
+      }
+      c.stroke();
+      c.globalAlpha = 1;
+    };
+
+    const step = () => {
+      if (stopped) return;
+      let budget = perFrame;
+
+      while (budget > 0 && opIdx < ops.length) {
+        const o = ops[opIdx];
+
+        if (o.k === OP.blur) {
+          opIdx += 1;
+          continue;
+        }
+        if (o.k === OP.fill) {
+          const p = o.p ?? [];
+          const mask = floodMask(c.getImageData(0, 0, SIZE, SIZE), p[0], p[1]);
+          const img = c.getImageData(0, 0, SIZE, SIZE);
+          const { r, g, b } = hexToRgb(o.c ?? "#000000");
+          for (let i = 0; i < mask.length; i++) {
+            if (!mask[i]) continue;
+            const q = i * 4;
+            img.data[q] = r;
+            img.data[q + 1] = g;
+            img.data[q + 2] = b;
+            img.data[q + 3] = 255;
+          }
+          c.putImageData(img, 0, 0);
+          opIdx += 1;
+          budget -= 1;
+          continue;
+        }
+        if (o.k !== OP.pen && o.k !== OP.eraser) {
+          shape(o);
+          opIdx += 1;
+          budget -= 1;
+          continue;
+        }
+
+        const segs = Math.max(1, (o.p?.length ?? 2) / 2 - 1);
+        segIdx += 1;
+        strokePath(o, segIdx);
+        budget -= 1;
+        if (segIdx >= segs) {
+          opIdx += 1;
+          segIdx = 0;
+        }
+      }
+
+      if (opIdx >= ops.length) {
+        setDone(true);
+        return;
+      }
+      raf = requestAnimationFrame(step);
+    };
+
+    raf = requestAnimationFrame(step);
+    return () => {
+      stopped = true;
+      cancelAnimationFrame(raf);
+    };
+  }, [ops, round]);
+
+  return (
+    <div className="cy-oe-player">
+      {/* 재생이 끝나면 저장된 그림으로 바꿉니다. 흐리게처럼 재현하지 않는 것이
+          있어도 마지막 장면은 늘 정확합니다. */}
+      {done ? (
+        <img className="cy-oe-big" src={image} alt="다 그려진 그림" />
+      ) : (
+        <canvas ref={canvasRef} width={SIZE} height={SIZE} className="cy-oe-big" />
+      )}
+      <button type="button" className="cy-oe-btn" onClick={() => setRound(r => r + 1)}>
+        {done ? "다시 재생" : "처음부터"}
+      </button>
+    </div>
+  );
+}
+
+/* ---------------------------------------------------------------
    목록 한 줄. 그림 옆에 글쓴이, 제목, 덧글이 붙습니다.
    --------------------------------------------------------------- */
 function OekakiRow({
@@ -800,8 +1041,29 @@ function OekakiDetail({
   const [text, setText] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  /* 재생 기록은 눌렀을 때만 받아옵니다. 목록에서는 건드리지 않습니다. */
+  const [ops, setOps] = useState<ReplayOp[] | null>(null);
+  const [loadingOps, setLoadingOps] = useState(false);
 
   useEffect(() => subscribeOekakiReplies(item.id, setReplies, () => setReplies([])), [item.id]);
+
+  const play = async () => {
+    if (loadingOps) return;
+    setLoadingOps(true);
+    setError(null);
+    try {
+      const replay = await getOekakiReplay(item.id);
+      if (!replay || !replay.ops) {
+        setError("이 그림은 그리는 과정이 기록되지 않았어요.");
+        return;
+      }
+      setOps(JSON.parse(replay.ops) as ReplayOp[]);
+    } catch {
+      setError("그리는 과정을 불러오지 못했어요.");
+    } finally {
+      setLoadingOps(false);
+    }
+  };
 
   const run = async (job: () => Promise<void>) => {
     if (busy) return;
@@ -836,6 +1098,15 @@ function OekakiDetail({
         <button type="button" className="cy-oe-btn" onClick={onClose}>
           목록으로
         </button>
+        {ops ? (
+          <button type="button" className="cy-oe-btn" onClick={() => setOps(null)}>
+            그림 보기
+          </button>
+        ) : (
+          <button type="button" className="cy-oe-btn" onClick={play} disabled={loadingOps}>
+            {loadingOps ? "여는 중" : "그리는 과정 재생"}
+          </button>
+        )}
         {isOwner(viewer) ? (
           <button
             type="button"
@@ -857,7 +1128,11 @@ function OekakiDetail({
         <p className="cy-oe-hidden-note">가림 처리된 그림입니다. 주인장에게만 보입니다.</p>
       ) : null}
 
-      <img className="cy-oe-big" src={item.image} alt={item.comment || `${item.author} 님의 그림`} />
+      {ops ? (
+        <OekakiPlayer image={item.image} ops={ops} />
+      ) : (
+        <img className="cy-oe-big" src={item.image} alt={item.comment || `${item.author} 님의 그림`} />
+      )}
 
       <div className="cy-oe-detail-meta">
         {item.comment ? <span className="cy-oe-title-text">{item.comment}</span> : null}
@@ -994,11 +1269,16 @@ export default function Oekaki() {
             다시 집고, 흐리게는 지나간 자리를 부드럽게 만듭니다. 농도를 낮추면 수채처럼 겹쳐집니다.
             레이어를 나누면 밑그림 위에 덧그렸다가 밑그림만 끌 수 있어요.
           </p>
+          <p className="cy-oe-help-tip">
+            남긴 그림을 눌러 <b>그리는 과정 재생</b>을 누르면 선이 하나씩 그어지는 걸 볼 수 있어요.
+            흐리게로 칠한 부분은 재생에서 건너뜁니다.
+          </p>
         </div>
       ) : null}
 
       {viewing ? (
         <OekakiDetail
+          key={viewing.id}
           item={viewing}
           viewer={viewer}
           onClose={() => setOpenId(null)}
