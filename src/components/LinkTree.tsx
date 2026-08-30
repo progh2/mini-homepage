@@ -84,13 +84,20 @@ function ChevronDown({ size = 18 }: { size?: number }) {
 }
 
 function IntroOverlay({ onBrowse }: { onBrowse: () => void }) {
+  const ctaRef = useRef<HTMLButtonElement>(null);
+
+  /* 뒤쪽은 inert 로 막아 두었으므로, 들어오자마자 누를 곳에 포커스를 둡니다. */
+  useEffect(() => {
+    ctaRef.current?.focus();
+  }, []);
+
   return (
     <div className="lt-intro" style={introStyle}>
       <Spiral className="lt-intro-spiral" {...spiralProps} />
       <div className="lt-intro-card">
         <span className="lt-intro-title">{profile.introTitle}</span>
         <p className="lt-intro-copy">{profile.introDescription}</p>
-        <button type="button" className="lt-intro-cta" onClick={onBrowse}>
+        <button type="button" className="lt-intro-cta" onClick={onBrowse} ref={ctaRef}>
           모든 활동 구경하기
           <ChevronDown size={18} />
         </button>
@@ -196,7 +203,7 @@ function StoryTab() {
           title={open.title ? `${open.label} ${open.title}` : open.label}
           sub={`${open.cuts.length}컷`}
         />
-        <button className="cy-back-btn" onClick={() => setOpenId(null)}>
+        <button type="button" className="cy-back-btn" onClick={() => setOpenId(null)}>
           목록으로
         </button>
         <div className="cy-cut-list">
@@ -214,7 +221,7 @@ function StoryTab() {
       <ul className="cy-episode-grid">
         {episodes.map(episode => (
           <li key={episode.id}>
-            <button className="cy-episode-card" onClick={() => setOpenId(episode.id)}>
+            <button type="button" className="cy-episode-card" onClick={() => setOpenId(episode.id)}>
               <span className="cy-episode-thumb">
                 <img src={asset(episode.thumb)} alt={episode.label} loading="lazy" />
               </span>
@@ -484,7 +491,10 @@ export default function LinkTree() {
     <div className="cy-root">
       <div className="cy-background-pattern"></div>
 
-      <div className="cy-book-wrapper">
+      {/* 인트로는 fixed 로 덮기만 하므로 뒤 콘텐츠가 DOM 에 그대로 살아 있습니다.
+          inert 를 걸어야 탭 포커스와 스크린리더 접근이 함께 막힙니다.
+          overflow: hidden(body.lt-intro-open)은 스크롤만 막고 포커스는 못 막습니다. */}
+      <div className="cy-book-wrapper" inert={!introSkipped}>
         <div className="cy-book-outer">
 
           {/* 바인더 링 */}
@@ -518,22 +528,21 @@ export default function LinkTree() {
                   <div className="title-sub">{profile.catalogDescription}</div>
                 </div>
 
-                <div className="cy-left-dropdown">
-                  <select
-                    value=""
-                    onChange={event => {
-                      const target = waveLinks.find(w => w.id === event.target.value);
-                      if (target) {
-                        window.open(target.href, "_blank", "noopener,noreferrer");
-                      }
-                    }}
-                  >
-                    <option value="" disabled>파도타기</option>
+                {/* select 의 onChange 로 새 창을 열면, 키보드로 항목을 훑는 동안
+                    항목마다 팝업이 열립니다. 목록이 링크이므로 실제 링크로 둡니다.
+                    새 탭에서 열기, 주소 복사 같은 브라우저 기본 동작도 살아납니다. */}
+                <details className="cy-left-dropdown">
+                  <summary>파도타기</summary>
+                  <ul>
                     {waveLinks.map(wave => (
-                      <option key={wave.id} value={wave.id}>{wave.label}</option>
+                      <li key={wave.id}>
+                        <a href={wave.href} target="_blank" rel="noopener noreferrer">
+                          {wave.label}
+                        </a>
+                      </li>
                     ))}
-                  </select>
-                </div>
+                  </ul>
+                </details>
               </div>
             </div>
 
@@ -544,7 +553,12 @@ export default function LinkTree() {
                 <span className="cy-url">{profile.displayUrl}</span>
               </div>
 
-              <div className="cy-right-content">
+              <div
+                className="cy-right-content"
+                role="tabpanel"
+                id={`cy-panel-${activeTab}`}
+                aria-labelledby={`cy-tab-${activeTab}`}
+              >
                 {activeTab === "home" && <HomeTab />}
                 {activeTab === "profile" && <ProfileTab />}
                 {activeTab === "story" && <StoryTab />}
@@ -554,10 +568,17 @@ export default function LinkTree() {
             </div>
 
             {/* 탭 영역 */}
-            <div className="cy-tabs">
+            {/* .active 는 배경색만 바꾸므로 시각 정보에만 의존합니다.
+                스크린리더가 어느 탭이 열려 있는지 알 수 있게 탭 패턴을 붙입니다. */}
+            <div className="cy-tabs" role="tablist" aria-label="미니홈피 메뉴">
               {TABS.map(tab => (
                 <button
                   key={tab}
+                  type="button"
+                  role="tab"
+                  id={`cy-tab-${tab}`}
+                  aria-selected={activeTab === tab}
+                  aria-controls={`cy-panel-${tab}`}
                   className={"cy-tab-btn " + (activeTab === tab ? "active" : "")}
                   onClick={() => setActiveTab(tab)}
                 >
