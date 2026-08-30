@@ -1814,3 +1814,14 @@ body.lt-intro-open {
     width: 78px;
   }
 }
+
+/* 그리는 과정 재생 */
+.cy-oe-player {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+}
+.cy-oe-player canvas {
+  cursor: default;
+}
