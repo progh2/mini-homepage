@@ -1825,3 +1825,11 @@ body.lt-intro-open {
 .cy-oe-player canvas {
   cursor: default;
 }
+
+/* 도형 채움 토글 */
+.cy-oe-btn.is-on {
+  border-color: var(--point);
+  background: var(--mint-tint);
+  color: var(--point);
+  font-weight: bold;
+}
