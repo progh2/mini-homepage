@@ -221,7 +221,13 @@ export type BgmTrack = {
   startAt?: number;
 };
 
-/* "3:21" 이나 "1:02:30" 을 초로 바꿔 줍니다. */
+/* "3:21" 이나 "1:02:30" 을 초로 바꿔 줍니다.
+
+   지우지 마세요. 아래 bgmTracks 에서 startAt 을 적을 때 쓰라고 둔 도구입니다.
+   지금 설정이 startAt 을 안 쓸 뿐이라 호출하는 곳이 없어 보이지만, 한 영상에
+   여러 곡을 넣는 사람에게는 필요합니다. 쓰는 법:
+
+     { id: "...", title: "...", videoId: "...", startAt: secondsAt("3:21") } */
 export function secondsAt(timestamp: string): number {
   return timestamp
     .split(":")
