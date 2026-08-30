@@ -69,25 +69,25 @@ export const theme: LinkTreeTheme = {
     accent: "#3E7CB1",
     spiralFront: "#FFC93C",
 
-    pageTop: "#d4f0d4",
-    pageMid: "#b2dbb2",
-    pageBottom: "#8ac08a",
+    pageTop: "#DCEEFA",
+    pageMid: "#BEDDF3",
+    pageBottom: "#93C4E8",
 
-    frame: "#9CBBA6",
-    frameStrong: "#779683",
-    frameHover: "#8ac08a",
+    frame: "#A8CDE6",
+    frameStrong: "#6E9EC4",
+    frameHover: "#93C4E8",
 
-    heading: "#2F4A38",
-    subInk: "#547A60",
-    leaf: "#4CA771",
+    heading: "#24405C",
+    subInk: "#4A6E92",
+    leaf: "#3E7CB1",
 
-    point: "#ff6600",
-    pointSoft: "#ffa366",
+    point: "#F4A11C",
+    pointSoft: "#F8C878",
 
-    mint: "#f4f7f4",
-    mintTint: "#eef4ef",
-    blueTint: "#eef3f6",
+    mint: "#F2F7FB",
+    mintTint: "#E9F2F9",
+    blueTint: "#E6F1F8",
 
-    danger: "#c0392b"
+    danger: "#C0392B"
   }
 };
