@@ -271,6 +271,14 @@ export const weatherLocation: WeatherLocation = {
   timezone: "Asia/Seoul"
 };
 
+/* 이 미니홈피의 기준 시간대입니다. 왼쪽 위 TODAY 방문 수가 이 시간대의
+   자정에 0으로 돌아갑니다. IANA 시간대 이름을 적으세요.
+
+   weatherLocation.timezone 과 따로 두는 이유: 날씨는 보고 싶은 곳의 시간대를
+   쓰고, 방문 수는 내가 사는 곳의 하루를 따라야 합니다. 서울에 살면서 제주
+   날씨를 띄워 두는 경우처럼 둘이 갈릴 수 있습니다. 대개는 같은 값입니다. */
+export const siteTimezone = "Asia/Seoul";
+
 /* 홈 탭 아래쪽 한마디입니다. */
 export type GuestbookEntry = {
   id: number;

@@ -3,7 +3,7 @@
    Firebase 웹 설정값은 비밀키가 아니라 프로젝트 식별자이며, 배포된 JS 에 그대로 들어가는 것이
    정상적인 사용법입니다. 실제 접근 제어는 firestore.rules 가 담당합니다. */
 import { initializeApp, getApps, type FirebaseApp } from "firebase/app";
-import { ownerUid } from "@/config/linktree";
+import { ownerUid, siteTimezone } from "@/config/linktree";
 import {
   GoogleAuthProvider,
   getAuth,
@@ -182,9 +182,11 @@ export const isCounterEnabled = isGuestbookEnabled;
 
 export type VisitCounts = { total: number; today: number };
 
-/* 하루 경계를 방문자 시간대가 아니라 한국 시간으로 맞춥니다. 2026-08-14 형태입니다. */
-function seoulDay() {
-  return new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Seoul" }).format(new Date());
+/* 하루 경계를 방문자의 시간대가 아니라 미니홈피 기준 시간대로 맞춥니다.
+   방문자마다 자정이 다르면 TODAY 숫자가 사람마다 다르게 보입니다.
+   en-CA 로 포맷하면 2026-08-14 형태가 나옵니다. */
+function localDay() {
+  return new Intl.DateTimeFormat("en-CA", { timeZone: siteTimezone }).format(new Date());
 }
 
 /* 방문 한 번을 기록하고 갱신된 값을 돌려줍니다.
@@ -194,7 +196,7 @@ export async function recordVisit(): Promise<VisitCounts> {
   if (!store) throw new Error("방문 수 기능이 설정되지 않았습니다.");
 
   const ref = doc(store, "counters", "site");
-  const day = seoulDay();
+  const day = localDay();
 
   return runTransaction(store, async transaction => {
     const snapshot = await transaction.get(ref);
