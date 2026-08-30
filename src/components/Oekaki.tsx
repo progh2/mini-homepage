@@ -17,6 +17,7 @@ import {
   subscribeOekakiReplies,
   subscribeUser,
   type OekakiEntry,
+  type OekakiReplay,
   type OekakiReply,
   type SignedInUser
 } from "@/lib/firebase";
@@ -212,7 +213,7 @@ function OekakiPad({
   onDone,
   onCancel
 }: {
-  onDone: (dataUrl: string, comment: string, replay: { ops: string; count: number }) => Promise<void>;
+  onDone: (dataUrl: string, comment: string, replay: OekakiReplay) => Promise<void>;
   onCancel: () => void;
 }) {
   const viewRef = useRef<HTMLCanvasElement>(null);
@@ -1245,8 +1246,8 @@ export default function Oekaki() {
     return subscribeOekaki(60, viewer, setItems, () => setFailed(true));
   }, [viewer, me]);
 
-  const save = async (dataUrl: string, comment: string) => {
-    await addOekaki(dataUrl, comment);
+  const save = async (dataUrl: string, comment: string, replay: OekakiReplay) => {
+    await addOekaki(dataUrl, comment, replay);
     setOpen(false);
     setPage(0);
     setNotice("그림을 남겼어요. 고맙습니다!");
