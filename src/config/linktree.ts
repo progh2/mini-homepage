@@ -44,8 +44,7 @@ export const profileSections: ProfileSection[] = [
         kind: "text",
         lines: [
           "미림마이스터고등학교 정보·컴퓨터 교사입니다. 지루한 것에서 벗어나 재미난 것 속으로 풍덩~☆",
-          "도름스에서는 교사 인증을 마친 @평온나날로 활동합니다. 서울 · 고등학교 · 정보·컴퓨터.",
-          "BGM: Kevin MacLeod (incompetech.com), CC BY 3.0"
+          "도름스에서는 교사 인증을 마친 @평온나날로 활동합니다. 서울 · 고등학교 · 정보·컴퓨터."
         ]
       },
       {
@@ -230,6 +229,10 @@ export function secondsAt(timestamp: string): number {
     .reduce((total, part) => total * 60 + part, 0);
 }
 
+/* 플레이어 아래에 작게 붙는 저작권 표기입니다.
+   내 음악이거나 표기가 필요 없으면 빈 문자열로 두세요. 줄 자체가 사라집니다. */
+export const bgmCredit = "Kevin MacLeod (incompetech.com), CC BY 3.0";
+
 export const bgmTracks: BgmTrack[] = [
   { id: "suonatore-di-liuto", title: "Suonatore di Liuto", artist: "Kevin MacLeod", videoId: "ZffDOCZy_bA" },
   { id: "midnight-tale", title: "Midnight Tale", artist: "Kevin MacLeod", videoId: "qWmfZlw3EFI" },
@@ -237,6 +240,22 @@ export const bgmTracks: BgmTrack[] = [
   { id: "village-consort", title: "Village Consort", artist: "Kevin MacLeod", videoId: "-_n0ib4fA0g" },
   { id: "pippin-the-hunchback", title: "Pippin the Hunchback", artist: "Kevin MacLeod", videoId: "W4lM5cBIj6w" }
 ];
+
+/* 왼쪽 위 "TODAY IS.." 에 보여 줄 날씨의 기준 위치입니다.
+   Open-Meteo 를 키 없이 쓰므로 좌표만 있으면 됩니다.
+   내 동네 좌표는 지도 앱에서 확인하거나 https://open-meteo.com 에서 찾으면 됩니다. */
+export type WeatherLocation = {
+  latitude: number;
+  longitude: number;
+  /* IANA 시간대 이름입니다. 하루 경계와 기온 시각을 이 시간대로 맞춥니다. */
+  timezone: string;
+};
+
+export const weatherLocation: WeatherLocation = {
+  latitude: 37.478,
+  longitude: 126.936,
+  timezone: "Asia/Seoul"
+};
 
 /* 홈 탭 아래쪽 한마디입니다. */
 export type GuestbookEntry = {

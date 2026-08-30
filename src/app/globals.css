@@ -23,7 +23,7 @@ body.lt-intro-open {
   place-items: center;
   padding: 1.5rem;
   overflow: hidden;
-  background: var(--cream);
+  background: var(--paper);
 }
 
 .lt-intro::before {
@@ -89,8 +89,8 @@ body.lt-intro-open {
   padding: 0 1.45rem;
   border: 1px solid rgba(244,247,244,0.62);
   border-radius: 999px;
-  background: var(--brown);
-  color: var(--cream);
+  background: var(--accent);
+  color: var(--paper);
   cursor: pointer;
   font-family: var(--body);
   font-size: 1rem;

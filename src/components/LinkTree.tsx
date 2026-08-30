@@ -24,7 +24,7 @@ import {
   waveLinks
 } from "@/config/linktree";
 import { theme } from "@/config/theme";
-import { UNKNOWN_WEATHER, fetchSeoulWeather, formatTodayWeather } from "@/lib/weather";
+import { UNKNOWN_WEATHER, fetchWeather, formatTodayWeather } from "@/lib/weather";
 
 const ALL_TABS = ["home", "profile", "story", "board", "photo"] as const;
 type TabName = (typeof ALL_TABS)[number];
@@ -53,7 +53,7 @@ const spiralProps = {
   worldWidth: 0,
   worldHeight: 0,
   density: 0.5,
-  colorBack: theme.colors.cream,
+  colorBack: theme.colors.paper,
   colorFront: theme.colors.spiralFront,
   distortion: 0,
   strokeWidth: 0.5,
@@ -68,9 +68,9 @@ const spiralProps = {
 } satisfies Partial<SpiralProps>;
 
 const introStyle = {
-  "--cream": theme.colors.cream,
+  "--paper": theme.colors.paper,
   "--ink": theme.colors.ink,
-  "--brown": theme.colors.brown,
+  "--accent": theme.colors.accent,
   "--display": "'Pretendard', 'Noto Sans KR', system-ui, sans-serif",
   "--body": "'Pretendard', 'Noto Sans KR', system-ui, sans-serif"
 } as React.CSSProperties;
@@ -394,7 +394,7 @@ function TodayWeather() {
 
   useEffect(() => {
     let cancelled = false;
-    fetchSeoulWeather()
+    fetchWeather()
       .then(weather => {
         if (!cancelled) setLabel(formatTodayWeather(weather));
       })
