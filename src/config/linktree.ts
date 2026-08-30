@@ -1,12 +1,12 @@
 export const profile = {
-  teacherName: "서린",
+  teacherName: "함쌤",
   title: "함쌤 작업실",
   introTitle: "함쌤 작업실",
-  introDescription: "서울 고등학교 정보·컴퓨터 교사. 도름스에서 수업·업무용 앱을 만들고 나눕니다.",
+  introDescription: "미림마이스터고등학교 정보·컴퓨터 교사. 도름스에서 수업·업무용 앱을 만들고 나눕니다.",
   catalogTitle: "함쌤 작업실",
-  catalogDescription: "서울 고등학교 정보·컴퓨터 교사",
+  catalogDescription: "미림마이스터고등학교 정보·컴퓨터 교사",
   /* 왼쪽 프로필 사진입니다. public/assets/ 안에 파일을 넣고 경로를 적으세요. */
-  photo: { src: "/assets/profile.png", alt: "서린" },
+  photo: { src: "/assets/profile.png", alt: "함쌤" },
   /* 홈 탭 위쪽 미니룸 이미지입니다. public/assets/ 안에 파일을 넣고 경로를 적으세요. */
   miniroom: { src: "/assets/miniroom.png", alt: "함쌤 작업실 미니룸" },
   /* 아래는 탭 이름표입니다. 나만의 이름으로 바꿔도 되고, 안 바꾸면 기본값 그대로 나옵니다. */
@@ -17,7 +17,7 @@ export const profile = {
   photoLabel: "사진첩",
   photoSubtitlePrefix: "사진",
   /* 오른쪽 위, 옛날 싸이월드 주소창을 흉내 낸 문구입니다. */
-  displayUrl: "seorin.cyworld.com"
+  displayUrl: "hamssam.cyworld.com"
 };
 
 /* 프로필 탭에 들어가는 소개 글입니다. 문구만 바꿔서 쓰세요. */
@@ -43,14 +43,14 @@ export const profileSections: ProfileSection[] = [
       {
         kind: "text",
         lines: [
-          "서울 고등학교 정보·컴퓨터 교사입니다. 지루한 것에서 벗어나 재미난 것 속으로 풍덩~☆",
+          "미림마이스터고등학교 정보·컴퓨터 교사입니다. 지루한 것에서 벗어나 재미난 것 속으로 풍덩~☆",
           "도름스에서는 교사 인증을 마친 @평온나날로 활동합니다. 서울 · 고등학교 · 정보·컴퓨터.",
           "BGM: Suonatore di Liuto — Kevin MacLeod (incompetech.com), CC BY 3.0"
         ]
       },
       {
         kind: "list",
-        heading: "하고 있는 일",
+        heading: "제작한 프로그램",
         items: [
           "깃허브 레포 매니저",
           "기초 통계량 실험실",
