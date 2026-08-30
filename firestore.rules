@@ -18,11 +18,17 @@ rules_version = '2';
    create 조건의 approved == true 를 approved == false 로 바꾸면 됩니다. */
 service cloud.firestore {
   match /databases/{database}/documents {
-    match /guestbook/{entryId} {
-      allow read: if true;
 
-      allow create: if request.auth != null
-        && request.resource.data.keys().hasOnly(['uid', 'author', 'text', 'approved', 'createdAt'])
+    /* 비밀글을 볼 수 있는 주인장입니다.
+       src/config/linktree.ts 의 ownerUid 와 반드시 같아야 합니다.
+       한쪽만 고치면 비밀글이 실제로는 공개되거나, 주인장도 못 보게 됩니다. */
+    function ownerUid() {
+      return 'hIWd40GYSIgauA0cCOlIea8sOvx1';
+    }
+
+    /* 한줄평 문서의 형태 검사입니다. 공개글과 비밀글이 같은 모양을 씁니다. */
+    function isValidEntry() {
+      return request.resource.data.keys().hasOnly(['uid', 'author', 'text', 'approved', 'createdAt'])
         && request.resource.data.uid == request.auth.uid
         && request.resource.data.author is string
         && request.resource.data.author.size() >= 1
@@ -32,6 +38,20 @@ service cloud.firestore {
         && request.resource.data.text.size() <= 100
         && request.resource.data.approved == true
         && request.resource.data.createdAt == request.time;
+    }
+
+    /* 비밀글입니다. 읽기는 주인장만, 쓰기는 로그인한 누구나 가능합니다.
+       남긴 본인도 주인장이 아니면 자기 글을 다시 볼 수 없습니다. */
+    match /guestbookSecret/{entryId} {
+      allow read: if request.auth != null && request.auth.uid == ownerUid();
+      allow create: if request.auth != null && isValidEntry();
+      allow update, delete: if false;
+    }
+
+    match /guestbook/{entryId} {
+      allow read: if true;
+
+      allow create: if request.auth != null && isValidEntry();
 
       allow update, delete: if false;
     }
