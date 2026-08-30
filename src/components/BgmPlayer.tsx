@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useImperativeHandle, useRef, useState } from "react";
-import { bgmTracks } from "@/config/linktree";
+import { bgmCredit, bgmTracks } from "@/config/linktree";
 import { PLAYER_STATE, loadYouTubeApi, type YouTubePlayer } from "@/lib/youtube";
 
 /* 인트로 버튼을 누르는 순간 재생을 시작하려고 부모에게 start 를 넘겨줍니다.
@@ -281,7 +281,7 @@ export default function BgmPlayer({ ref }: { ref?: React.Ref<BgmHandle> }) {
       </div>
 
       {current.artist ? <div className="cy-bgm-artist">{current.artist}</div> : null}
-      <div className="cy-bgm-credit">Kevin MacLeod (incompetech.com), CC BY 3.0</div>
+      {bgmCredit ? <div className="cy-bgm-credit">{bgmCredit}</div> : null}
 
       {failed ? (
         <div className="cy-bgm-note">

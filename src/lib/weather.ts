@@ -1,6 +1,17 @@
-/* 서울 미림마이스터고 근처 날씨입니다. Open-Meteo 는 키 없이 브라우저에서 호출할 수 있습니다. */
-const WEATHER_URL =
-  "https://api.open-meteo.com/v1/forecast?latitude=37.478&longitude=126.936&current=temperature_2m,weather_code&timezone=Asia%2FSeoul";
+/* Open-Meteo 는 키 없이 브라우저에서 바로 호출할 수 있습니다.
+   기준 위치는 src/config/linktree.ts 의 weatherLocation 을 따릅니다.
+   여기에 좌표를 박아 두면 이 키트를 포크한 다른 지역 사람에게 남의 동네 날씨가 뜹니다. */
+import { weatherLocation } from "@/config/linktree";
+
+function weatherUrl() {
+  const params = new URLSearchParams({
+    latitude: String(weatherLocation.latitude),
+    longitude: String(weatherLocation.longitude),
+    current: "temperature_2m,weather_code",
+    timezone: weatherLocation.timezone
+  });
+  return `https://api.open-meteo.com/v1/forecast?${params}`;
+}
 
 /* 아직 못 불러왔거나 실패했을 때 쓰는 중립 표시입니다.
    여기서 특정 날씨(예: 맑음)를 기본값으로 두면, 비 오는 날 API 가 죽었을 때
@@ -27,8 +38,8 @@ export function labelWeatherCode(code: number): { label: string; emoji: string }
   return null;
 }
 
-export async function fetchSeoulWeather(): Promise<WeatherNow> {
-  const response = await fetch(WEATHER_URL);
+export async function fetchWeather(): Promise<WeatherNow> {
+  const response = await fetch(weatherUrl());
   if (!response.ok) throw new Error(`날씨를 불러오지 못했어요 (${response.status}).`);
 
   const data = (await response.json()) as {
