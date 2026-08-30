@@ -9,8 +9,12 @@ import {
   addGuestbookEntry,
   isCounterEnabled,
   isGuestbookEnabled,
+  canDeleteEntry,
+  canEditEntry,
+  deleteGuestbookEntry,
   isOwner,
   isSecretGuestbookEnabled,
+  updateGuestbookEntry,
   recordVisit,
   signInWithGoogle,
   signOutOfGoogle,
@@ -371,7 +375,112 @@ function GuestbookForm({ me }: { me: SignedInUser }) {
   );
 }
 
-const GUESTBOOK_FETCH_LIMIT = 30;
+type ListEntry = {
+  key: string;
+  author: string;
+  text: string;
+  date: string;
+  time?: string;
+  secret?: boolean;
+  uid?: string;
+  edited?: boolean;
+  /* Firestore 문서 id 입니다. 예시 글(linktree.ts)에는 없습니다. */
+  id?: string;
+};
+
+/* 한줄평 한 줄입니다. 볼 수 있는 사람에게만 수정·삭제 버튼을 답니다.
+   실제 권한은 firestore.rules 가 정합니다. 여기 판단은 화면 편의일 뿐입니다. */
+function GuestbookItem({ entry, viewer }: { entry: ListEntry; viewer: SignedInUser | null }) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(entry.text);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const stored = Boolean(entry.id);
+  const mayEdit = stored && canEditEntry(viewer, entry.uid ?? "");
+  const mayDelete = stored && canDeleteEntry(viewer, entry.uid ?? "");
+
+  const run = async (job: () => Promise<void>) => {
+    if (busy) return;
+    setBusy(true);
+    setError(null);
+    try {
+      await job();
+      setEditing(false);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "처리하지 못했어요.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const save = () => run(() => updateGuestbookEntry(entry.id!, Boolean(entry.secret), draft));
+  const remove = () => {
+    if (!window.confirm("이 한줄평을 지울까요? 되돌릴 수 없어요.")) return;
+    run(() => deleteGuestbookEntry(entry.id!, Boolean(entry.secret)));
+  };
+
+  return (
+    <div className="cy-guestbook-item">
+      <span className="cg-author">
+        {entry.secret ? <span className="cg-lock" title="주인장과 작성자만 보이는 비밀글">🔒</span> : null}
+        {entry.author} <span className="cg-colon">:</span>{" "}
+      </span>
+
+      {editing ? (
+        <span className="cg-edit">
+          <input
+            className="cg-edit-input"
+            value={draft}
+            onChange={e => setDraft(e.target.value)}
+            maxLength={GUESTBOOK_LIMITS.text}
+            aria-label="한줄평 고치기"
+          />
+          <button type="button" className="cg-act" onClick={save} disabled={busy}>
+            {busy ? "저장중" : "저장"}
+          </button>
+          <button
+            type="button"
+            className="cg-act"
+            onClick={() => {
+              setDraft(entry.text);
+              setEditing(false);
+              setError(null);
+            }}
+            disabled={busy}
+          >
+            취소
+          </button>
+        </span>
+      ) : (
+        <>
+          <span className="cg-text">{entry.text}</span>
+          <span className="cg-date">
+            ({entry.time ? `${entry.date} ${entry.time}` : entry.date}
+            {entry.edited ? ", 수정됨" : ""})
+          </span>
+          {mayEdit ? (
+            <button type="button" className="cg-act" onClick={() => setEditing(true)}>
+              수정
+            </button>
+          ) : null}
+          {mayDelete ? (
+            <button type="button" className="cg-act" onClick={remove} disabled={busy}>
+              삭제
+            </button>
+          ) : null}
+        </>
+      )}
+
+      {error ? <span className="cy-gb-message is-error">{error}</span> : null}
+    </div>
+  );
+}
+
+/* 넉넉히 가져와 클라이언트에서 나눕니다. 커서 기반 페이징이 정석이지만
+   공개글과 비밀글 두 컬렉션을 실시간 구독해 합치는 구조라 커서를 둘 관리해야
+   합니다. 개인 미니홈피 규모에서는 이 편이 단순하고 충분합니다. */
+const GUESTBOOK_FETCH_LIMIT = 200;
 const GUESTBOOK_PAGE_SIZE = 5;
 
 function GuestbookList() {
@@ -396,10 +505,9 @@ function GuestbookList() {
   }, []);
 
   const live = isGuestbookEnabled && !failed;
-  const entries: { key: string; author: string; text: string; date: string; time?: string; secret?: boolean }[] =
-    live && remote
-      ? remote.map(e => ({ key: e.id, ...e }))
-      : guestbook.map(e => ({ key: String(e.id), ...e }));
+  const entries: ListEntry[] = live && remote
+    ? remote.map(e => ({ key: e.id, ...e }))
+    : guestbook.map(e => ({ key: String(e.id), author: e.author, text: e.text, date: e.date }));
 
   const pageCount = Math.max(1, Math.ceil(entries.length / GUESTBOOK_PAGE_SIZE));
   const currentPage = Math.min(page, pageCount - 1);
@@ -420,14 +528,7 @@ function GuestbookList() {
           </div>
         ) : (
           pageEntries.map(c => (
-            <div key={c.key} className="cy-guestbook-item">
-              <span className="cg-author">
-                {c.secret ? <span className="cg-lock" title="주인장과 작성자만 보이는 비밀글">🔒</span> : null}
-                {c.author} <span className="cg-colon">:</span>{" "}
-              </span>
-              <span className="cg-text">{c.text}</span>
-              <span className="cg-date">({c.time ? `${c.date} ${c.time}` : c.date})</span>
-            </div>
+            <GuestbookItem key={c.key} entry={c} viewer={viewer} />
           ))
         )}
       </div>
