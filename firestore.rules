@@ -1,13 +1,18 @@
 rules_version = '2';
 
 /* 한줄평(방명록) 보안 규칙입니다.
-   로그인 없이 누구나 한 줄을 남길 수 있고, 남기면 바로 공개됩니다.
-   대신 아래 조건으로 형태를 제한해 아무 데이터나 넣지 못하게 막습니다.
+   읽기는 누구나, 쓰기는 구글 로그인한 사람만 가능합니다.
 
-   - 필드는 author, text, approved, createdAt 네 개만 허용
-   - 이름 20자, 본문 100자 제한
+   - 필드는 uid, author, text, approved, createdAt 다섯 개만 허용
+   - uid 는 로그인한 본인의 uid 여야 함 (남의 이름으로 못 씀)
+   - 이름 50자(구글 프로필 이름), 본문 100자 제한
    - createdAt 은 클라이언트가 정할 수 없고 서버 시간만 허용
    - 한 번 쓴 글은 클라이언트에서 수정·삭제 불가 (콘솔에서만 삭제)
+
+   author 는 클라이언트가 보낸 값이라 로그인한 사람이 마음먹으면 표시 이름을
+   바꿔 넣을 수 있습니다. 다만 uid 가 함께 남으므로 누가 썼는지는 추적됩니다.
+   이름까지 강제하려면 author == request.auth.token.name 을 추가하면 되는데,
+   구글 계정에 표시 이름이 없는 경우 토큰에 name 이 빠져 쓰기가 막힙니다.
 
    승인제로 바꾸려면: read 조건을 resource.data.approved == true 로 바꾸고,
    create 조건의 approved == true 를 approved == false 로 바꾸면 됩니다. */
@@ -16,10 +21,12 @@ service cloud.firestore {
     match /guestbook/{entryId} {
       allow read: if true;
 
-      allow create: if request.resource.data.keys().hasOnly(['author', 'text', 'approved', 'createdAt'])
+      allow create: if request.auth != null
+        && request.resource.data.keys().hasOnly(['uid', 'author', 'text', 'approved', 'createdAt'])
+        && request.resource.data.uid == request.auth.uid
         && request.resource.data.author is string
         && request.resource.data.author.size() >= 1
-        && request.resource.data.author.size() <= 20
+        && request.resource.data.author.size() <= 50
         && request.resource.data.text is string
         && request.resource.data.text.size() >= 1
         && request.resource.data.text.size() <= 100

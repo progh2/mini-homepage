@@ -44,7 +44,27 @@ npm run dev
 
 ## 방명록·방문자 수를 실제로 움직이려면 (선택)
 
-기본 상태에서는 방명록에 예시 글만 보이고 방문자 수도 늘어나지 않습니다. 방문자가 직접 글을 남기고 방문 수가 실제로 쌓이길 원하면 Firebase(Firestore) 프로젝트를 하나 만들어 `.env.local`에 `NEXT_PUBLIC_FIREBASE_*` 값들을 채우고, `firestore.rules`를 그 프로젝트에 배포하세요. Firebase 웹 설정값은 비밀키가 아니라 배포된 JS에 그대로 노출되는 값이며, 실제 접근 제한은 `firestore.rules`가 담당합니다. 이 값을 채우지 않으면 그냥 예시 데이터로 조용히 동작합니다.
+기본 상태에서는 방명록에 예시 글만 보이고 방문자 수도 늘어나지 않습니다. 실제로 쌓이게 하려면 Firebase 프로젝트를 하나 만들어 연결하세요.
+
+방명록(한줄평)은 **구글 로그인한 사람만** 남길 수 있습니다. 이름 칸이 자유 입력이면 사칭을 막을 수 없어서, 이름은 구글 프로필에서 가져오고 문서에 계정 uid가 함께 남습니다. 로그인하지 않은 사람에게는 입력 칸 대신 작은 로그인 안내만 보입니다.
+
+### 설정 절차
+
+1. [Firebase 콘솔](https://console.firebase.google.com)에서 프로젝트를 만듭니다.
+2. **Authentication → Sign-in method** 에서 **Google** 을 사용 설정합니다.
+3. **Authentication → Settings → 승인된 도메인** 에 배포 주소의 도메인을 추가합니다. GitHub Pages라면 `<내 아이디>.github.io` 입니다. 로컬 개발용 `localhost` 는 기본으로 들어 있습니다.
+   - 이 단계를 빼먹으면 배포된 사이트에서 로그인 팝업이 `auth/unauthorized-domain` 으로 막힙니다.
+4. **Firestore Database** 를 만듭니다.
+5. 프로젝트 설정에서 **웹 앱**을 등록하고 config 값 6개를 받아옵니다.
+6. `.env.example` 을 참고해 `.env.local` 에 `NEXT_PUBLIC_FIREBASE_*` 6개를 채웁니다.
+7. GitHub Pages로 배포한다면 같은 값 6개를 저장소의 **Settings → Secrets and variables → Actions** 에 같은 이름으로 넣습니다. `deploy.yml` 이 알아서 씁니다.
+8. `firestore.rules` 를 그 프로젝트에 배포합니다.
+
+```bash
+npx firebase-tools deploy --only firestore:rules
+```
+
+Firebase 웹 설정값은 비밀키가 아니라 프로젝트 식별자입니다. 배포된 JS에 그대로 노출되는 것이 정상이며, 실제 접근 제한은 `firestore.rules` 가 담당합니다. 이 값을 채우지 않으면 그냥 예시 데이터로 조용히 동작합니다.
 
 ## AI에게 맡길 때
 

@@ -259,7 +259,9 @@ body.lt-intro-open {
   font-size: 0.8rem;
   line-height: 1.4;
   color: #444;
-  margin-bottom: 20px;
+  /* 왼쪽 패널 세로 공간이 빠듯합니다. 여기가 남는 공간을 흡수하는 자리라
+     여백을 줄이면 아래 내용이 그만큼 올라옵니다. */
+  margin-bottom: 12px;
   flex: 1; /* 가변 공간 차지 */
   overflow-y: auto;
 }
@@ -992,7 +994,6 @@ body.lt-intro-open {
   border-top: 1px solid #eee;
 }
 
-.cy-gb-author,
 .cy-gb-text {
   font-family: inherit;
   font-size: 0.75rem;
@@ -1003,17 +1004,11 @@ body.lt-intro-open {
   background: #fff;
 }
 
-.cy-gb-author {
-  width: 80px;
-  flex-shrink: 0;
-}
-
 .cy-gb-text {
   flex: 1;
   min-width: 120px;
 }
 
-.cy-gb-author:focus,
 .cy-gb-text:focus {
   outline: none;
   border-color: #9CBBA6;
@@ -1039,6 +1034,59 @@ body.lt-intro-open {
 .cy-gb-submit:disabled {
   opacity: 0.6;
   cursor: default;
+}
+
+/* 방명록: 구글 로그인 안내와 로그인한 사람의 입력 줄 */
+.cy-gb-signin {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 10px;
+  font-size: 0.72rem;
+  color: #888;
+}
+.cy-gb-signin-text {
+  color: #888;
+}
+.cy-gb-google {
+  padding: 3px 8px;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  background: #fff;
+  color: #555;
+  font-size: 0.72rem;
+  font-family: inherit;
+  cursor: pointer;
+}
+.cy-gb-google:hover:not(:disabled) {
+  border-color: #9CBBA6;
+  color: #ff6600;
+}
+.cy-gb-google:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+/* 로그인한 사람 이름과 로그아웃. 입력 줄 아래에 작게 붙습니다. */
+.cy-gb-who {
+  flex-basis: 100%;
+  margin-top: 4px;
+  font-size: 0.68rem;
+  color: #999;
+}
+.cy-gb-signout {
+  margin-left: 6px;
+  padding: 0;
+  border: none;
+  background: none;
+  color: #999;
+  font-size: 0.68rem;
+  font-family: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+}
+.cy-gb-signout:hover {
+  color: #ff6600;
 }
 
 /* 전송 결과 안내. 폼 아래 한 줄을 차지합니다. */
