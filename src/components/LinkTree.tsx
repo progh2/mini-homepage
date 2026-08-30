@@ -77,10 +77,28 @@ const spiralProps = {
   maxPixelCount: 1_500_000
 } satisfies Partial<SpiralProps>;
 
-const introStyle = {
+/* theme.ts 의 값을 CSS 변수로 만들어 최상위 요소에 심습니다. globals.css 가
+   var(--이름) 으로 받습니다. 진입 화면도 이 안에 있으므로 같은 변수를 씁니다.
+   새 색을 더하려면 theme.ts, 이 목록, globals.css 를 함께 고치세요. */
+const rootStyle = {
   "--paper": theme.colors.paper,
   "--ink": theme.colors.ink,
   "--accent": theme.colors.accent,
+  "--page-top": theme.colors.pageTop,
+  "--page-mid": theme.colors.pageMid,
+  "--page-bottom": theme.colors.pageBottom,
+  "--frame": theme.colors.frame,
+  "--frame-strong": theme.colors.frameStrong,
+  "--frame-hover": theme.colors.frameHover,
+  "--heading": theme.colors.heading,
+  "--sub-ink": theme.colors.subInk,
+  "--leaf": theme.colors.leaf,
+  "--point": theme.colors.point,
+  "--point-soft": theme.colors.pointSoft,
+  "--mint": theme.colors.mint,
+  "--mint-tint": theme.colors.mintTint,
+  "--blue-tint": theme.colors.blueTint,
+  "--danger": theme.colors.danger,
   "--display": "'Pretendard', 'Noto Sans KR', system-ui, sans-serif",
   "--body": "'Pretendard', 'Noto Sans KR', system-ui, sans-serif"
 } as React.CSSProperties;
@@ -102,7 +120,7 @@ function IntroOverlay({ onBrowse }: { onBrowse: () => void }) {
   }, []);
 
   return (
-    <div className="lt-intro" style={introStyle}>
+    <div className="lt-intro">
       <Spiral className="lt-intro-spiral" {...spiralProps} />
       <div className="lt-intro-card">
         <span className="lt-intro-title">{profile.introTitle}</span>
@@ -659,7 +677,7 @@ export default function LinkTree() {
   /* 본문을 항상 그려 두고 인트로를 그 위에 덮습니다. (.lt-intro 는 position: fixed 입니다)
      BGM 플레이어가 미리 준비되어 있어야 인트로 클릭 한 번으로 재생이 시작됩니다. */
   return (
-    <div className="cy-root">
+    <div className="cy-root" style={rootStyle}>
       <div className="cy-background-pattern"></div>
 
       {/* 인트로는 fixed 로 덮기만 하므로 뒤 콘텐츠가 DOM 에 그대로 살아 있습니다.
