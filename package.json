@@ -3,12 +3,12 @@
   "version": "1.0.0",
   "private": false,
   "license": "MIT",
-  "author": "ljh6479z",
+  "author": "progh2",
   "repository": {
     "type": "git",
-    "url": "https://github.com/ljh6479z/mini-homepage.git"
+    "url": "https://github.com/progh2/mini-homepage.git"
   },
-  "homepage": "https://ljh6479z.github.io/mini-homepage/",
+  "homepage": "https://progh2.github.io/mini-homepage/",
   "scripts": {
     "dev": "next dev",
     "build": "next build",

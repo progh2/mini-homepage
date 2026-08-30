@@ -1,14 +1,14 @@
 export const profile = {
-  teacherName: "",
-  title: "나의 링크트리",
-  introTitle: "나의 링크트리",
-  introDescription: "",
-  catalogTitle: "게시판",
-  catalogDescription: "",
+  teacherName: "서린",
+  title: "함쌤 작업실",
+  introTitle: "함쌤 작업실",
+  introDescription: "서울 고등학교 정보·컴퓨터 교사. 도름스에서 수업·업무용 앱을 만들고 나눕니다.",
+  catalogTitle: "함쌤 작업실",
+  catalogDescription: "서울 고등학교 정보·컴퓨터 교사",
   /* 왼쪽 프로필 사진입니다. public/assets/ 안에 파일을 넣고 경로를 적으세요. */
-  photo: { src: "", alt: "" },
+  photo: { src: "/assets/profile.png", alt: "서린" },
   /* 홈 탭 위쪽 미니룸 이미지입니다. public/assets/ 안에 파일을 넣고 경로를 적으세요. */
-  miniroom: { src: "", alt: "" },
+  miniroom: { src: "/assets/miniroom.png", alt: "함쌤 작업실 미니룸" },
   /* 아래는 탭 이름표입니다. 나만의 이름으로 바꿔도 되고, 안 바꾸면 기본값 그대로 나옵니다. */
   storyLabel: "연재물",
   boardLabel: "게시판",
@@ -17,7 +17,7 @@ export const profile = {
   photoLabel: "사진첩",
   photoSubtitlePrefix: "사진",
   /* 오른쪽 위, 옛날 싸이월드 주소창을 흉내 낸 문구입니다. */
-  displayUrl: ""
+  displayUrl: "seorin.cyworld.com"
 };
 
 /* 프로필 탭에 들어가는 소개 글입니다. 문구만 바꿔서 쓰세요. */
@@ -34,12 +34,61 @@ export type ProfileSection = {
   blocks: ProfileBlock[];
 };
 
-export const profileSections: ProfileSection[] = [];
+export const profileSections: ProfileSection[] = [
+  {
+    id: "intro",
+    title: "소개",
+    subtitle: "도름스 @평온나날",
+    blocks: [
+      {
+        kind: "text",
+        lines: [
+          "서울 고등학교 정보·컴퓨터 교사입니다. 지루한 것에서 벗어나 재미난 것 속으로 풍덩~☆",
+          "도름스에서는 교사 인증을 마친 @평온나날로 활동합니다. 서울 · 고등학교 · 정보·컴퓨터.",
+          "BGM: Suonatore di Liuto — Kevin MacLeod (incompetech.com), CC BY 3.0"
+        ]
+      },
+      {
+        kind: "list",
+        heading: "하고 있는 일",
+        items: [
+          "깃허브 레포 매니저",
+          "기초 통계량 실험실",
+          "급식쪽지",
+          "직업계고 AI 면접 모의고사 시뮬레이터",
+          "급식 식단 업로드 양식 생성기",
+          "캣모아",
+          "인터넷 랙 줄여주는 팁"
+        ]
+      },
+      {
+        kind: "contact",
+        items: [
+          {
+            label: "도름스",
+            value: "dorms.school/u/평온나날",
+            href: "https://dorms.school/u/17074aa0-a3a8-44f8-b40a-d7c044c5ade6"
+          },
+          {
+            label: "Instagram",
+            value: "@gihunham",
+            href: "https://www.instagram.com/gihunham/"
+          },
+          {
+            label: "GitHub",
+            value: "github.com/progh2",
+            href: "https://github.com/progh2"
+          }
+        ]
+      }
+    ]
+  }
+];
 
-/* 미요툰 회차는 src/config/miyotoon.ts 에 있습니다. */
+/* 연재물 회차는 src/config/miyotoon.ts 에 있습니다. */
 export { episodes, type Episode } from "./miyotoon";
 
-/* 미요앱 탭입니다. 앱과 게시글 링크를 여기에 추가하세요.
+/* 게시판 탭입니다. 앱과 게시글 링크를 여기에 추가하세요.
    preview 는 화면 미리보기 이미지입니다. public/assets/apps 에 넣고 경로를 적으세요.
    생략하면 썸네일 없이 제목만 나옵니다. */
 export type BoardPost = {
@@ -52,7 +101,71 @@ export type BoardPost = {
   preview?: { src: string; alt: string };
 };
 
-export const boardPosts: BoardPost[] = [];
+export const boardPosts: BoardPost[] = [
+  {
+    id: "catmoa",
+    category: "앱",
+    title: "캣모아",
+    summary: "교사 일정 수집 고양이. 한글·PDF·스크린샷에서 일정 추출",
+    date: "2026-08-29",
+    href: "https://progh2.github.io/catmoa/#how",
+    preview: { src: "/assets/apps/catmoa.png", alt: "캣모아" }
+  },
+  {
+    id: "schoollunchmemo",
+    category: "앱",
+    title: "급식쪽지",
+    summary: "학교 급식·학사일정을 포스트잇처럼 바탕화면에",
+    date: "2026-08-27",
+    href: "https://progh2.github.io/schoollunchmemo/",
+    preview: { src: "/assets/apps/schoollunchmemo.jpeg", alt: "급식쪽지" }
+  },
+  {
+    id: "stat-lab",
+    category: "앱",
+    title: "기초 통계량 실험실",
+    summary: "숫자로 데이터 읽기",
+    date: "2026-08-26",
+    href: "https://progh2.github.io/stat-lab/",
+    preview: { src: "/assets/apps/stat-lab.png", alt: "기초 통계량 실험실" }
+  },
+  {
+    id: "meal-converter",
+    category: "앱",
+    title: "급식 식단 업로드 양식 생성기",
+    summary: "서울시교육청 연구정보원 학교 홈페이지 mlsvTmplat",
+    date: "2026-08-25",
+    href: "https://progh2.github.io/mirim-meal-converter/",
+    preview: { src: "/assets/apps/meal-converter.png", alt: "급식 식단 업로드 양식 생성기" }
+  },
+  {
+    id: "ai-interview",
+    category: "앱",
+    title: "직업계고 AI 면접 모의고사 시뮬레이터",
+    summary: "학과·면접 유형 선택 후 AI 면접관 질문/피드백",
+    date: "2026-08-24",
+    href: "https://partyrock.aws/u/hamteacher/ksGF_z3I_3/AI",
+    preview: { src: "/assets/apps/ai-interview.png", alt: "직업계고 AI 면접 모의고사 시뮬레이터" }
+  },
+  {
+    id: "internet-lag-tips",
+    category: "앱",
+    title: "인터넷 랙 줄여주는 팁",
+    summary: "클릭 한 번으로 랙 설정 적용 GUI",
+    date: "2026-08-24",
+    href: "https://github.com/progh2/internet-lag-tips",
+    preview: { src: "/assets/apps/internet-lag-tips.png", alt: "인터넷 랙 줄여주는 팁" }
+  },
+  {
+    id: "repo-manager",
+    category: "앱",
+    title: "깃허브 레포 매니저",
+    summary: "깃허브 저장소 관리 프로그램",
+    date: "2026-08-24",
+    href: "https://github.com/progh2/repomanager",
+    preview: { src: "/assets/apps/repo-manager.png", alt: "깃허브 레포 매니저" }
+  }
+];
 
 /* 사진첩 탭입니다. */
 export type PhotoItem = {
@@ -61,7 +174,11 @@ export type PhotoItem = {
   src: string;
 };
 
-export const photos: PhotoItem[] = [];
+export const photos: PhotoItem[] = [
+  { id: "classroom", name: "컴퓨터실", src: "/assets/album-classroom.png" },
+  { id: "desk", name: "코딩 책상", src: "/assets/album-desk.png" },
+  { id: "afternoon", name: "오후 실습실", src: "/assets/album-afternoon.png" }
+];
 
 /* 왼쪽 아래 파도타기 목록입니다.
    고정 규칙: 첫 번째 항목은 반드시 "도름스 커뮤니티 나의 활동" 링크입니다. 지우지 마세요. */
@@ -72,7 +189,21 @@ export type WaveLink = {
 };
 
 export const waveLinks: WaveLink[] = [
-  { id: "dorms-activity", label: "도름스 커뮤니티 나의 활동", href: "" }
+  {
+    id: "dorms-activity",
+    label: "도름스 커뮤니티 나의 활동",
+    href: "https://dorms.school/u/17074aa0-a3a8-44f8-b40a-d7c044c5ade6"
+  },
+  {
+    id: "instagram",
+    label: "Instagram",
+    href: "https://www.instagram.com/gihunham/"
+  },
+  {
+    id: "github",
+    label: "GitHub",
+    href: "https://github.com/progh2"
+  }
 ];
 
 /* 미니홈피 BGM 입니다. 유튜브 영상을 음원으로 씁니다.
@@ -99,7 +230,14 @@ export function secondsAt(timestamp: string): number {
     .reduce((total, part) => total * 60 + part, 0);
 }
 
-export const bgmTracks: BgmTrack[] = [];
+export const bgmTracks: BgmTrack[] = [
+  {
+    id: "suonatore-di-liuto",
+    title: "Suonatore di Liuto — Kevin MacLeod (incompetech.com), CC BY 3.0",
+    artist: "Kevin MacLeod",
+    videoId: "ZffDOCZy_bA"
+  }
+];
 
 /* 홈 탭 아래쪽 한마디입니다. */
 export type GuestbookEntry = {
