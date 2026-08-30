@@ -6,16 +6,108 @@ DoRms 커뮤니티 구성원이 옛날 싸이월드 미니홈피 느낌의 링�
 
 ## 담긴 기능
 
-- 첫 화면 스파이럴 인트로 → 홈(미니룸, 방명록) → 탭별 콘텐츠로 이어지는 미니홈피 구조
-- 왼쪽 프로필 사진, 미니룸 이미지, 자기소개 섹션(소개 글 / 하고 있는 일들 목록 / 연락처) — 모두 내 것으로 교체
+- 첫 화면 스파이럴 인트로에서 홈(미니룸, 방명록)으로, 다시 탭별 콘텐츠로 이어지는 미니홈피 구조
+- 왼쪽 프로필 사진, 미니룸 이미지, 자기소개 섹션(소개 글 / 하고 있는 일들 목록 / 연락처). 모두 내 것으로 교체
 - 게시판 탭 (앱·글 등 링크 모음, 미리보기 이미지 지원, 탭 이름도 바꿀 수 있음)
 - 연재물 탭 (웹툰처럼 화별로 이어지는 이미지 컷, 선택 기능. 안 쓰면 탭 자체가 숨겨짐)
 - 사진첩 탭 (탭 이름도 바꿀 수 있음)
-- 왼쪽 아래 파도타기(자주 가는 곳) 목록 — 첫 항목은 도름스 활동 링크로 고정
+- 왼쪽 아래 파도타기(자주 가는 곳) 목록. 첫 항목은 도름스 활동 링크로 고정
 - 미니홈피 배경음악(BGM) 플레이어 (유튜브 영상 기반, 선택 기능)
-- 방명록(한줄평) — 기본은 예시 글만 보이고, Firebase를 연결하면 방문자가 직접 남길 수 있음
-- 왼쪽 위 TODAY / TOTAL 방문자 수 — Firebase 연결 시 실제 방문 수로 집계
-- `main`에 푸시하면 GitHub Pages에 자동 배포되는 워크플로 포함
+- 왼쪽 위 날씨 (Open-Meteo, 키 없이 동작. 위치는 설정에서 바꿉니다)
+- 방명록(한줄평). Firebase를 연결하면 아래 기능이 살아납니다
+  - 구글 로그인한 사람만 작성 (이름은 구글 프로필에서 자동)
+  - 비밀글 (주인장과 작성자 본인만 열람)
+  - 작성자 본인 수정·삭제, 주인장은 남의 글도 삭제
+  - 최신순 정렬, 5개씩 페이징, 실시간 반영
+- 왼쪽 위 TODAY / TOTAL 방문자 수. Firebase 연결 시 실제 방문 수로 집계
+- `main`에 푸시하면 GitHub Pages에 자동 배포되는 워크플로 포함 (lint 검사 포함)
+
+## 전체 구조
+
+고칠 곳은 `src/config` 세 파일이고, 나머지는 그 값을 읽어 그리기만 합니다. Firebase는 연결하지 않아도 사이트가 그대로 동작합니다.
+
+```mermaid
+flowchart LR
+    subgraph CFG["src/config 여기만 고치면 됩니다"]
+        LT["linktree.ts<br/>프로필·게시판·사진첩<br/>파도타기·BGM·ownerUid<br/>날씨 위치"]
+        TH["theme.ts<br/>진입 화면 색"]
+        MY["miyotoon.ts<br/>연재물 회차"]
+    end
+
+    subgraph APP["정적 사이트 (GitHub Pages)"]
+        UI["LinkTree.tsx<br/>탭·방명록·방문수"]
+        BG["BgmPlayer.tsx"]
+        LIB["lib/firebase.ts<br/>lib/weather.ts<br/>lib/youtube.ts"]
+    end
+
+    subgraph EXT["외부 서비스 (모두 선택)"]
+        AUTH["Firebase Auth<br/>구글 로그인"]
+        FS[("Firestore<br/>guestbook<br/>guestbookSecret<br/>counters")]
+        OM["Open-Meteo<br/>날씨"]
+        YT["YouTube<br/>IFrame API"]
+    end
+
+    LT --> UI
+    LT --> BG
+    LT --> LIB
+    TH --> UI
+    MY --> UI
+
+    UI --> LIB
+    BG --> LIB
+
+    LIB --> AUTH
+    LIB --> FS
+    LIB --> OM
+    LIB --> YT
+
+    RULES["firestore.rules<br/>실제 권한은 여기서 정해집니다"] -.검사.-> FS
+```
+
+`NEXT_PUBLIC_FIREBASE_*` 를 비워 두면 `lib/firebase.ts` 가 조용히 꺼지고, 방명록은 `linktree.ts` 의 예시 글만 보여 줍니다.
+
+### 방명록이 저장되는 과정
+
+```mermaid
+sequenceDiagram
+    actor V as 방문자
+    participant P as 미니홈피 화면
+    participant A as Firebase Auth
+    participant F as Firestore
+    participant R as firestore.rules
+
+    V->>P: 구글 로그인 버튼
+    P->>A: signInWithPopup
+    A-->>P: uid, 표시 이름
+    Note over P: 이름 칸이 사라지고<br/>말 칸 하나만 남습니다
+
+    V->>P: 한마디 입력 후 남기기
+    P->>F: addDoc(uid, author, text, createdAt=서버시간)
+    Note over P,F: 비밀글이면 guestbookSecret<br/>아니면 guestbook
+
+    F->>R: 이 쓰기를 허용하나
+    R-->>F: 로그인했고 문서 uid가 본인 uid면 허용
+    F-->>P: 저장 완료
+    F-->>P: onSnapshot 으로 목록 즉시 갱신
+```
+
+### 방명록을 누가 볼 수 있나
+
+Firestore 규칙은 조회 결과를 걸러 주지 않습니다. 문서마다 달라지는 조건을 걸면 질의 자체가 거부되므로, 보는 사람에 따라 질의를 다르게 보냅니다.
+
+```mermaid
+flowchart TD
+    START["방명록 목록 불러오기"] --> OPEN["guestbook<br/>공개글은 누구나"]
+    START --> WHO{"로그인했나"}
+    WHO -->|"아니오"| NONE["비밀글 안 가져옴"]
+    WHO -->|"예"| OWNER{"주인장인가"}
+    OWNER -->|"예"| ALL["guestbookSecret 전체<br/>orderBy(createdAt)"]
+    OWNER -->|"아니오"| MINE["guestbookSecret 중 내 글만<br/>where(uid == 내 uid)"]
+    OPEN --> MERGE["시각 내림차순으로 합쳐서<br/>5개씩 페이징"]
+    ALL --> MERGE
+    MINE --> MERGE
+    NONE --> MERGE
+```
 
 ## 빠른 시작
 
@@ -34,9 +126,9 @@ npm run dev
 
 이 저장소를 처음 열면 원 저작자(미요Lab)의 사진·소개글·게시판 예시가 이미 채워져 있습니다. 그대로 두지 말고 내 것으로 바꾸세요.
 
-1. `src/config/linktree.ts` — 표시 이름, 소개 문구, 프로필 사진·미니룸 이미지, 게시판·사진첩·연재 탭 이름(`profile.boardLabel` 등), 자기소개 섹션, 게시판, 사진첩, 파도타기, BGM 목록, 방명록 예시 글이 모두 여기 있습니다.
-2. `src/config/miyotoon.ts` — 연재물(웹툰형) 탭을 쓸 때 회차와 컷 이미지 경로를 넣습니다. 안 쓰면 이 파일을 비워도 됩니다(탭이 자동으로 숨겨집니다).
-3. `src/config/theme.ts` — 전체 색상(`colors`)과 아이콘 배경색(`pillColors`)을 바꿉니다.
+1. `src/config/linktree.ts` : 표시 이름, 소개 문구, 프로필 사진·미니룸 이미지, 게시판·사진첩·연재 탭 이름(`profile.boardLabel` 등), 자기소개 섹션, 게시판, 사진첩, 파도타기, BGM 목록, 방명록 예시 글이 모두 여기 있습니다.
+2. `src/config/miyotoon.ts` : 연재물(웹툰형) 탭을 쓸 때 회차와 컷 이미지 경로를 넣습니다. 안 쓰면 이 파일을 비워도 됩니다(탭이 자동으로 숨겨집니다).
+3. `src/config/theme.ts` : 진입 화면(스파이럴 인트로)의 색을 바꿉니다. 미니홈피 본문 색은 아직 `src/app/globals.css` 에 직접 들어 있어 여기서 바꿔도 반영되지 않습니다.
 4. 왼쪽 아래 파도타기 목록의 첫 번째 항목인 `도름스 커뮤니티 나의 활동`은 항상 맨 위에 둡니다.
 5. 프로필 사진·미니룸 이미지·게시판 미리보기·사진첩 사진은 `public/assets/` 안에 미리 넣어두고 그 경로를 config에 적습니다.
 6. 저장소 이름을 "meyo-lab"이 아닌 나만의 이름으로 정했다면 `package.json`의 `name`, `homepage`, `repository.url`도 맞춰 바꿉니다.
@@ -47,6 +139,24 @@ npm run dev
 기본 상태에서는 방명록에 예시 글만 보이고 방문자 수도 늘어나지 않습니다. 실제로 쌓이게 하려면 Firebase 프로젝트를 하나 만들어 연결하세요.
 
 방명록(한줄평)은 **구글 로그인한 사람만** 남길 수 있습니다. 이름 칸이 자유 입력이면 사칭을 막을 수 없어서, 이름은 구글 프로필에서 가져오고 문서에 계정 uid가 함께 남습니다. 로그인하지 않은 사람에게는 입력 칸 대신 작은 로그인 안내만 보입니다.
+
+### 누가 무엇을 할 수 있나
+
+| | 공개글 읽기 | 비밀글 읽기 | 쓰기 | 수정 | 삭제 |
+|---|---|---|---|---|---|
+| 로그아웃 | O | X | X | X | X |
+| 로그인한 사람 | O | 자기 글만 | O | 자기 글만 | 자기 글만 |
+| 주인장 | O | 전부 | O | 자기 글만 | **전부** |
+
+주인장에게 **수정** 권한은 주지 않았습니다. 남이 한 말의 내용을 바꾸면 그 사람이 하지 않은 말이 그 사람 이름으로 남습니다. 부적절한 글은 지우는 것으로 충분합니다.
+
+이 표는 `firestore.rules` 가 강제합니다. 화면의 버튼 표시는 편의일 뿐이라, 규칙을 배포하지 않으면 실제로는 막히지 않습니다.
+
+### 주인장 지정
+
+비밀글을 볼 주인장은 `src/config/linktree.ts` 의 `ownerUid` 와 `firestore.rules` 의 `ownerUid()` **두 곳**에 같은 값으로 적어야 합니다. 값은 Firebase 콘솔의 Authentication > Users 에서 확인합니다.
+
+한쪽만 고치면 비밀글이 공개되거나 주인장도 못 봅니다. `ownerUid` 를 빈 문자열로 두면 비밀글 체크박스가 아예 나오지 않습니다.
 
 ### 설정 절차
 
