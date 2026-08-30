@@ -40,10 +40,15 @@ service cloud.firestore {
         && request.resource.data.createdAt == request.time;
     }
 
-    /* 비밀글입니다. 읽기는 주인장만, 쓰기는 로그인한 누구나 가능합니다.
-       남긴 본인도 주인장이 아니면 자기 글을 다시 볼 수 없습니다. */
+    /* 비밀글입니다. 쓰기는 로그인한 누구나, 읽기는 주인장과 작성자 본인만.
+
+       규칙은 목록 질의의 필터가 아닙니다. resource.data.uid 조건은 문서마다
+       달라지므로, 주인장이 아닌 사람은 질의에 where("uid","==",본인) 을 붙여야
+       통과합니다. 클라이언트가 그렇게 보냅니다(src/lib/firebase.ts).
+       필터 없이 컬렉션 전체를 훑는 질의는 주인장만 통과합니다. */
     match /guestbookSecret/{entryId} {
-      allow read: if request.auth != null && request.auth.uid == ownerUid();
+      allow read: if request.auth != null
+        && (request.auth.uid == ownerUid() || resource.data.uid == request.auth.uid);
       allow create: if request.auth != null && isValidEntry();
       allow update, delete: if false;
     }
