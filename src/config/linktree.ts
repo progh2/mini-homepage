@@ -199,6 +199,11 @@ export const waveLinks: WaveLink[] = [
     id: "github",
     label: "GitHub",
     href: "https://github.com/progh2"
+  },
+  {
+    id: "meyo-lab",
+    label: "미요Lab 미요앱 실험실",
+    href: "https://pcallpang.github.io/meyo-lab/"
   }
 ];
 
