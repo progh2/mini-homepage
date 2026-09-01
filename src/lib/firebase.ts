@@ -17,6 +17,7 @@ import {
   addDoc,
   collection,
   deleteDoc,
+  deleteField,
   doc,
   getDoc,
   setDoc,
@@ -378,8 +379,15 @@ export type OekakiEntry = {
   uid: string;
   author: string;
   comment: string;
-  /* data:image/png;base64,... */
-  image: string;
+  /* data:image/png;base64,... 입니다.
+
+     예전 그림은 문서 안에 들어 있고, 새 그림은 oekaki/{id}/image/data 하위
+     문서에 있습니다. 목록을 받을 때 이미지까지 딸려오면 화면에 5장만 보여도
+     수십 장을 통째로 받게 되어 옮겼습니다. Firestore JS SDK 에는 필드를 골라
+     받는 기능이 없어서 문서를 나누는 수밖에 없습니다.
+
+     그래서 목록에서는 비어 있을 수 있습니다. 보이는 것만 따로 가져옵니다. */
+  image?: string;
   /* 주인장이 가린 그림인지. 가려지면 주인장 외에는 규칙이 읽기를 막습니다. */
   hidden: boolean;
   date: string;
@@ -541,13 +549,18 @@ export async function addOekaki(image: string, comment: string, replay?: OekakiR
 
   const trimmed = comment.trim().slice(0, OEKAKI_LIMITS.comment);
 
+  /* 이미지는 문서에 넣지 않습니다. 목록이 무거워집니다. */
   const created = await addDoc(collection(store, OEKAKI), {
     uid: me.uid,
     author: me.name,
     comment: trimmed,
-    image,
     hidden: false,
     createdAt: serverTimestamp()
+  });
+
+  await setDoc(doc(store, OEKAKI, created.id, "image", "data"), {
+    uid: me.uid,
+    image
   });
 
   /* 기록이 상한을 넘으면 재생만 포기합니다. 그림은 이미 저장됐습니다. */
@@ -578,4 +591,30 @@ export async function deleteOekaki(id: string) {
   const store = getDb();
   if (!store) throw new Error("그림 기능이 설정되지 않았습니다.");
   await deleteDoc(doc(store, OEKAKI, id));
+}
+
+/* 그림 한 장을 가져옵니다. 목록에는 없으므로 보이는 것만 이걸로 채웁니다. */
+export async function getOekakiImage(drawingId: string): Promise<string | null> {
+  const store = getDb();
+  if (!store) return null;
+  const snap = await getDoc(doc(store, OEKAKI, drawingId, "image", "data"));
+  if (!snap.exists()) return null;
+  return String(snap.data().image ?? "") || null;
+}
+
+/* 문서 안에 이미지가 남아 있는 예전 그림을 하위 문서로 옮깁니다.
+   주인장만 할 수 있고, 규칙은 이미지를 빼는 것만 허용하고 바꾸는 것은 막습니다.
+   남의 그림을 바꿔치울 수 있으면 안 됩니다. */
+export async function moveOekakiImage(drawingId: string, image: string) {
+  const store = getDb();
+  const instance = getAuthOrNull();
+  if (!store || !instance) throw new Error("그림 기능이 설정되지 않았습니다.");
+  const me = toSignedInUser(instance.currentUser);
+  if (!isOwner(me)) throw new Error("주인장만 정리할 수 있어요.");
+
+  await setDoc(doc(store, OEKAKI, drawingId, "image", "data"), {
+    uid: me!.uid,
+    image
+  });
+  await updateDoc(doc(store, OEKAKI, drawingId), { image: deleteField() });
 }

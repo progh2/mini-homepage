@@ -8,9 +8,11 @@ import {
   canDeleteEntry,
   deleteOekaki,
   deleteOekakiReply,
+  getOekakiImage,
   getOekakiReplay,
   isGuestbookEnabled,
   isOwner,
+  moveOekakiImage,
   setOekakiHidden,
   signInWithGoogle,
   subscribeOekaki,
@@ -1084,6 +1086,31 @@ function OekakiPlayer({ image, ops }: { image: string; ops: ReplayOp[] }) {
   );
 }
 
+/* 보이는 그림만 받아옵니다. 목록 문서에는 이미지가 없습니다.
+   예전 그림은 문서 안에 남아 있어 그대로 씁니다. */
+function useOekakiImage(item: OekakiEntry) {
+  /* 문서에 이미 이미지가 있으면 그대로 씁니다. state 로 옮겨 담지 않습니다.
+     받아온 것만 담아 두었다가 없을 때 씁니다. */
+  const [fetched, setFetched] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (item.image) return;
+    let cancelled = false;
+    getOekakiImage(item.id)
+      .then(img => {
+        if (!cancelled) setFetched(img);
+      })
+      .catch(() => {
+        if (!cancelled) setFetched(null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [item.id, item.image]);
+
+  return item.image ?? fetched;
+}
+
 /* ---------------------------------------------------------------
    목록 한 줄. 그림 옆에 글쓴이, 제목, 덧글이 붙습니다.
    --------------------------------------------------------------- */
@@ -1097,6 +1124,7 @@ function OekakiRow({
   onOpen: () => void;
 }) {
   const [replies, setReplies] = useState<OekakiReply[]>([]);
+  const src = useOekakiImage(item);
 
   useEffect(
     () => subscribeOekakiReplies(item.id, setReplies, () => setReplies([])),
@@ -1112,7 +1140,11 @@ function OekakiRow({
         aria-label={`${item.author} 님의 그림 열기`}
       >
         {/* data URL 이라 next/image 를 쓸 수 없고 최적화 대상도 아닙니다. */}
-        <img src={item.image} alt={item.comment || `${item.author} 님의 그림`} loading="lazy" />
+        {src ? (
+          <img src={src} alt={item.comment || `${item.author} 님의 그림`} loading="lazy" />
+        ) : (
+          <span className="cy-oe-loading" aria-label="그림 불러오는 중" />
+        )}
         {item.hidden ? <span className="cy-oe-badge">가림</span> : null}
       </button>
 
@@ -1167,6 +1199,7 @@ function OekakiDetail({
   onDeleted: () => void;
 }) {
   const fieldId = useId();
+  const src = useOekakiImage(item);
   const [replies, setReplies] = useState<OekakiReply[] | null>(null);
   const [text, setText] = useState("");
   const [busy, setBusy] = useState(false);
@@ -1258,10 +1291,12 @@ function OekakiDetail({
         <p className="cy-oe-hidden-note">가림 처리된 그림입니다. 주인장에게만 보입니다.</p>
       ) : null}
 
-      {ops ? (
-        <OekakiPlayer image={item.image} ops={ops} />
+      {ops && src ? (
+        <OekakiPlayer image={src} ops={ops} />
+      ) : src ? (
+        <img className="cy-oe-big" src={src} alt={item.comment || `${item.author} 님의 그림`} />
       ) : (
-        <img className="cy-oe-big" src={item.image} alt={item.comment || `${item.author} 님의 그림`} />
+        <div className="cy-oe-big cy-oe-loading" aria-label="그림 불러오는 중" />
       )}
 
       <div className="cy-oe-detail-meta">
@@ -1341,6 +1376,7 @@ export default function Oekaki() {
   const [page, setPage] = useState(0);
   const [help, setHelp] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
+  const [tidying, setTidying] = useState(false);
 
   const viewer = me ?? null;
 
@@ -1360,6 +1396,31 @@ export default function Oekaki() {
     setOpen(false);
     setPage(0);
     setNotice("그림을 남겼어요. 고맙습니다!");
+  };
+
+  /* 예전 그림은 문서 안에 이미지가 들어 있어 목록을 무겁게 합니다.
+     주인장이 한 번 눌러 하위 문서로 옮길 수 있게 합니다. */
+  const heavy = (items ?? []).filter(i => i.image);
+  const tidy = async () => {
+    if (tidying) return;
+    setTidying(true);
+    setNotice(null);
+    let moved = 0;
+    try {
+      for (const item of heavy) {
+        if (!item.image) continue;
+        await moveOekakiImage(item.id, item.image);
+        moved += 1;
+      }
+      setNotice(`옛 그림 ${moved}장을 정리했어요.`);
+    } catch (e) {
+      setNotice(
+        `${moved}장까지 정리하고 멈췄어요. ` +
+          (e instanceof Error ? e.message : "다시 눌러 주세요.")
+      );
+    } finally {
+      setTidying(false);
+    }
   };
 
   if (!isGuestbookEnabled || failed) return null;
@@ -1432,6 +1493,11 @@ export default function Oekaki() {
               >
                 그림 그리기
               </button>
+              {isOwner(viewer) && heavy.length > 0 ? (
+                <button type="button" className="cy-oe-btn" onClick={tidy} disabled={tidying}>
+                  {tidying ? "정리하는 중" : `옛 그림 ${heavy.length}장 정리`}
+                </button>
+              ) : null}
               {notice ? <span className="cy-gb-message">{notice}</span> : null}
             </div>
           ) : (
