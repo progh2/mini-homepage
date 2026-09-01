@@ -1,39 +1,39 @@
 /* Firestore 한줄평 저장소입니다.
    설정값은 빌드 시 NEXT_PUBLIC_FIREBASE_* 환경변수로 주입됩니다.
    Firebase 웹 설정값은 비밀키가 아니라 프로젝트 식별자이며, 배포된 JS 에 그대로 들어가는 것이
-   정상적인 사용법입니다. 실제 접근 제어는 firestore.rules 가 담당합니다. */
-import { initializeApp, getApps, type FirebaseApp } from "firebase/app";
+   정상적인 사용법입니다. 실제 접근 제어는 firestore.rules 가 담당합니다.
+
+   SDK 는 처음부터 받지 않고 필요할 때 불러옵니다. 인트로 화면에서는 쓸 일이 없는데
+   Firebase 와 Firestore 만으로 634KB 라 첫 화면이 그만큼 무거워집니다.
+   타입은 빌드할 때 지워지므로 정적으로 가져와도 값이 딸려오지 않습니다. */
+import type { FirebaseApp } from "firebase/app";
+import type { Auth, User } from "firebase/auth";
+import type { Firestore, QueryConstraint, Timestamp } from "firebase/firestore";
 import { ownerUid, siteTimezone } from "@/config/linktree";
-import {
-  GoogleAuthProvider,
-  getAuth,
-  onAuthStateChanged,
-  signInWithPopup,
-  signOut,
-  type Auth,
-  type User
-} from "firebase/auth";
-import {
-  addDoc,
-  collection,
-  deleteDoc,
-  deleteField,
-  doc,
-  getDoc,
-  setDoc,
-  updateDoc,
-  getFirestore,
-  limit as fsLimit,
-  onSnapshot,
-  orderBy,
-  query,
-  runTransaction,
-  serverTimestamp,
-  where,
-  type Firestore,
-  type QueryConstraint,
-  type Timestamp
-} from "firebase/firestore";
+
+type Sdk = {
+  app: typeof import("firebase/app");
+  auth: typeof import("firebase/auth");
+  store: typeof import("firebase/firestore");
+};
+
+let sdkPromise: Promise<Sdk> | null = null;
+
+/* 한 번만 불러오고 결과를 담아 두었다가 재사용합니다. */
+function loadSdk(): Promise<Sdk> {
+  if (!sdkPromise) {
+    sdkPromise = Promise.all([
+      import("firebase/app"),
+      import("firebase/auth"),
+      import("firebase/firestore")
+    ]).then(([app, auth, store]) => ({ app, auth, store }));
+    /* 실패하면 다음에 다시 시도할 수 있게 비웁니다. */
+    sdkPromise.catch(() => {
+      sdkPromise = null;
+    });
+  }
+  return sdkPromise;
+}
 
 const config = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -87,20 +87,22 @@ let db: Firestore | null = null;
 
 let auth: Auth | null = null;
 
-function getApp() {
-  if (!app) app = getApps()[0] ?? initializeApp(config as Record<string, string>);
+function getApp(sdk: Sdk) {
+  if (!app) app = sdk.app.getApps()[0] ?? sdk.app.initializeApp(config as Record<string, string>);
   return app;
 }
 
-function getDb() {
+async function getDb() {
   if (!isGuestbookEnabled) return null;
-  if (!db) db = getFirestore(getApp());
+  const sdk = await loadSdk();
+  if (!db) db = sdk.store.getFirestore(getApp(sdk));
   return db;
 }
 
-function getAuthOrNull() {
+async function getAuthOrNull() {
   if (!isGuestbookEnabled) return null;
-  if (!auth) auth = getAuth(getApp());
+  const sdk = await loadSdk();
+  if (!auth) auth = sdk.auth.getAuth(getApp(sdk));
   return auth;
 }
 
@@ -144,20 +146,37 @@ function toSignedInUser(user: User | null): SignedInUser | null {
 /* 로그인 상태를 구독합니다. 정리 함수를 돌려줍니다.
    아직 확인 전인지(undefined) 로그아웃 상태인지(null) 구분해서 넘깁니다. */
 export function subscribeUser(onChange: (user: SignedInUser | null) => void) {
-  const instance = getAuthOrNull();
-  if (!instance) {
+  if (!isGuestbookEnabled) {
     onChange(null);
     return () => {};
   }
-  return onAuthStateChanged(instance, user => onChange(toSignedInUser(user)));
+  /* SDK 를 불러오는 사이에 화면이 사라질 수 있습니다. 정리 함수는 곧바로
+     돌려주고, 늦게 붙은 구독은 뒤늦게 끊습니다. */
+  let stop: (() => void) | null = null;
+  let cancelled = false;
+
+  void (async () => {
+    const { auth: authSdk } = await loadSdk();
+    const instance = await getAuthOrNull();
+    if (!instance || cancelled) return;
+    const un = authSdk.onAuthStateChanged(instance, user => onChange(toSignedInUser(user)));
+    if (cancelled) un();
+    else stop = un;
+  })();
+
+  return () => {
+    cancelled = true;
+    stop?.();
+  };
 }
 
 export async function signInWithGoogle() {
-  const instance = getAuthOrNull();
+  const { auth: authSdk } = await loadSdk();
+  const instance = await getAuthOrNull();
   if (!instance) throw new Error("로그인 기능이 설정되지 않았습니다.");
 
   try {
-    await signInWithPopup(instance, new GoogleAuthProvider());
+    await authSdk.signInWithPopup(instance, new authSdk.GoogleAuthProvider());
   } catch (error) {
     const code = (error as { code?: string }).code ?? "";
     /* 사용자가 팝업을 그냥 닫은 경우는 오류로 알리지 않습니다. */
@@ -171,8 +190,9 @@ export async function signInWithGoogle() {
 }
 
 export async function signOutOfGoogle() {
-  const instance = getAuthOrNull();
-  if (instance) await signOut(instance);
+  const { auth: authSdk } = await loadSdk();
+  const instance = await getAuthOrNull();
+  if (instance) await authSdk.signOut(instance);
 }
 
 /* ---------------------------------------------------------------
@@ -195,7 +215,8 @@ function localDay() {
 /* 방문 한 번을 기록하고 갱신된 값을 돌려줍니다.
    읽기와 쓰기를 한 트랜잭션으로 처리해서 동시에 들어와도 숫자가 어긋나지 않습니다. */
 export async function recordVisit(): Promise<VisitCounts> {
-  const store = getDb();
+  const { doc, runTransaction } = (await loadSdk()).store;
+  const store = await getDb();
   if (!store) throw new Error("방문 수 기능이 설정되지 않았습니다.");
 
   const ref = doc(store, "counters", "site");
@@ -240,59 +261,77 @@ export function subscribeGuestbook(
   onData: (entries: RemoteEntry[]) => void,
   onError: (error: Error) => void
 ) {
-  const store = getDb();
-  if (!store) return () => {};
+  if (!isGuestbookEnabled) return () => {};
 
-  /* 두 컬렉션이 각자 따로 도착하므로 마지막 결과를 들고 있다가 합칩니다. */
-  const latest: Record<string, RemoteEntry[]> = {};
+  /* SDK 를 불러오는 사이에 화면이 사라질 수 있습니다. 정리 함수는 곧바로
+     돌려주고, 늦게 붙은 구독은 뒤늦게 끊습니다. */
+  let stop: (() => void) | null = null;
+  let cancelled = false;
 
-  const publish = () => {
-    const merged = [...(latest[GUESTBOOK_OPEN] ?? []), ...(latest[GUESTBOOK_SECRET] ?? [])]
-      .sort((a, b) => b.at - a.at)
-      .slice(0, count);
-    onData(merged);
+  void (async () => {
+    const { collection, limit: fsLimit, onSnapshot, orderBy, query, where } = (await loadSdk()).store;
+    const store = await getDb();
+    if (!store || cancelled) return;
+
+    /* 두 컬렉션이 각자 따로 도착하므로 마지막 결과를 들고 있다가 합칩니다. */
+    const latest: Record<string, RemoteEntry[]> = {};
+
+    const publish = () => {
+      const merged = [...(latest[GUESTBOOK_OPEN] ?? []), ...(latest[GUESTBOOK_SECRET] ?? [])]
+        .sort((a, b) => b.at - a.at)
+        .slice(0, count);
+      onData(merged);
+    };
+
+    const toEntry = (id: string, data: Record<string, unknown>, secret: boolean): RemoteEntry => ({
+      id,
+      uid: String(data.uid ?? ""),
+      edited: Boolean(data.editedAt),
+      author: String(data.author ?? ""),
+      text: String(data.text ?? ""),
+      date: formatDate(data.createdAt),
+      time: formatTime(data.createdAt),
+      secret,
+      at: toDate(data.createdAt).getTime()
+    });
+
+    const watch = (name: string, secret: boolean, constraints: QueryConstraint[]) => {
+      const q = query(collection(store, name), ...constraints, fsLimit(count));
+      return onSnapshot(
+        q,
+        snapshot => {
+          latest[name] = snapshot.docs.map(doc => toEntry(doc.id, doc.data(), secret));
+          publish();
+        },
+        error => onError(error as Error)
+      );
+    };
+
+    const stops = [watch(GUESTBOOK_OPEN, false, [orderBy("createdAt", "desc")])];
+
+    if (viewer && isSecretGuestbookEnabled) {
+      stops.push(
+        isOwner(viewer)
+          ? watch(GUESTBOOK_SECRET, true, [orderBy("createdAt", "desc")])
+          : watch(GUESTBOOK_SECRET, true, [where("uid", "==", viewer.uid)])
+      );
+    }
+
+    const un = () => stops.forEach(stop => stop());
+      if (cancelled) un();
+      else stop = un;
+  })();
+
+  return () => {
+    cancelled = true;
+    stop?.();
   };
-
-  const toEntry = (id: string, data: Record<string, unknown>, secret: boolean): RemoteEntry => ({
-    id,
-    uid: String(data.uid ?? ""),
-    edited: Boolean(data.editedAt),
-    author: String(data.author ?? ""),
-    text: String(data.text ?? ""),
-    date: formatDate(data.createdAt),
-    time: formatTime(data.createdAt),
-    secret,
-    at: toDate(data.createdAt).getTime()
-  });
-
-  const watch = (name: string, secret: boolean, constraints: QueryConstraint[]) => {
-    const q = query(collection(store, name), ...constraints, fsLimit(count));
-    return onSnapshot(
-      q,
-      snapshot => {
-        latest[name] = snapshot.docs.map(doc => toEntry(doc.id, doc.data(), secret));
-        publish();
-      },
-      error => onError(error as Error)
-    );
-  };
-
-  const stops = [watch(GUESTBOOK_OPEN, false, [orderBy("createdAt", "desc")])];
-
-  if (viewer && isSecretGuestbookEnabled) {
-    stops.push(
-      isOwner(viewer)
-        ? watch(GUESTBOOK_SECRET, true, [orderBy("createdAt", "desc")])
-        : watch(GUESTBOOK_SECRET, true, [where("uid", "==", viewer.uid)])
-    );
-  }
-
-  return () => stops.forEach(stop => stop());
 }
 
 export async function addGuestbookEntry(text: string, secret = false) {
-  const store = getDb();
-  const instance = getAuthOrNull();
+  const { addDoc, collection, serverTimestamp } = (await loadSdk()).store;
+  const store = await getDb();
+  const instance = await getAuthOrNull();
   if (!store || !instance) throw new Error("한줄평 기능이 설정되지 않았습니다.");
 
   const me = toSignedInUser(instance.currentUser);
@@ -326,8 +365,9 @@ export async function addGuestbookEntry(text: string, secret = false) {
    지우는 것으로 충분합니다. firestore.rules 도 같은 선을 긋습니다.
    --------------------------------------------------------------- */
 
-function entryRef(id: string, secret: boolean) {
-  const store = getDb();
+async function entryRef(id: string, secret: boolean) {
+  const { doc } = (await loadSdk()).store;
+  const store = await getDb();
   if (!store) throw new Error("한줄평 기능이 설정되지 않았습니다.");
   return doc(store, secret ? GUESTBOOK_SECRET : GUESTBOOK_OPEN, id);
 }
@@ -347,12 +387,14 @@ export async function updateGuestbookEntry(id: string, secret: boolean, text: st
     throw new Error(`한줄평은 ${GUESTBOOK_LIMITS.text}자까지 쓸 수 있어요.`);
   }
 
+  const { serverTimestamp, updateDoc } = (await loadSdk()).store;
   /* uid, author, createdAt 은 손대지 않습니다. 규칙도 이 셋의 변경을 막습니다. */
-  await updateDoc(entryRef(id, secret), { text: trimmedText, editedAt: serverTimestamp() });
+  await updateDoc(await entryRef(id, secret), { text: trimmedText, editedAt: serverTimestamp() });
 }
 
 export async function deleteGuestbookEntry(id: string, secret: boolean) {
-  await deleteDoc(entryRef(id, secret));
+  const { deleteDoc } = (await loadSdk()).store;
+  await deleteDoc(await entryRef(id, secret));
 }
 
 /* ---------------------------------------------------------------
@@ -412,40 +454,57 @@ export function subscribeOekaki(
   onData: (items: OekakiEntry[]) => void,
   onError: (error: Error) => void
 ) {
-  const store = getDb();
-  if (!store) return () => {};
+  if (!isGuestbookEnabled) return () => {};
 
-  /* 한줄평 비밀글과 같은 이유로 보는 사람에 따라 질의가 다릅니다.
-     규칙은 목록 질의를 걸러 주지 않으므로, 주인장이 아니면 질의에
-     where("hidden","==",false) 를 붙여야 규칙이 통과시킵니다.
-     orderBy 를 함께 쓰면 복합 색인이 필요해서, 정렬은 아래에서 합니다. */
-  const owner = isOwner(viewer);
-  const q = owner
-    ? query(collection(store, OEKAKI), orderBy("createdAt", "desc"), fsLimit(count))
-    : query(collection(store, OEKAKI), where("hidden", "==", false), fsLimit(count));
+  /* SDK 를 불러오는 사이에 화면이 사라질 수 있습니다. 정리 함수는 곧바로
+     돌려주고, 늦게 붙은 구독은 뒤늦게 끊습니다. */
+  let stop: (() => void) | null = null;
+  let cancelled = false;
 
-  return onSnapshot(
-    q,
-    snapshot => {
-      const items = snapshot.docs.map(doc => {
-        const data = doc.data();
-        return {
-          id: doc.id,
-          uid: String(data.uid ?? ""),
-          author: String(data.author ?? ""),
-          comment: String(data.comment ?? ""),
-          image: String(data.image ?? ""),
-          hidden: Boolean(data.hidden),
-          date: formatDate(data.createdAt),
-          time: formatTime(data.createdAt),
-          at: toDate(data.createdAt).getTime()
-        };
-      });
-      items.sort((a, b) => b.at - a.at);
-      onData(items);
-    },
-    error => onError(error as Error)
-  );
+  void (async () => {
+    const { collection, limit: fsLimit, onSnapshot, orderBy, query, where } = (await loadSdk()).store;
+    const store = await getDb();
+    if (!store || cancelled) return;
+
+    /* 한줄평 비밀글과 같은 이유로 보는 사람에 따라 질의가 다릅니다.
+       규칙은 목록 질의를 걸러 주지 않으므로, 주인장이 아니면 질의에
+       where("hidden","==",false) 를 붙여야 규칙이 통과시킵니다.
+       orderBy 를 함께 쓰면 복합 색인이 필요해서, 정렬은 아래에서 합니다. */
+    const owner = isOwner(viewer);
+    const q = owner
+      ? query(collection(store, OEKAKI), orderBy("createdAt", "desc"), fsLimit(count))
+      : query(collection(store, OEKAKI), where("hidden", "==", false), fsLimit(count));
+
+    const un = onSnapshot(
+      q,
+      snapshot => {
+        const items = snapshot.docs.map(doc => {
+          const data = doc.data();
+          return {
+            id: doc.id,
+            uid: String(data.uid ?? ""),
+            author: String(data.author ?? ""),
+            comment: String(data.comment ?? ""),
+            image: String(data.image ?? ""),
+            hidden: Boolean(data.hidden),
+            date: formatDate(data.createdAt),
+            time: formatTime(data.createdAt),
+            at: toDate(data.createdAt).getTime()
+          };
+        });
+        items.sort((a, b) => b.at - a.at);
+        onData(items);
+      },
+      error => onError(error as Error)
+    );
+    if (cancelled) un();
+    else stop = un;
+  })();
+
+  return () => {
+    cancelled = true;
+    stop?.();
+  };
 }
 
 /* 그림 하나에 달린 댓글을 구독합니다. */
@@ -454,39 +513,57 @@ export function subscribeOekakiReplies(
   onData: (items: OekakiReply[]) => void,
   onError: (error: Error) => void
 ) {
-  const store = getDb();
-  if (!store) return () => {};
+  if (!isGuestbookEnabled) return () => {};
 
-  const q = query(
-    collection(store, OEKAKI, drawingId, "comments"),
-    orderBy("createdAt", "asc"),
-    fsLimit(100)
-  );
-  return onSnapshot(
-    q,
-    snapshot => {
-      onData(
-        snapshot.docs.map(doc => {
-          const data = doc.data();
-          return {
-            id: doc.id,
-            uid: String(data.uid ?? ""),
-            author: String(data.author ?? ""),
-            text: String(data.text ?? ""),
-            date: formatDate(data.createdAt),
-            time: formatTime(data.createdAt),
-            at: toDate(data.createdAt).getTime()
-          };
-        })
-      );
-    },
-    error => onError(error as Error)
-  );
+  /* SDK 를 불러오는 사이에 화면이 사라질 수 있습니다. 정리 함수는 곧바로
+     돌려주고, 늦게 붙은 구독은 뒤늦게 끊습니다. */
+  let stop: (() => void) | null = null;
+  let cancelled = false;
+
+  void (async () => {
+    const { collection, limit: fsLimit, onSnapshot, orderBy, query } = (await loadSdk()).store;
+    const store = await getDb();
+    if (!store || cancelled) return;
+
+    const q = query(
+      collection(store, OEKAKI, drawingId, "comments"),
+      orderBy("createdAt", "asc"),
+      fsLimit(100)
+    );
+    const un = onSnapshot(
+      q,
+      snapshot => {
+        onData(
+          snapshot.docs.map(doc => {
+            const data = doc.data();
+            return {
+              id: doc.id,
+              uid: String(data.uid ?? ""),
+              author: String(data.author ?? ""),
+              text: String(data.text ?? ""),
+              date: formatDate(data.createdAt),
+              time: formatTime(data.createdAt),
+              at: toDate(data.createdAt).getTime()
+            };
+          })
+        );
+      },
+      error => onError(error as Error)
+    );
+    if (cancelled) un();
+    else stop = un;
+  })();
+
+  return () => {
+    cancelled = true;
+    stop?.();
+  };
 }
 
 export async function addOekakiReply(drawingId: string, text: string) {
-  const store = getDb();
-  const instance = getAuthOrNull();
+  const { addDoc, collection, serverTimestamp } = (await loadSdk()).store;
+  const store = await getDb();
+  const instance = await getAuthOrNull();
   if (!store || !instance) throw new Error("댓글 기능이 설정되지 않았습니다.");
 
   const me = toSignedInUser(instance.currentUser);
@@ -507,7 +584,8 @@ export async function addOekakiReply(drawingId: string, text: string) {
 }
 
 export async function deleteOekakiReply(drawingId: string, replyId: string) {
-  const store = getDb();
+  const { deleteDoc, doc } = (await loadSdk()).store;
+  const store = await getDb();
   if (!store) throw new Error("댓글 기능이 설정되지 않았습니다.");
   await deleteDoc(doc(store, OEKAKI, drawingId, "comments", replyId));
 }
@@ -515,7 +593,8 @@ export async function deleteOekakiReply(drawingId: string, replyId: string) {
 /* 주인장이 그림을 가리거나 다시 보이게 합니다. 규칙은 주인장에게만,
    그리고 hidden 한 칸만 바꾸도록 허용합니다. */
 export async function setOekakiHidden(id: string, hidden: boolean) {
-  const store = getDb();
+  const { doc, updateDoc } = (await loadSdk()).store;
+  const store = await getDb();
   if (!store) throw new Error("그림 기능이 설정되지 않았습니다.");
   await updateDoc(doc(store, OEKAKI, id), { hidden });
 }
@@ -526,7 +605,8 @@ export async function setOekakiHidden(id: string, hidden: boolean) {
 export type OekakiReplay = { ops: string; count: number };
 
 export async function getOekakiReplay(drawingId: string): Promise<OekakiReplay | null> {
-  const store = getDb();
+  const { doc, getDoc } = (await loadSdk()).store;
+  const store = await getDb();
   if (!store) return null;
   const snap = await getDoc(doc(store, OEKAKI, drawingId, "replay", "data"));
   if (!snap.exists()) return null;
@@ -535,8 +615,9 @@ export async function getOekakiReplay(drawingId: string): Promise<OekakiReplay |
 }
 
 export async function addOekaki(image: string, comment: string, replay?: OekakiReplay) {
-  const store = getDb();
-  const instance = getAuthOrNull();
+  const { addDoc, collection, doc, setDoc, serverTimestamp } = (await loadSdk()).store;
+  const store = await getDb();
+  const instance = await getAuthOrNull();
   if (!store || !instance) throw new Error("그림 기능이 설정되지 않았습니다.");
 
   const me = toSignedInUser(instance.currentUser);
@@ -588,14 +669,16 @@ export async function addOekaki(image: string, comment: string, replay?: OekakiR
 
 /* 삭제 권한은 한줄평과 같습니다. 작성자 본인과 주인장. */
 export async function deleteOekaki(id: string) {
-  const store = getDb();
+  const { deleteDoc, doc } = (await loadSdk()).store;
+  const store = await getDb();
   if (!store) throw new Error("그림 기능이 설정되지 않았습니다.");
   await deleteDoc(doc(store, OEKAKI, id));
 }
 
 /* 그림 한 장을 가져옵니다. 목록에는 없으므로 보이는 것만 이걸로 채웁니다. */
 export async function getOekakiImage(drawingId: string): Promise<string | null> {
-  const store = getDb();
+  const { doc, getDoc } = (await loadSdk()).store;
+  const store = await getDb();
   if (!store) return null;
   const snap = await getDoc(doc(store, OEKAKI, drawingId, "image", "data"));
   if (!snap.exists()) return null;
@@ -606,8 +689,9 @@ export async function getOekakiImage(drawingId: string): Promise<string | null> 
    주인장만 할 수 있고, 규칙은 이미지를 빼는 것만 허용하고 바꾸는 것은 막습니다.
    남의 그림을 바꿔치울 수 있으면 안 됩니다. */
 export async function moveOekakiImage(drawingId: string, image: string) {
-  const store = getDb();
-  const instance = getAuthOrNull();
+  const { deleteField, doc, setDoc, updateDoc } = (await loadSdk()).store;
+  const store = await getDb();
+  const instance = await getAuthOrNull();
   if (!store || !instance) throw new Error("그림 기능이 설정되지 않았습니다.");
   const me = toSignedInUser(instance.currentUser);
   if (!isOwner(me)) throw new Error("주인장만 정리할 수 있어요.");
