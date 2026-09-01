@@ -1839,3 +1839,15 @@ body.lt-intro-open {
 .cy-oe-big.is-hidden {
   display: none;
 }
+
+/* 그림을 받아오는 동안 자리를 잡아 둡니다. 안 그러면 목록이 들썩입니다. */
+.cy-oe-loading {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  background: repeating-linear-gradient(
+    45deg,
+    var(--mint) 0 8px,
+    var(--mint-tint) 8px 16px
+  );
+}

@@ -107,27 +107,50 @@ service cloud.firestore {
         || (request.auth != null && request.auth.uid == ownerUid());
 
       allow create: if request.auth != null
-        && request.resource.data.keys().hasOnly(['uid', 'author', 'comment', 'image', 'hidden', 'createdAt'])
+        && request.resource.data.keys().hasOnly(['uid', 'author', 'comment', 'hidden', 'createdAt'])
         && request.resource.data.uid == request.auth.uid
         && request.resource.data.author is string
         && request.resource.data.author.size() >= 1
         && request.resource.data.author.size() <= 50
         && request.resource.data.comment is string
         && request.resource.data.comment.size() <= 60
-        && request.resource.data.image is string
-        && request.resource.data.image.size() <= 300000
-        && request.resource.data.image[0:22] == 'data:image/png;base64,'
         && request.resource.data.hidden == false
         && request.resource.data.createdAt == request.time;
 
-      /* 주인장만, 그리고 hidden 한 칸만 바꿀 수 있습니다.
+      /* 가리기. 주인장만, 그리고 hidden 한 칸만 바꿀 수 있습니다.
          그림 내용은 고칠 수 없습니다. 지우고 다시 그리면 됩니다. */
       allow update: if request.auth != null
         && request.auth.uid == ownerUid()
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['hidden'])
         && request.resource.data.hidden is bool;
 
+      /* 예전 그림 정리. 문서 안에 있던 이미지를 하위 문서로 옮긴 뒤 여기서
+         빼냅니다. 빼는 것만 허용하고 바꾸는 것은 막습니다. 남의 그림을
+         바꿔치울 수 있으면 안 됩니다. */
+      allow update: if request.auth != null
+        && request.auth.uid == ownerUid()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['image'])
+        && !('image' in request.resource.data);
+
       allow delete: if canDelete();
+
+      /* 그림 본체입니다. 목록에 이미지가 딸려오지 않도록 따로 두었습니다.
+         가려진 그림은 이것도 못 읽어야 하므로 부모의 hidden 을 확인합니다. */
+      match /image/{docId} {
+        allow read: if get(/databases/$(database)/documents/oekaki/$(drawingId)).data.hidden == false
+          || (request.auth != null && request.auth.uid == ownerUid());
+
+        allow create: if request.auth != null
+          && request.resource.data.keys().hasOnly(['uid', 'image'])
+          && (request.resource.data.uid == request.auth.uid
+            || request.auth.uid == ownerUid())
+          && request.resource.data.image is string
+          && request.resource.data.image.size() <= 300000
+          && request.resource.data.image[0:22] == 'data:image/png;base64,';
+
+        allow update: if false;
+        allow delete: if canDelete();
+      }
 
       /* 그리는 과정 기록입니다. 그림이 가려지면 이것도 못 읽어야 합니다.
          부모 문서를 get() 으로 확인하느라 읽기가 한 번 더 들지만, 재생은
