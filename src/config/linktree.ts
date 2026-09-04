@@ -51,12 +51,14 @@ export const profileSections: ProfileSection[] = [
         kind: "list",
         heading: "제작한 프로그램",
         items: [
-          "깃허브 레포 매니저",
-          "기초 통계량 실험실",
-          "급식쪽지",
-          "직업계고 AI 면접 모의고사 시뮬레이터",
-          "급식 식단 업로드 양식 생성기",
+          "야근용 Classic BGM DJ",
+          "음유시인의 홀 (야근용 RPG BGM DJ)",
           "캣모아",
+          "급식쪽지",
+          "기초 통계량 실험실",
+          "급식 식단 업로드 양식 생성기",
+          "직업계고 AI 면접 모의고사 시뮬레이터",
+          "깃허브 레포 매니저",
           "인터넷 랙 줄여주는 팁"
         ]
       },
@@ -102,10 +104,28 @@ export type BoardPost = {
 
 export const boardPosts: BoardPost[] = [
   {
+    id: "classic-bgm-dj",
+    category: "앱",
+    title: "야근용 Classic BGM DJ",
+    summary: "품격있는 야근을 위한 클래식. 세바스찬 집사가 골라 줍니다",
+    date: "2026-09-03",
+    href: "https://progh2.github.io/classic-bgm-dj/",
+    preview: { src: "/assets/apps/classic-bgm-dj.webp", alt: "야근용 Classic BGM DJ" }
+  },
+  {
+    id: "rpg-bgm-dj",
+    category: "앱",
+    title: "음유시인의 홀",
+    summary: "야근용 RPG BGM DJ. 옛날 콘솔 RPG 배경음악과 함께",
+    date: "2026-09-03",
+    href: "https://progh2.github.io/rpg-bgm-dj/",
+    preview: { src: "/assets/apps/rpg-bgm-dj.webp", alt: "음유시인의 홀, 야근용 RPG BGM DJ" }
+  },
+  {
     id: "catmoa",
     category: "앱",
     title: "캣모아",
-    summary: "교사 일정 수집 고양이. 한글·PDF·스크린샷에서 일정 추출",
+    summary: "교사를 위한 일정 수집 고양이. 한글·PDF·스크린샷을 던지면 캘린더로",
     date: "2026-08-29",
     href: "https://progh2.github.io/catmoa/",
     preview: { src: "/assets/apps/catmoa.webp", alt: "캣모아" }
@@ -114,7 +134,7 @@ export const boardPosts: BoardPost[] = [
     id: "schoollunchmemo",
     category: "앱",
     title: "급식쪽지",
-    summary: "학교 급식·학사일정을 포스트잇처럼 바탕화면에",
+    summary: "학교 급식과 학사일정을 포스트잇처럼 바탕화면에. 인증키 없이 바로",
     date: "2026-08-27",
     href: "https://progh2.github.io/schoollunchmemo/",
     preview: { src: "/assets/apps/schoollunchmemo.webp", alt: "급식쪽지" }
@@ -123,7 +143,7 @@ export const boardPosts: BoardPost[] = [
     id: "stat-lab",
     category: "앱",
     title: "기초 통계량 실험실",
-    summary: "숫자로 데이터 읽기",
+    summary: "숫자로 데이터 읽기. 교과·수업용",
     date: "2026-08-26",
     href: "https://progh2.github.io/stat-lab/",
     preview: { src: "/assets/apps/stat-lab.webp", alt: "기초 통계량 실험실" }
@@ -150,7 +170,7 @@ export const boardPosts: BoardPost[] = [
     id: "internet-lag-tips",
     category: "앱",
     title: "인터넷 랙 줄여주는 팁",
-    summary: "클릭 한 번으로 랙 설정 적용 GUI",
+    summary: "인터넷 랙 줄여주는 설정을 클릭 한 번으로 적용하는 GUI",
     date: "2026-08-24",
     href: "https://github.com/progh2/internet-lag-tips",
     preview: { src: "/assets/apps/internet-lag-tips.webp", alt: "인터넷 랙 줄여주는 팁" }

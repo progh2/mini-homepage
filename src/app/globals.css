@@ -1851,3 +1851,14 @@ body.lt-intro-open {
     var(--mint-tint) 8px 16px
   );
 }
+
+/* 내 그림에 달린 새 덧글 표시 */
+.cy-oe-new {
+  margin-left: 6px;
+  padding: 1px 5px;
+  border-radius: 999px;
+  background: var(--point);
+  color: #fff;
+  font-size: 0.6rem;
+  font-weight: bold;
+}
