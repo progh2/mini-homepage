@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useId, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useRef, useState, useSyncExternalStore } from "react";
 import {
   OEKAKI_LIMITS,
   addOekaki,
@@ -1086,6 +1086,46 @@ function OekakiPlayer({ image, ops }: { image: string; ops: ReplayOp[] }) {
   );
 }
 
+/* 내 그림에 달린 새 덧글을 알려 주려고, 마지막으로 본 시각을 이 브라우저에
+   남깁니다. 서버에 두려면 읽음 표시를 사람마다 저장해야 하는데 개인
+   미니홈피에는 과합니다. 브라우저를 바꾸면 다시 새 덧글로 보입니다. */
+const SEEN_KEY = "oekaki-seen";
+
+function readSeen(): Record<string, number> {
+  try {
+    return JSON.parse(window.localStorage.getItem(SEEN_KEY) ?? "{}");
+  } catch {
+    return {};
+  }
+}
+
+function useSeenAt(id: string) {
+  return useSyncExternalStore(
+    subscribeSeen,
+    () => readSeen()[id] ?? 0,
+    () => 0
+  );
+}
+
+const seenListeners = new Set<() => void>();
+function subscribeSeen(cb: () => void) {
+  seenListeners.add(cb);
+  return () => seenListeners.delete(cb);
+}
+
+function useMarkSeen(id: string) {
+  useEffect(() => {
+    const seen = readSeen();
+    seen[id] = Date.now();
+    try {
+      window.localStorage.setItem(SEEN_KEY, JSON.stringify(seen));
+    } catch {
+      /* 저장이 막혀 있어도 화면은 그대로 동작합니다. */
+    }
+    seenListeners.forEach(cb => cb());
+  }, [id]);
+}
+
 /* 보이는 그림만 받아옵니다. 목록 문서에는 이미지가 없습니다.
    예전 그림은 문서 안에 남아 있어 그대로 씁니다. */
 function useOekakiImage(item: OekakiEntry) {
@@ -1124,6 +1164,7 @@ function OekakiRow({
   onOpen: () => void;
 }) {
   const [replies, setReplies] = useState<OekakiReply[]>([]);
+  const seenAt = useSeenAt(item.id);
   const src = useOekakiImage(item);
 
   useEffect(
@@ -1178,6 +1219,15 @@ function OekakiRow({
 
         <button type="button" className="cy-oe-more" onClick={onOpen}>
           {replies.length > 0 ? `덧글 ${replies.length}개 보기` : "덧글 남기기"}
+          {/* 내 그림에 남이 새로 단 덧글만 셉니다. 본 시각은 이 브라우저에만
+              남깁니다. 알림을 서버에 두려면 읽음 표시까지 저장해야 하는데,
+              개인 미니홈피에는 과합니다. */}
+          {viewer && viewer.uid === item.uid
+            ? (() => {
+                const fresh = replies.filter(r => r.uid !== viewer.uid && r.at > seenAt).length;
+                return fresh > 0 ? <span className="cy-oe-new">새 덧글 {fresh}</span> : null;
+              })()
+            : null}
         </button>
       </div>
     </li>
@@ -1201,8 +1251,10 @@ function OekakiDetail({
   const fieldId = useId();
   const src = useOekakiImage(item);
   const [replies, setReplies] = useState<OekakiReply[] | null>(null);
+  useMarkSeen(item.id);
   const [text, setText] = useState("");
   const [busy, setBusy] = useState(false);
+  const [copied, setCopied] = useState(false);
   const [error, setError] = useState<string | null>(null);
   /* 재생 기록은 눌렀을 때만 받아옵니다. 목록에서는 건드리지 않습니다. */
   const [ops, setOps] = useState<ReplayOp[] | null>(null);
@@ -1260,6 +1312,26 @@ function OekakiDetail({
       <div className="cy-oe-detail-head">
         <button type="button" className="cy-oe-btn" onClick={onClose}>
           목록으로
+        </button>
+        <button
+          type="button"
+          className="cy-oe-btn"
+          onClick={async () => {
+            const url = new URL(window.location.href);
+            url.searchParams.set("tab", "photo");
+            url.searchParams.set("draw", item.id);
+            try {
+              await navigator.clipboard.writeText(url.toString());
+              setCopied(true);
+              window.setTimeout(() => setCopied(false), 2000);
+            } catch {
+              /* 클립보드를 막아 둔 브라우저가 있습니다. 주소창에 이미 같은
+                 주소가 들어 있으니 그걸 쓰라고 알려 줍니다. */
+              setError("주소창의 주소를 복사해 주세요.");
+            }
+          }}
+        >
+          {copied ? "복사했어요" : "링크 복사"}
         </button>
         {ops ? (
           <button type="button" className="cy-oe-btn" onClick={() => setOps(null)}>
@@ -1385,6 +1457,28 @@ export default function Oekaki() {
     return subscribeUser(setMe);
   }, []);
 
+  /* ?draw=<id> 로 들어오면 그 그림을 바로 엽니다. 정적 배포라 주소는
+     브라우저에서 읽습니다. 탭 딥링크와 같은 방식입니다. */
+  useEffect(() => {
+    const id = new URLSearchParams(window.location.search).get("draw");
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (id) setOpenId(id);
+  }, []);
+
+  /* 그림을 열고 닫을 때 주소를 맞춰 둡니다. 새로고침하거나 링크를 건네도
+     같은 그림이 열립니다. 화면을 새로 그리지 않도록 replaceState 를 씁니다. */
+  const show = (id: string | null) => {
+    setOpenId(id);
+    const url = new URL(window.location.href);
+    if (id) {
+      url.searchParams.set("tab", "photo");
+      url.searchParams.set("draw", id);
+    } else {
+      url.searchParams.delete("draw");
+    }
+    window.history.replaceState(null, "", url);
+  };
+
   /* 주인장인지에 따라 질의가 달라지므로 로그인 상태가 바뀌면 다시 겁니다. */
   useEffect(() => {
     if (!isGuestbookEnabled || me === undefined) return;
@@ -1423,7 +1517,23 @@ export default function Oekaki() {
     }
   };
 
-  if (!isGuestbookEnabled || failed) return null;
+  if (!isGuestbookEnabled) return null;
+
+  /* 예전에는 실패하면 영역을 통째로 감췄습니다. 보는 사람은 왜 없어졌는지
+     알 수 없습니다. 무슨 일이 있었는지는 알려 줍니다. */
+  if (failed) {
+    return (
+      <div className="cy-content-box">
+        <div className="cy-section-title">
+          오에카키
+          <span className="cy-sub-text">그림으로 남기는 방명록</span>
+        </div>
+        <div className="cy-gb-loading">
+          그림을 불러오지 못했어요. 잠시 뒤 새로고침해 주세요.
+        </div>
+      </div>
+    );
+  }
 
   const viewing = items?.find(i => i.id === openId) ?? null;
   const list = items ?? [];
@@ -1474,8 +1584,8 @@ export default function Oekaki() {
           key={viewing.id}
           item={viewing}
           viewer={viewer}
-          onClose={() => setOpenId(null)}
-          onDeleted={() => setOpenId(null)}
+          onClose={() => show(null)}
+          onDeleted={() => show(null)}
         />
       ) : (
         <>
@@ -1521,7 +1631,7 @@ export default function Oekaki() {
                     key={item.id}
                     item={item}
                     viewer={viewer}
-                    onOpen={() => setOpenId(item.id)}
+                    onOpen={() => show(item.id)}
                   />
                 ))}
               </ul>
