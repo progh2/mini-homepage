@@ -1148,7 +1148,9 @@ function useOekakiImage(item: OekakiEntry) {
     };
   }, [item.id, item.image]);
 
-  return item.image ?? fetched;
+  /* ?? 는 null 과 undefined 만 걸러 냅니다. 빈 문자열이 들어오면 그대로
+     써 버리므로 || 를 씁니다. 값이 비어 있으면 받아온 것을 씁니다. */
+  return item.image || fetched;
 }
 
 /* ---------------------------------------------------------------

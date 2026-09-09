@@ -485,7 +485,10 @@ export function subscribeOekaki(
             uid: String(data.uid ?? ""),
             author: String(data.author ?? ""),
             comment: String(data.comment ?? ""),
-            image: String(data.image ?? ""),
+            /* 정리를 마친 문서에는 이 필드가 없습니다. 빈 문자열로 만들면
+               "값이 있다" 로 오해되어 하위 문서에서 받아온 그림을 덮습니다.
+               없을 때는 undefined 로 두어야 합니다. */
+            image: typeof data.image === "string" && data.image ? data.image : undefined,
             hidden: Boolean(data.hidden),
             date: formatDate(data.createdAt),
             time: formatTime(data.createdAt),
