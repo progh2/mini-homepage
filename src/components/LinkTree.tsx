@@ -4,6 +4,7 @@ import { useEffect, useId, useRef, useState } from "react";
 import { Spiral, type SpiralProps } from "@paper-design/shaders-react";
 import { asset } from "@/lib/asset";
 import { setDraw } from "@/lib/drawParam";
+import { linkify } from "@/lib/linkify";
 import BgmPlayer, { type BgmHandle } from "@/components/BgmPlayer";
 import Oekaki from "@/components/Oekaki";
 import {
@@ -306,10 +307,13 @@ function ProfileTab({ viewer }: { viewer: SignedInUser | null }) {
             if (block.kind === "text") {
               /* 고친 소개 글이 있으면 그것을, 없으면 설정 파일 값을 씁니다. */
               const lines = si === 0 && over.aboutLines?.length ? over.aboutLines : block.lines;
+              /* 적은 글이 없으면 빈 칸을 남기지 않습니다. */
+              if (lines.length === 0) return null;
               return (
                 <div key={bi} className="cy-text-block">
+                  {/* 소개 글에 적은 주소를 눌러 갈 수 있게 링크로 바꿉니다. */}
                   {lines.map((line, i) => (
-                    <p key={i}>{line}</p>
+                    <p key={i}>{linkify(line)}</p>
                   ))}
                 </div>
               );

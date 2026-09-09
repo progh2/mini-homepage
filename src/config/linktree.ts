@@ -44,10 +44,14 @@ export const profileSections: ProfileSection[] = [
     blocks: [
       {
         kind: "text",
-        lines: [
-          "미림마이스터고등학교 정보·컴퓨터 교사입니다. 지루한 것에서 벗어나 재미난 것 속으로 풍덩~☆",
-          "도름스에서는 교사 인증을 마친 @평온나날로 활동합니다. 서울 · 고등학교 · 정보·컴퓨터."
-        ]
+        /* 소개 글은 화면의 "수정" 으로 고칩니다. 고친 내용은 Firestore 에
+           담기고 이 값은 기본값 자리입니다. 두 곳에 같은 글을 두면 어느
+           쪽이 진짜인지 헷갈리므로 비워 둡니다.
+
+           Firebase 를 안 붙인 포크에서는 여기에 적은 글이 그대로 보입니다.
+           본문에 적은 주소(dorms.school/... 같은)는 화면에서 자동으로
+           링크가 됩니다. */
+        lines: []
       },
       {
         kind: "list",
@@ -56,26 +60,6 @@ export const profileSections: ProfileSection[] = [
            새 앱을 올릴 때마다 두 곳을 고쳐야 하고 언젠가 어긋납니다.
            긴 제목은 " - " 앞부분만 씁니다. */
         items: dormsApps.map(a => a.title.split(" - ")[0].split(" · ")[0])
-      },
-      {
-        kind: "contact",
-        items: [
-          {
-            label: "도름스",
-            value: "dorms.school/u/평온나날",
-            href: "https://dorms.school/u/17074aa0-a3a8-44f8-b40a-d7c044c5ade6"
-          },
-          {
-            label: "Instagram",
-            value: "@gihunham",
-            href: "https://www.instagram.com/gihunham/"
-          },
-          {
-            label: "GitHub",
-            value: "github.com/progh2",
-            href: "https://github.com/progh2"
-          }
-        ]
       }
     ]
   }
