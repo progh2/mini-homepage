@@ -222,6 +222,29 @@ service cloud.firestore {
       allow delete: if false;
     }
 
+    /* 주인장이 화면에서 고치는 프로필입니다. 설정 파일 값을 덮어씁니다.
+       읽기는 누구나(화면에 보여야 하므로), 쓰기는 주인장만.
+       글자 수를 막지 않으면 큰 문서를 밀어 넣을 수 있습니다. */
+    match /site/profile {
+      allow read: if true;
+
+      allow write: if request.auth != null
+        && request.auth.uid == ownerUid()
+        && request.resource.data.keys().hasOnly(['teacherName', 'introDescription', 'catalogDescription', 'aboutLines'])
+        && (!('teacherName' in request.resource.data)
+          || (request.resource.data.teacherName is string
+            && request.resource.data.teacherName.size() <= 20))
+        && (!('introDescription' in request.resource.data)
+          || (request.resource.data.introDescription is string
+            && request.resource.data.introDescription.size() <= 120))
+        && (!('catalogDescription' in request.resource.data)
+          || (request.resource.data.catalogDescription is string
+            && request.resource.data.catalogDescription.size() <= 120))
+        && (!('aboutLines' in request.resource.data)
+          || (request.resource.data.aboutLines is list
+            && request.resource.data.aboutLines.size() <= 6));
+    }
+
     /* 그 밖의 모든 경로는 차단합니다. */
     match /{document=**} {
       allow read, write: if false;

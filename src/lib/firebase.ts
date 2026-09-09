@@ -705,3 +705,74 @@ export async function moveOekakiImage(drawingId: string, image: string) {
   });
   await updateDoc(doc(store, OEKAKI, drawingId), { image: deleteField() });
 }
+
+/* ---------------------------------------------------------------
+   프로필 고쳐 쓰기
+
+   설정 파일(linktree.ts)의 값을 기본으로 두고, 주인장이 화면에서 고친
+   것만 Firestore 에 덮어 씁니다. 파일을 고쳐 다시 배포하지 않아도
+   바뀌도록 하려는 것입니다.
+
+   비워 두면 설정 파일 값으로 돌아갑니다. 되돌리기가 쉬워야 마음 편히
+   고칩니다.
+   --------------------------------------------------------------- */
+
+export const PROFILE_LIMITS = { name: 20, line: 120, lines: 6 } as const;
+
+export type ProfileOverride = {
+  teacherName?: string;
+  introDescription?: string;
+  catalogDescription?: string;
+  aboutLines?: string[];
+};
+
+export function subscribeProfile(onChange: (value: ProfileOverride) => void) {
+  if (!isGuestbookEnabled) return () => {};
+
+  let stop: (() => void) | null = null;
+  let cancelled = false;
+
+  void (async () => {
+    const { doc, onSnapshot } = (await loadSdk()).store;
+    const store = await getDb();
+    if (!store || cancelled) return;
+    const un = onSnapshot(
+      doc(store, "site", "profile"),
+      snap => onChange((snap.data() ?? {}) as ProfileOverride),
+      () => onChange({})
+    );
+    if (cancelled) un();
+    else stop = un;
+  })();
+
+  return () => {
+    cancelled = true;
+    stop?.();
+  };
+}
+
+export async function saveProfile(value: ProfileOverride) {
+  const { doc, setDoc } = (await loadSdk()).store;
+  const store = await getDb();
+  const instance = await getAuthOrNull();
+  if (!store || !instance) throw new Error("프로필 기능이 설정되지 않았습니다.");
+
+  const me = toSignedInUser(instance.currentUser);
+  if (!isOwner(me)) throw new Error("주인장만 고칠 수 있어요.");
+
+  /* 빈 값은 아예 넣지 않습니다. 설정 파일 값으로 돌아갑니다. */
+  const clean: Record<string, string | string[]> = {};
+  const name = (value.teacherName ?? "").trim();
+  const intro = (value.introDescription ?? "").trim();
+  const sub = (value.catalogDescription ?? "").trim();
+  const lines = (value.aboutLines ?? []).map(l => l.trim()).filter(Boolean);
+
+  if (name) clean.teacherName = name.slice(0, PROFILE_LIMITS.name);
+  if (intro) clean.introDescription = intro.slice(0, PROFILE_LIMITS.line);
+  if (sub) clean.catalogDescription = sub.slice(0, PROFILE_LIMITS.line);
+  if (lines.length) {
+    clean.aboutLines = lines.slice(0, PROFILE_LIMITS.lines).map(l => l.slice(0, PROFILE_LIMITS.line));
+  }
+
+  await setDoc(doc(store, "site", "profile"), clean);
+}

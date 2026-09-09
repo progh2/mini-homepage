@@ -36,18 +36,6 @@
     "preview": "/assets/dorms/4d98ca63-783e-47b9-8115-ac1a439b5740.webp"
   },
   {
-    "id": "6f8b3332-cdf0-46ac-914e-2fbb82a329af",
-    "title": "음유시인의 홀 - 야근용 RPG BGM DJ",
-    "summary": "야근하는데 음악이 필요하세요? 옛날 콘솔 RPG 배경음악과 함께하시면 어떨까요?",
-    "category": "기타",
-    "date": "2026-09-03",
-    "href": "https://dorms.school/apps/6f8b3332-cdf0-46ac-914e-2fbb82a329af",
-    "appUrl": "https://progh2.github.io/rpg-bgm-dj/",
-    "dorms": 5,
-    "comments": 4,
-    "preview": "/assets/dorms/6f8b3332-cdf0-46ac-914e-2fbb82a329af.webp"
-  },
-  {
     "id": "0991102a-3733-4586-bae9-8fd28690d11c",
     "title": "야근용 Classic BGM DJ",
     "summary": "품격있는 야근을 위한 음악이 필요하신가요? 여기 세바티안 집사가 준비한 클래식 음악과 함께하세요.",
@@ -58,6 +46,18 @@
     "dorms": 5,
     "comments": 5,
     "preview": "/assets/dorms/0991102a-3733-4586-bae9-8fd28690d11c.webp"
+  },
+  {
+    "id": "6f8b3332-cdf0-46ac-914e-2fbb82a329af",
+    "title": "음유시인의 홀 - 야근용 RPG BGM DJ",
+    "summary": "야근하는데 음악이 필요하세요? 옛날 콘솔 RPG 배경음악과 함께하시면 어떨까요?",
+    "category": "기타",
+    "date": "2026-09-03",
+    "href": "https://dorms.school/apps/6f8b3332-cdf0-46ac-914e-2fbb82a329af",
+    "appUrl": "https://progh2.github.io/rpg-bgm-dj/",
+    "dorms": 5,
+    "comments": 4,
+    "preview": "/assets/dorms/6f8b3332-cdf0-46ac-914e-2fbb82a329af.webp"
   },
   {
     "id": "087e63e4-5926-4048-a6f9-df557cb80148",

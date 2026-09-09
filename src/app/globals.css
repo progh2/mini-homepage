@@ -1863,9 +1863,83 @@ body.lt-intro-open {
   font-weight: bold;
 }
 
-/* 도름스에서 받은 도름 수 */
-.cy-board-dorms {
+/* 주인장이 프로필을 고치는 자리 */
+.cy-edit-btn {
   margin-left: 6px;
-  color: var(--point);
-  font-weight: bold;
+  padding: 1px 7px;
+  border: 1px solid var(--frame-strong);
+  border-radius: 3px;
+  background: #fff;
+  color: var(--sub-ink);
+  font-family: inherit;
+  font-size: 0.62rem;
+  cursor: pointer;
+  vertical-align: middle;
+}
+.cy-edit-btn:hover {
+  background: var(--point);
+  border-color: var(--point);
+  color: #fff;
+}
+
+.cy-edit {
+  margin: 8px 0 10px;
+  padding: 10px;
+  border: 1px solid var(--frame);
+  border-radius: 4px;
+  background: var(--mint-tint);
+}
+.cy-edit-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+.cy-edit-row > span {
+  flex: 0 0 84px;
+  font-size: 0.72rem;
+  color: var(--sub-ink);
+}
+.cy-edit-row input,
+.cy-edit-row textarea {
+  flex: 1;
+  min-width: 0;
+  font-family: inherit;
+  font-size: 0.75rem;
+  padding: 4px 6px;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  background: #fff;
+  color: #444;
+}
+.cy-edit-row textarea {
+  resize: vertical;
+  line-height: 1.5;
+}
+.cy-edit-tall {
+  align-items: flex-start;
+}
+.cy-edit-tall > span {
+  padding-top: 5px;
+}
+.cy-edit-hint {
+  margin: 0 0 8px;
+  font-size: 0.66rem;
+  color: #999;
+  line-height: 1.5;
+}
+.cy-edit-buttons {
+  display: flex;
+  gap: 5px;
+}
+
+@media (max-width: 480px) {
+  .cy-edit-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 3px;
+  }
+  .cy-edit-row > span {
+    flex: none;
+  }
 }
