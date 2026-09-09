@@ -56,7 +56,11 @@ function uploadedOn(url) {
 }
 
 async function thumbnail(app) {
-  const src = app.logo && app.logo.startsWith("http") ? app.logo : app.image;
+  /* 도름스에 올린 대표 이미지(image)를 씁니다. logo 는 앱 사이트에 있는
+     스크린샷이라 본문 한 장면인 경우가 많습니다. 실제로 급식쪽지와
+     음유시인의 홀이 그래서 엉뚱한 그림이 걸렸습니다.
+     대표 이미지가 없을 때만 logo 로 물러섭니다. */
+  const src = app.image || (app.logo && app.logo.startsWith("http") ? app.logo : null);
   if (!src) return null;
   const file = `${app.appId}.webp`;
   const dest = path.join(IMG_DIR, file);

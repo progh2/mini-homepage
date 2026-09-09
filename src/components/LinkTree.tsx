@@ -16,12 +16,16 @@ import {
   deleteGuestbookEntry,
   isOwner,
   isSecretGuestbookEnabled,
+  PROFILE_LIMITS,
+  saveProfile,
+  subscribeProfile,
   updateGuestbookEntry,
   recordVisit,
   signInWithGoogle,
   signOutOfGoogle,
   subscribeGuestbook,
   subscribeUser,
+  type ProfileOverride,
   type RemoteEntry,
   type SignedInUser,
   type VisitCounts
@@ -171,17 +175,140 @@ function HomeTab() {
   );
 }
 
-function ProfileTab() {
+/* 설정 파일 값을 기본으로 두고 주인장이 고친 것만 덮어씁니다.
+   Firebase 를 안 붙였으면 설정 파일 값 그대로입니다. */
+function useProfileOverride() {
+  const [over, setOver] = useState<ProfileOverride>({});
+  useEffect(() => subscribeProfile(setOver), []);
+  return over;
+}
+
+function ProfileEditor({ over, onClose }: { over: ProfileOverride; onClose: () => void }) {
+  const fieldId = useId();
+  const [name, setName] = useState(over.teacherName ?? profile.teacherName);
+  const [intro, setIntro] = useState(over.introDescription ?? profile.introDescription);
+  const [sub, setSub] = useState(over.catalogDescription ?? profile.catalogDescription);
+  const [lines, setLines] = useState(
+    (over.aboutLines ?? defaultAboutLines()).join("\n")
+  );
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const save = async () => {
+    if (busy) return;
+    setBusy(true);
+    setError(null);
+    try {
+      await saveProfile({
+        teacherName: name,
+        introDescription: intro,
+        catalogDescription: sub,
+        aboutLines: lines.split("\n")
+      });
+      onClose();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "저장하지 못했어요.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="cy-edit">
+      <label className="cy-edit-row">
+        <span>이름</span>
+        <input
+          id={`${fieldId}-name`}
+          name="profile-name"
+          value={name}
+          onChange={e => setName(e.target.value)}
+          maxLength={PROFILE_LIMITS.name}
+        />
+      </label>
+      <label className="cy-edit-row">
+        <span>한 줄 소개</span>
+        <input
+          id={`${fieldId}-intro`}
+          name="profile-intro"
+          value={intro}
+          onChange={e => setIntro(e.target.value)}
+          maxLength={PROFILE_LIMITS.line}
+        />
+      </label>
+      <label className="cy-edit-row">
+        <span>이름 아래 한 줄</span>
+        <input
+          id={`${fieldId}-sub`}
+          name="profile-sub"
+          value={sub}
+          onChange={e => setSub(e.target.value)}
+          maxLength={PROFILE_LIMITS.line}
+        />
+      </label>
+      <label className="cy-edit-row cy-edit-tall">
+        <span>소개 글</span>
+        <textarea
+          id={`${fieldId}-about`}
+          name="profile-about"
+          value={lines}
+          onChange={e => setLines(e.target.value)}
+          rows={4}
+        />
+      </label>
+      <p className="cy-edit-hint">
+        한 줄에 하나씩 적으면 문단이 나뉩니다. 최대 {PROFILE_LIMITS.lines}줄.
+        비워 두면 처음 설정한 내용으로 돌아갑니다.
+      </p>
+      <div className="cy-edit-buttons">
+        <button type="button" className="cy-gb-submit" onClick={save} disabled={busy}>
+          {busy ? "저장중" : "저장"}
+        </button>
+        <button type="button" className="cy-oe-btn" onClick={onClose} disabled={busy}>
+          취소
+        </button>
+      </div>
+      {error ? <span className="cy-gb-message is-error">{error}</span> : null}
+    </div>
+  );
+}
+
+/* 설정 파일에 적힌 소개 글의 첫 문단들입니다. 고치기 화면의 기본값으로 씁니다. */
+function defaultAboutLines() {
+  const block = profileSections[0]?.blocks.find(b => b.kind === "text");
+  return block && block.kind === "text" ? block.lines : [];
+}
+
+function ProfileTab({ viewer }: { viewer: SignedInUser | null }) {
+  const over = useProfileOverride();
+  const [editing, setEditing] = useState(false);
+
   return (
     <>
-      {profileSections.map(section => (
+      {profileSections.map((section, si) => (
         <div key={section.id} className="cy-content-box">
-          <SectionTitle title={section.title} sub={section.subtitle} />
+          <div className="cy-section-title">
+            {section.title}
+            {section.subtitle ? <span className="cy-sub-text">{section.subtitle}</span> : null}
+            {/* 주인장만 고칠 수 있습니다. 파일을 고쳐 다시 배포하지 않아도
+                바뀌도록 첫 구역에만 답니다. */}
+            {si === 0 && isOwner(viewer) && !editing ? (
+              <button type="button" className="cy-edit-btn" onClick={() => setEditing(true)}>
+                수정
+              </button>
+            ) : null}
+          </div>
+
+          {si === 0 && editing ? (
+            <ProfileEditor over={over} onClose={() => setEditing(false)} />
+          ) : null}
+
           {section.blocks.map((block, bi) => {
             if (block.kind === "text") {
+              /* 고친 소개 글이 있으면 그것을, 없으면 설정 파일 값을 씁니다. */
+              const lines = si === 0 && over.aboutLines?.length ? over.aboutLines : block.lines;
               return (
                 <div key={bi} className="cy-text-block">
-                  {block.lines.map((line, i) => (
+                  {lines.map((line, i) => (
                     <p key={i}>{line}</p>
                   ))}
                 </div>
@@ -291,11 +418,7 @@ function BoardTab() {
                     <span className="cy-board-title">{post.title}</span>
                   </span>
                   {post.summary ? <span className="cy-board-summary">{post.summary}</span> : null}
-                  <span className="cy-board-date">
-                    {post.date}
-                    {/* 도름스에서 온 글에는 받은 도름 수를 함께 보여 줍니다. */}
-                    {post.dorms ? <span className="cy-board-dorms">도름 {post.dorms}</span> : null}
-                  </span>
+                  <span className="cy-board-date">{post.date}</span>
                 </span>
               </a>
             </li>
@@ -670,9 +793,13 @@ function PhotoTab() {
 }
 
 export default function LinkTree() {
+  const over = useProfileOverride();
+  const [viewer, setViewer] = useState<SignedInUser | null>(null);
   const [activeTab, setActiveTab] = useState<TabName>("home");
   const [introSkipped, setIntroSkipped] = useState(false);
   const bgmRef = useRef<BgmHandle>(null);
+
+  useEffect(() => subscribeUser(setViewer), []);
 
   /* ?tab=프로필 처럼 탭 딥링크로 들어오면 진입 화면을 건너뜁니다.
      정적 배포에서도 동작하도록 브라우저에서 읽습니다. */
@@ -729,14 +856,16 @@ export default function LinkTree() {
                 </div>
 
                 <div className="cy-intro-text">
-                  {profile.introDescription}
+                  {over.introDescription ?? profile.introDescription}
                 </div>
 
                 <BgmPlayer ref={bgmRef} />
 
                 <div className="cy-profile-name">
-                  <div className="name-bold">{profile.teacherName}</div>
-                  <div className="title-sub">{profile.catalogDescription}</div>
+                  <div className="name-bold">{over.teacherName ?? profile.teacherName}</div>
+                  <div className="title-sub">
+                    {over.catalogDescription ?? profile.catalogDescription}
+                  </div>
                 </div>
 
                 {/* select 의 onChange 로 새 창을 열면, 키보드로 항목을 훑는 동안
@@ -771,7 +900,7 @@ export default function LinkTree() {
                 aria-labelledby={`cy-tab-${activeTab}`}
               >
                 {activeTab === "home" && <HomeTab />}
-                {activeTab === "profile" && <ProfileTab />}
+                {activeTab === "profile" && <ProfileTab viewer={viewer} />}
                 {activeTab === "story" && <StoryTab />}
                 {activeTab === "board" && <BoardTab />}
                 {activeTab === "photo" && <PhotoTab />}
