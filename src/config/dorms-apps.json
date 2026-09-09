@@ -1,0 +1,122 @@
+[
+  {
+    "id": "e4978f46-0194-40fd-a1a2-45d165aa4a2a",
+    "title": "기초 통계량 실험실 · 숫자로 데이터 읽기",
+    "summary": "https://progh2.github.io/stat-lab/",
+    "category": "교과·수업",
+    "date": "2026-09-07",
+    "href": "https://dorms.school/apps/e4978f46-0194-40fd-a1a2-45d165aa4a2a",
+    "appUrl": "https://progh2.github.io/stat-lab/",
+    "dorms": 10,
+    "comments": 0,
+    "preview": "/assets/dorms/e4978f46-0194-40fd-a1a2-45d165aa4a2a.webp"
+  },
+  {
+    "id": "0de6a104-bf19-4751-a297-9fee61e301f3",
+    "title": "급식쪽지",
+    "summary": "오늘 급식, 바탕화면에서 바로 확인 학교 급식 메뉴와 학사일정을 포스트잇처럼 화면에 붙여두세요. 인증키 없이 바로 쓸 수 있어요.",
+    "category": "기타",
+    "date": "2026-09-07",
+    "href": "https://dorms.school/apps/0de6a104-bf19-4751-a297-9fee61e301f3",
+    "appUrl": "https://progh2.github.io/schoollunchmemo/",
+    "dorms": 7,
+    "comments": 4,
+    "preview": "/assets/dorms/0de6a104-bf19-4751-a297-9fee61e301f3.webp"
+  },
+  {
+    "id": "4d98ca63-783e-47b9-8115-ac1a439b5740",
+    "title": "미드나잇 클럽 - 야근용 째즈 BGM",
+    "summary": "밤이 깊을수록 클럽도 어두워지고 야근도 계속됩니다. 그럴때 째즈의 바이브에 빠져보세요.",
+    "category": "기타",
+    "date": "2026-09-07",
+    "href": "https://dorms.school/apps/4d98ca63-783e-47b9-8115-ac1a439b5740",
+    "appUrl": "https://progh2.github.io/jazz-bgm-dj/",
+    "dorms": 4,
+    "comments": 6,
+    "preview": "/assets/dorms/4d98ca63-783e-47b9-8115-ac1a439b5740.webp"
+  },
+  {
+    "id": "6f8b3332-cdf0-46ac-914e-2fbb82a329af",
+    "title": "음유시인의 홀 - 야근용 RPG BGM DJ",
+    "summary": "야근하는데 음악이 필요하세요? 옛날 콘솔 RPG 배경음악과 함께하시면 어떨까요?",
+    "category": "기타",
+    "date": "2026-09-03",
+    "href": "https://dorms.school/apps/6f8b3332-cdf0-46ac-914e-2fbb82a329af",
+    "appUrl": "https://progh2.github.io/rpg-bgm-dj/",
+    "dorms": 5,
+    "comments": 4,
+    "preview": "/assets/dorms/6f8b3332-cdf0-46ac-914e-2fbb82a329af.webp"
+  },
+  {
+    "id": "0991102a-3733-4586-bae9-8fd28690d11c",
+    "title": "야근용 Classic BGM DJ",
+    "summary": "품격있는 야근을 위한 음악이 필요하신가요? 여기 세바티안 집사가 준비한 클래식 음악과 함께하세요.",
+    "category": "기타",
+    "date": "2026-09-03",
+    "href": "https://dorms.school/apps/0991102a-3733-4586-bae9-8fd28690d11c",
+    "appUrl": "https://progh2.github.io/classic-bgm-dj/",
+    "dorms": 5,
+    "comments": 5,
+    "preview": "/assets/dorms/0991102a-3733-4586-bae9-8fd28690d11c.webp"
+  },
+  {
+    "id": "087e63e4-5926-4048-a6f9-df557cb80148",
+    "title": "캣모아 - 교사를 위한 일정 수집 고양이",
+    "summary": "일정 자료를 고양이에게 던지세요 한글 문서 · PDF · 스크린샷 · 쿨메신저 쪽지 · 복사한 텍스트. AI가 일정을 뽑아내고, 확인 한 번이면",
+    "category": "기타",
+    "date": "2026-08-29",
+    "href": "https://dorms.school/apps/087e63e4-5926-4048-a6f9-df557cb80148",
+    "appUrl": "https://progh2.github.io/catmoa/",
+    "dorms": 7,
+    "comments": 9,
+    "preview": "/assets/dorms/087e63e4-5926-4048-a6f9-df557cb80148.webp"
+  },
+  {
+    "id": "ec1de254-f0e1-4d4e-afbd-bb337cbd510b",
+    "title": "서울시교육청 연구정보원에서 호스팅하는 학교 홈페이지를 위한 급식 식단 업로드 양식 생성기",
+    "summary": "월별 식단표 엑셀 또는 나이스 급식 API로, 서울시교육청 연구정보원에서 호스팅하는 학교 홈페이지를 위한 급식 업로드 양식(mlsvTmplat)",
+    "category": "기타",
+    "date": "2026-08-25",
+    "href": "https://dorms.school/apps/ec1de254-f0e1-4d4e-afbd-bb337cbd510b",
+    "appUrl": "https://progh2.github.io/mirim-meal-converter/",
+    "dorms": 6,
+    "comments": 1,
+    "preview": "/assets/dorms/ec1de254-f0e1-4d4e-afbd-bb337cbd510b.webp"
+  },
+  {
+    "id": "f5537d57-7931-4900-aa0f-a1ec658a7f2d",
+    "title": "깃허브 레포 매니저",
+    "summary": "깃허브 저장소 관리 프로그램",
+    "category": "기타",
+    "date": "2026-08-24",
+    "href": "https://dorms.school/apps/f5537d57-7931-4900-aa0f-a1ec658a7f2d",
+    "appUrl": "https://github.com/progh2/repomanager",
+    "dorms": 12,
+    "comments": 8,
+    "preview": "/assets/dorms/f5537d57-7931-4900-aa0f-a1ec658a7f2d.webp"
+  },
+  {
+    "id": "2bf24f62-dbb3-421f-99fd-221b53073c46",
+    "title": "직업계고 AI 면접 모의고사 시뮬레이터",
+    "summary": "AI 면접 연습 앱에 오신 것을 환영합니다! 학과와 면접 유형을 선택한 후, AI 면접관이 제시하는 질문에 답변을 입력하세요. 각 답변에 대한 ",
+    "category": "진로·입시",
+    "date": "2026-08-24",
+    "href": "https://dorms.school/apps/2bf24f62-dbb3-421f-99fd-221b53073c46",
+    "appUrl": "https://partyrock.aws/u/hamteacher/ksGF_z3I_3/AI",
+    "dorms": 8,
+    "comments": 5,
+    "preview": "/assets/dorms/2bf24f62-dbb3-421f-99fd-221b53073c46.webp"
+  },
+  {
+    "id": "2ad7411b-2a13-4057-a0f5-c8757d156d25",
+    "title": "인터넷 랙 줄여주는 팁 적용 프로그램",
+    "summary": "인터넷 랙 줄여주는 설정을 클릭 한번으로 적용하는 간단한 GUI 프로그램",
+    "category": "기타",
+    "date": "2026-08-24",
+    "href": "https://dorms.school/apps/2ad7411b-2a13-4057-a0f5-c8757d156d25",
+    "appUrl": "https://github.com/progh2/internet-lag-tips",
+    "dorms": 7,
+    "comments": 0,
+    "preview": "/assets/dorms/2ad7411b-2a13-4057-a0f5-c8757d156d25.webp"
+  }
+]

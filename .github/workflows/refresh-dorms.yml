@@ -1,0 +1,47 @@
+# 도름스 프로필의 앱 목록을 하루 한 번 다시 가져옵니다.
+#
+# 게시판은 빌드할 때 굽습니다. 그래서 새 앱을 올려도 이 저장소에 무언가
+# 푸시하기 전까지는 미니홈피에 안 나옵니다. 이 작업이 바뀐 것이 있을 때만
+# 커밋해서, 그 커밋이 배포를 일으킵니다.
+name: Refresh DoRms apps
+
+on:
+  schedule:
+    # 매일 한국 시간 오전 6시 (UTC 21시)
+    - cron: "0 21 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: refresh-dorms
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      - name: Fetch DoRms apps
+        run: node scripts/fetch-dorms-apps.mjs
+
+      - name: Commit if changed
+        run: |
+          if git diff --quiet -- src/config/dorms-apps.json public/assets/dorms; then
+            echo "바뀐 것이 없습니다."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/config/dorms-apps.json public/assets/dorms
+          git commit -m "도름스 앱 목록 자동 갱신"
+          git push

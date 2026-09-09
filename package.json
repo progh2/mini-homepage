@@ -13,7 +13,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "prebuild": "node scripts/fetch-dorms-apps.mjs"
   },
   "dependencies": {
     "@paper-design/shaders-react": "^0.0.77",
