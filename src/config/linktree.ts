@@ -52,18 +52,18 @@ export const profileSections: ProfileSection[] = [
            본문에 적은 주소(dorms.school/... 같은)는 화면에서 자동으로
            링크가 됩니다. */
         lines: []
-      },
-      {
-        kind: "list",
-        heading: "제작한 프로그램",
-        /* 게시판과 같은 곳(도름스 프로필)에서 옵니다. 손으로 적어 두면
-           새 앱을 올릴 때마다 두 곳을 고쳐야 하고 언젠가 어긋납니다.
-           긴 제목은 " - " 앞부분만 씁니다. */
-        items: dormsApps.map(a => a.title.split(" - ")[0].split(" · ")[0])
       }
     ]
   }
 ];
+
+/* 소개 글에 적은 @아이디를 어디로 보낼지입니다. 뒤에 아이디가 붙습니다.
+   비워 두면 @아이디를 링크로 만들지 않습니다.
+
+   영문 아이디만 링크가 됩니다. 한글 아이디(@평온나날 같은)는 조사가
+   붙어 어디까지가 아이디인지 알 수 없고, 도름스처럼 다른 서비스의
+   아이디일 수도 있어서 그대로 둡니다. */
+export const mentionLinkBase = "https://www.instagram.com/";
 
 /* 연재물 회차는 src/config/miyotoon.ts 에 있습니다. */
 export { episodes, type Episode } from "./miyotoon";
