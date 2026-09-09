@@ -3,6 +3,7 @@
 import { useEffect, useId, useRef, useState } from "react";
 import { Spiral, type SpiralProps } from "@paper-design/shaders-react";
 import { asset } from "@/lib/asset";
+import { setDraw } from "@/lib/drawParam";
 import BgmPlayer, { type BgmHandle } from "@/components/BgmPlayer";
 import Oekaki from "@/components/Oekaki";
 import {
@@ -290,7 +291,11 @@ function BoardTab() {
                     <span className="cy-board-title">{post.title}</span>
                   </span>
                   {post.summary ? <span className="cy-board-summary">{post.summary}</span> : null}
-                  <span className="cy-board-date">{post.date}</span>
+                  <span className="cy-board-date">
+                    {post.date}
+                    {/* 도름스에서 온 글에는 받은 도름 수를 함께 보여 줍니다. */}
+                    {post.dorms ? <span className="cy-board-dorms">도름 {post.dorms}</span> : null}
+                  </span>
                 </span>
               </a>
             </li>
@@ -786,7 +791,13 @@ export default function LinkTree() {
                   aria-selected={activeTab === tab}
                   aria-controls={`cy-panel-${tab}`}
                   className={"cy-tab-btn " + (activeTab === tab ? "active" : "")}
-                  onClick={() => setActiveTab(tab)}
+                  onClick={() => {
+                    setActiveTab(tab);
+                    /* 이미 보던 탭을 다시 누르면 처음 화면으로 돌아옵니다.
+                       낙서장에서 그림을 열어 둔 채 탭을 눌렀을 때
+                       목록으로 가지 않으면 갇힌 느낌이 듭니다. */
+                    if (tab === "photo") setDraw(null);
+                  }}
                 >
                   <span className="cy-tab-line">{NAV_LABELS[tab]}</span>
                 </button>

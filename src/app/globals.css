@@ -1862,3 +1862,10 @@ body.lt-intro-open {
   font-size: 0.6rem;
   font-weight: bold;
 }
+
+/* 도름스에서 받은 도름 수 */
+.cy-board-dorms {
+  margin-left: 6px;
+  color: var(--point);
+  font-weight: bold;
+}

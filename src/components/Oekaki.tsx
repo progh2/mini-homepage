@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useId, useRef, useState, useSyncExternalStore } from "react";
+import { drawUrl, readDraw, readDrawOnServer, setDraw, subscribeDraw } from "@/lib/drawParam";
 import {
   OEKAKI_LIMITS,
   addOekaki,
@@ -1319,11 +1320,8 @@ function OekakiDetail({
           type="button"
           className="cy-oe-btn"
           onClick={async () => {
-            const url = new URL(window.location.href);
-            url.searchParams.set("tab", "photo");
-            url.searchParams.set("draw", item.id);
             try {
-              await navigator.clipboard.writeText(url.toString());
+              await navigator.clipboard.writeText(drawUrl(item.id));
               setCopied(true);
               window.setTimeout(() => setCopied(false), 2000);
             } catch {
@@ -1446,7 +1444,9 @@ export default function Oekaki() {
   const [failed, setFailed] = useState(false);
   const [me, setMe] = useState<SignedInUser | null | undefined>(undefined);
   const [open, setOpen] = useState(false);
-  const [openId, setOpenId] = useState<string | null>(null);
+  /* 열려 있는 그림은 주소가 정합니다. 탭을 다시 눌러 주소에서 draw 가
+     빠지면 목록으로 돌아옵니다. */
+  const openId = useSyncExternalStore(subscribeDraw, readDraw, readDrawOnServer);
   const [page, setPage] = useState(0);
   const [help, setHelp] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
@@ -1459,28 +1459,6 @@ export default function Oekaki() {
     return subscribeUser(setMe);
   }, []);
 
-  /* ?draw=<id> 로 들어오면 그 그림을 바로 엽니다. 정적 배포라 주소는
-     브라우저에서 읽습니다. 탭 딥링크와 같은 방식입니다. */
-  useEffect(() => {
-    const id = new URLSearchParams(window.location.search).get("draw");
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    if (id) setOpenId(id);
-  }, []);
-
-  /* 그림을 열고 닫을 때 주소를 맞춰 둡니다. 새로고침하거나 링크를 건네도
-     같은 그림이 열립니다. 화면을 새로 그리지 않도록 replaceState 를 씁니다. */
-  const show = (id: string | null) => {
-    setOpenId(id);
-    const url = new URL(window.location.href);
-    if (id) {
-      url.searchParams.set("tab", "photo");
-      url.searchParams.set("draw", id);
-    } else {
-      url.searchParams.delete("draw");
-    }
-    window.history.replaceState(null, "", url);
-  };
-
   /* 주인장인지에 따라 질의가 달라지므로 로그인 상태가 바뀌면 다시 겁니다. */
   useEffect(() => {
     if (!isGuestbookEnabled || me === undefined) return;
@@ -1491,6 +1469,7 @@ export default function Oekaki() {
     await addOekaki(dataUrl, comment, replay);
     setOpen(false);
     setPage(0);
+    setDraw(null);
     setNotice("그림을 남겼어요. 고맙습니다!");
   };
 
@@ -1586,8 +1565,8 @@ export default function Oekaki() {
           key={viewing.id}
           item={viewing}
           viewer={viewer}
-          onClose={() => show(null)}
-          onDeleted={() => show(null)}
+          onClose={() => setDraw(null)}
+          onDeleted={() => setDraw(null)}
         />
       ) : (
         <>
@@ -1633,7 +1612,7 @@ export default function Oekaki() {
                     key={item.id}
                     item={item}
                     viewer={viewer}
-                    onOpen={() => show(item.id)}
+                    onOpen={() => setDraw(item.id)}
                   />
                 ))}
               </ul>
