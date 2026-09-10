@@ -13,6 +13,8 @@ on:
 
 permissions:
   contents: write
+  # 갱신한 뒤 배포를 직접 부르려면 필요합니다.
+  actions: write
 
 concurrency:
   group: refresh-dorms
@@ -35,9 +37,11 @@ jobs:
         run: node scripts/fetch-dorms-apps.mjs
 
       - name: Commit if changed
+        id: commit
         run: |
           if git diff --quiet -- src/config/dorms-apps.json public/assets/dorms; then
             echo "바뀐 것이 없습니다."
+            echo "changed=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
           git config user.name "github-actions[bot]"
@@ -45,3 +49,13 @@ jobs:
           git add src/config/dorms-apps.json public/assets/dorms
           git commit -m "도름스 앱 목록 자동 갱신"
           git push
+          echo "changed=true" >> "$GITHUB_OUTPUT"
+
+      # Actions 가 만든 커밋은 다른 워크플로를 일으키지 않습니다. 무한 반복을
+      # 막으려는 안전장치입니다. 그래서 배포를 직접 불러야 새 앱이 사이트에
+      # 올라갑니다. 이 단계가 없으면 갱신만 되고 화면은 그대로입니다.
+      - name: Deploy
+        if: steps.commit.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh workflow run deploy.yml --ref main
