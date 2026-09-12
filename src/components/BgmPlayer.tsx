@@ -182,7 +182,14 @@ export default function BgmPlayer({ ref }: { ref?: React.Ref<BgmHandle> }) {
 
   const start = useCallback(() => {
     wantsPlayRef.current = true;
-    playerRef.current?.playVideo();
+    /* 유튜브 플레이어는 객체가 먼저 생기고 onReady 가 온 뒤에야 메서드가
+       붙습니다. 인트로 버튼을 빨리 누르면 객체는 있는데 playVideo 가 아직
+       없어 여기서 예외가 납니다. 그러면 이 함수를 부른 쪽의 다음 줄
+       (인트로 닫기)이 실행되지 않아 화면이 넘어가지 않습니다.
+
+       wantsPlayRef 에 적어 두었으니 준비되는 대로 알아서 재생됩니다. */
+    const player = playerRef.current;
+    if (player && typeof player.playVideo === "function") player.playVideo();
     watchForBlock();
   }, [watchForBlock]);
 

@@ -2089,6 +2089,31 @@ body.lt-skin-neon {
   background: #03040D;
 }
 
+/* 네온 범위 안에서는 클래식 규칙을 통째로 되돌립니다.
+
+   왜 필요한가: 네온은 원래 독립 페이지로 만든 디자인이라 클래식이
+   정하는 모든 칸을 다시 정하지는 않습니다. 안 정한 칸은 클래식 값이
+   그대로 새어 들어옵니다. 실제로 왼쪽 정보판이 흰 상자가 되고 탭이
+   세로로 섰습니다. 보이는 것만 하나씩 고치면 안 보이는 것이 남습니다.
+
+   revert 는 "작성자가 아예 안 적은 셈 치라" 는 뜻이라 클래식 선언을
+   건너뛰고 브라우저 기본값으로 갑니다. 이 선택자는 (0,2,0) 이고
+   클래식 규칙은 거의 다 (0,1,0) 이라 리셋이 이깁니다. 아래 네온
+   규칙들은 (0,2,1) 이상이거나 같은 (0,2,0) 이면서 뒤에 있으므로
+   리셋을 이깁니다. 그래서 이 블록은 네온 규칙보다 반드시 앞에
+   있어야 합니다.
+
+   클래식 화면에는 닿지 않습니다. data-skin="neon" 일 때만 붙습니다. */
+.cy-root[data-skin="neon"],
+.cy-root[data-skin="neon"] *,
+.cy-root[data-skin="neon"] *::before,
+.cy-root[data-skin="neon"] *::after {
+  all: revert;
+  /* all 이 되돌리면서 box-sizing 도 브라우저 기본(content-box)으로
+     갑니다. 데모는 전부 border-box 를 전제로 크기를 잡았습니다. */
+  box-sizing: border-box;
+}
+
 .cy-root[data-skin="neon"] {
   --nav-h: 84px;
   --hud-w: 380px;
@@ -3059,4 +3084,125 @@ body.lt-skin-neon {
    있어도 그대로 맞습니다. */
 .cy-root[data-skin="neon"] .cy-panel-body {
   display: contents;
+}
+
+/* 홈피 설정은 주인장만 보지만, 네온에서도 읽을 만해야 합니다.
+   위의 all: revert 가 클래식 설정 스타일까지 되돌리므로 여기서
+   네온 몫을 다시 그립니다. */
+.cy-root[data-skin="neon"] .cy-settings-group {
+  display: block;
+  margin: 0 0 18px;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+
+.cy-root[data-skin="neon"] .cy-settings-legend {
+  display: block;
+  margin: 0 0 8px;
+  padding: 0;
+  font-family: var(--display);
+  font-size: 1.1rem;
+  letter-spacing: 0.08em;
+  color: var(--accent);
+  text-shadow: 0 0 10px rgba(43, 240, 255, 0.45);
+}
+
+.cy-root[data-skin="neon"] .cy-settings-choice {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  margin-bottom: 6px;
+  border: 1px solid rgba(43, 240, 255, 0.22);
+  background: rgba(10, 16, 52, 0.55);
+  font-size: 1.15rem;
+  line-height: 1.5;
+  color: var(--ink);
+  cursor: pointer;
+}
+.cy-root[data-skin="neon"] .cy-settings-choice:hover {
+  border-color: var(--point);
+}
+
+.cy-root[data-skin="neon"] .cy-settings-choice input[type="radio"] {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  accent-color: var(--point);
+  cursor: inherit;
+}
+
+.cy-root[data-skin="neon"] .cy-settings-choice-label {
+  font-family: var(--display);
+  font-size: 1rem;
+  letter-spacing: 0.04em;
+  color: var(--heading);
+}
+
+/* 설명은 한 줄 내려 적습니다. 네온은 글자가 커서 한 줄에 넣으면
+   이름과 설명이 뭉칩니다. */
+.cy-root[data-skin="neon"] .cy-settings-hint {
+  flex-basis: 100%;
+  font-size: 1rem;
+  color: var(--sub-ink);
+}
+
+.cy-root[data-skin="neon"] .cy-settings-note {
+  margin: 6px 0 0;
+  font-size: 1rem;
+  color: var(--point);
+}
+
+.cy-root[data-skin="neon"] .cy-switch {
+  flex: none;
+  width: 42px;
+  height: 22px;
+  padding: 3px;
+  border: 1px solid var(--frame-strong);
+  border-radius: 999px;
+  background: rgba(3, 4, 13, 0.8);
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, box-shadow 0.15s;
+}
+.cy-root[data-skin="neon"] .cy-switch:disabled {
+  cursor: default;
+  opacity: 0.6;
+}
+.cy-root[data-skin="neon"] .cy-switch.is-on {
+  background: var(--point);
+  border-color: var(--point);
+  box-shadow: 0 0 16px rgba(255, 43, 214, 0.5);
+}
+
+.cy-root[data-skin="neon"] .cy-switch-knob {
+  display: block;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--accent);
+  transition: transform 0.15s;
+}
+.cy-root[data-skin="neon"] .cy-switch.is-on .cy-switch-knob {
+  background: #fff;
+  transform: translateX(20px);
+}
+
+/* 저장 결과 한 줄입니다. 클래식 규칙이 되돌려지므로 여기서 정합니다. */
+.cy-root[data-skin="neon"] .cy-gb-message {
+  display: block;
+  font-size: 1rem;
+  color: var(--sub-ink);
+}
+.cy-root[data-skin="neon"] .cy-gb-message.is-error {
+  color: var(--danger);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cy-root[data-skin="neon"] .cy-switch,
+  .cy-root[data-skin="neon"] .cy-switch-knob {
+    transition: none;
+  }
 }

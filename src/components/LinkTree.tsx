@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useId, useRef, useState, useSyncExternalStore } from "react";
+import { Component, useEffect, useId, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
 import dynamic from "next/dynamic";
 import { Spiral, type SpiralProps } from "@paper-design/shaders-react";
 import { asset } from "@/lib/asset";
@@ -53,6 +53,34 @@ import { UNKNOWN_WEATHER, fetchWeather, formatTodayWeather } from "@/lib/weather
    ssr: false 인 이유: 정적 export 라 서버에는 스킨 정보가 없고,
    3D 는 브라우저에서만 뜻이 있습니다. */
 const NeonStage = dynamic(() => import("@/components/NeonStage"), { ssr: false });
+
+/* 네온 무대를 못 불러와도 미니홈피가 통째로 사라지지 않게 막습니다.
+
+   next/dynamic 은 청크를 못 받으면 렌더 도중에 예외를 던집니다. 안
+   잡으면 흰 화면만 남습니다. 3D 하나 못 쓰는 일로 사이트 전체가 죽는
+   것은 맞바꿀 만한 거래가 아닙니다. 2D 로 내려가 그대로 보여 줍니다. */
+class NeonBoundary extends Component<
+  { onError: () => void; children: ReactNode },
+  { failed: boolean }
+> {
+  state = { failed: false };
+
+  static getDerivedStateFromError() {
+    return { failed: true };
+  }
+
+  componentDidCatch(error: unknown) {
+    console.warn("[neon] 3D 무대를 불러오지 못해 2D 로 보여 줍니다.", error);
+    this.props.onError();
+  }
+
+  render() {
+    /* 실패한 뒤에도 자식을 계속 그리면 같은 예외가 다시 나고, React 는
+       반복을 끊으려고 트리 전체를 버립니다. 결국 흰 화면입니다.
+       한 번 실패하면 그리지 않습니다. 부모가 곧 2D 쪽으로 갈아탑니다. */
+    return this.state.failed ? null : this.props.children;
+  }
+}
 
 const ALL_TABS = ["home", "profile", "story", "board", "photo"] as const;
 type TabName = (typeof ALL_TABS)[number];
@@ -883,6 +911,40 @@ export default function LinkTree() {
     }
   }, []);
 
+  /* 네온 글꼴입니다. 클래식은 쓰지 않으므로 스킨을 따라 붙였다 뗍니다.
+     구글 폰트 서버로 요청이 한 번 나갑니다. 이 사이트는 이미 유튜브와
+     날씨 서버를 부르고 있어 새로 생기는 성질의 것은 아닙니다.
+
+     폰트가 오기 전에는 theme.ts 의 대체 글꼴로 그려지고 도착하면
+     바뀝니다(display=swap). 글자가 안 보이는 구간은 없습니다.
+
+     3D 무대가 아니라 여기 있는 이유: 무대를 못 불러온 경우에도
+     글꼴은 있어야 네온답게 보입니다. */
+  useEffect(() => {
+    if (!neon) return;
+    const links = [
+      { rel: "preconnect", href: "https://fonts.googleapis.com", crossOrigin: "" },
+      { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
+      {
+        rel: "stylesheet",
+        href:
+          "https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900" +
+          "&family=Share+Tech+Mono&family=Do+Hyeon" +
+          "&family=Nanum+Gothic+Coding:wght@400;700&display=swap",
+        crossOrigin: ""
+      }
+    ].map(spec => {
+      const el = document.createElement("link");
+      el.rel = spec.rel;
+      el.href = spec.href;
+      if (spec.crossOrigin) el.crossOrigin = spec.crossOrigin;
+      el.dataset.neonFont = "1";
+      document.head.appendChild(el);
+      return el;
+    });
+    return () => links.forEach(el => el.remove());
+  }, [neon]);
+
   /* 네온은 화면 전체를 채우는 고정 레이아웃이라 body 가 스크롤되면
      안 됩니다. html, body 는 cy-root 바깥이라 스킨 선택자로 닿지
      못하므로 여기서 클래스를 붙였다 뗍니다. */
@@ -1005,20 +1067,26 @@ export default function LinkTree() {
               {/* 네온은 탭 넷을 모두 만들어 3D 로 돌립니다. 클래식은
                   보고 있는 하나만 만듭니다. 스킨을 바꿔도 왼쪽의 BGM 과
                   방문 수는 이 갈림길 바깥에 있어 끊기지 않습니다. */}
-              {neon ? (
-                <NeonStage
-                  tabs={TABS}
-                  labels={NAV_LABELS}
-                  active={activeTab}
-                  onSelect={tab => setActiveTab(tab as TabName)}
-                  renderPanel={panelFor}
-                  backgroundRef={backgroundRef}
-                  locked={showIntro}
-                  onFallback={() => setNeon3dFailed(true)}
-                />
+              {neon && !neon3dFailed ? (
+                <NeonBoundary onError={() => setNeon3dFailed(true)}>
+                  <NeonStage
+                    tabs={TABS}
+                    labels={NAV_LABELS}
+                    active={activeTab}
+                    onSelect={tab => setActiveTab(tab as TabName)}
+                    renderPanel={panelFor}
+                    backgroundRef={backgroundRef}
+                    locked={showIntro}
+                    onFallback={() => setNeon3dFailed(true)}
+                  />
+                </NeonBoundary>
               ) : (
+                /* 클래식이거나, 네온인데 3D 를 못 쓰는 경우입니다.
+                   네온의 2D 폴백 CSS 는 is-active 인 창만 보여 주므로
+                   보고 있는 탭에 그 표시를 답니다. 클래식 마크업은
+                   예전 그대로입니다. */
                 <div
-                  className="cy-right-content"
+                  className={"cy-right-content" + (neon ? " is-active" : "")}
                   role="tabpanel"
                   id={`cy-panel-${activeTab}`}
                   aria-labelledby={`cy-tab-${activeTab}`}
