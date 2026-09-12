@@ -20,10 +20,17 @@ import { createPortal } from "react-dom";
 
    모양과 수치는 docs/design/neon-demo.html 에서 그대로 옮겼습니다. */
 
-const FOV = 36;
-/* 옆으로 밀린 창이 보는 사람 쪽으로 얼마나 돌아설지입니다. 1 이면 늘
-   정면을 보고, 0 이면 원의 접선을 향합니다. */
-const K_YAW = 0.42;
+/* 화각입니다. 좁으면 망원처럼 눌려 보여 원을 돌아도 옆으로 미끄러지는
+   것처럼 느껴집니다. 넓힐수록 카메라가 가까워져 깊이가 살아납니다. */
+const FOV = 44;
+/* 옆으로 밀린 창이 보는 사람 쪽으로 얼마나 돌아설지입니다. 0 이면 원의
+   접선을 향하고(진짜 원통), 1 이면 어디 있든 정면을 봅니다.
+
+   1 에 가까우면 돌아도 정면이라 평면을 옆으로 미는 것처럼 보이고,
+   0 에 가까우면 옆 창이 칼날처럼 서서 안 보입니다. 창이 넷이라 옆 창은
+   90도에 서는데, 이 값이면 65도쯤 돌아서서 두께가 보이면서도 무엇인지는
+   읽힙니다. */
+const K_YAW = 0.5;
 
 type Stage = {
   hosts: HTMLDivElement[];
@@ -260,14 +267,19 @@ function buildStage({
     const hudW = mobile ? 0 : parseFloat(cs?.getPropertyValue("--hud-w") || "") || 380;
     const regionW = W - hudW;
     const regionH = H - navH;
+    /* 창을 조금 작게 잡습니다. 화면을 꽉 채우면 옆 창이 화면 밖으로
+       밀려나 앞 창 하나만 보이고, 그러면 도는 것이 아니라 넘기는 것처럼
+       보입니다. */
     const pw = Math.round(
-      mobile ? Math.min(W * 0.9, 620) : Math.max(420, Math.min(regionW * 0.64, 880))
+      mobile ? Math.min(W * 0.86, 560) : Math.max(360, Math.min(regionW * 0.44, 620))
     );
     const ph = Math.round(Math.max(380, Math.min(regionH * (mobile ? 0.84 : 0.8), 1000)));
-    /* 원의 반지름입니다. 깊이(Rz)를 조금 줄여 납작한 타원으로 돕니다.
-       정원으로 돌리면 뒤쪽 창이 너무 멀어져 작아 보입니다. */
-    const R = mobile ? pw * 1.02 : pw * 0.85;
-    const Rz = mobile ? pw * 0.9 : pw * 0.8;
+    /* 원의 반지름입니다. 좌우(R)보다 깊이(Rz)를 훨씬 크게 잡아 앞뒤로
+       길쭉한 타원으로 돕니다. 둘이 비슷하면 옆 창이 같은 거리에서 좌우로
+       오갈 뿐이라 평면으로 미끄러지는 것처럼 보입니다. 깊이를 늘리면
+       옆 창이 뒤로 물러나 작아지고, 돌 때 뒤에서 앞으로 걸어 나옵니다. */
+    const R = mobile ? pw * 1.02 : pw * 0.88;
+    const Rz = mobile ? pw * 1.0 : pw * 1.05;
     const cx = hudW / 2;
     const cy = -(navH / 2) + (mobile ? 0 : -6);
     const floorY = cy - ph / 2 - 70;
@@ -647,9 +659,14 @@ function buildStage({
         o.position.z = 0;
         o.rotation.y = 0;
       }
-      o.element.style.opacity = (0.1 + 0.9 * Math.pow(f, 0.85)).toFixed(3);
+      /* 바닥을 꽤 높게 잡습니다. 배경이 거의 검정이라 많이 흐려 놓으면
+         옆 창이 있는지조차 모릅니다. 앞뒤 구분은 원근으로 줄어드는 크기와
+         보라색 테두리가 맡고, 투명도는 거들기만 합니다. */
+      o.element.style.opacity = (0.3 + 0.7 * Math.pow(f, 0.8)).toFixed(3);
       o.element.style.zIndex = String(Math.round(f * 100));
-      o.visible = f > 0.02;
+      /* 문턱을 거의 0 으로 둡니다. 뒤에 있는 창도 돌기 시작하는 순간부터
+         보여야 "뒤에서 돌아 나온다" 로 읽힙니다. */
+      o.visible = f > 0.004;
 
       const mk = markers[i];
       if (mk) {
