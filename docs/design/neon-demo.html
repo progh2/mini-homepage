@@ -832,7 +832,12 @@ img{display:block;max-width:100%}
 /* ---------------- constants ---------------- */
 const SITE = 'https://progh2.github.io/mini-homepage';
 const FS = 'https://firestore.googleapis.com/v1/projects/mini-homepage-addd7/databases/(default)/documents';
-const KEY = 'AIzaSyC9aKizKkwQcr5SOuCpmA8HBS_sT1oC6js';
+/* 원본 데모에는 여기에 Firebase 웹 API 키가 박혀 있었습니다. 이 저장소는
+   공개라 키를 넣지 않기로 했으므로 지웠습니다(AGENTS.md, CLAUDE.md).
+   이 파일은 네온 스킨의 모양과 동작을 참고하려고 보관하는 것이고,
+   실제 사이트는 src/lib/firebase.ts 가 .env.local 의 값으로 붙습니다.
+   이 파일만 단독으로 열어 보려면 아래에 직접 키를 넣으세요. */
+const KEY = '';
 const REDUCED = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 const MQ_MOBILE = window.matchMedia('(max-width: 900px)');
 
