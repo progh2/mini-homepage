@@ -2208,21 +2208,22 @@ body.lt-skin-neon {
 }
 
 /* brand block (top-left) */
+/* 왼쪽 정보판이 떠 있게 되면서 이 칸만 세로선을 달고 있으면 아직
+   기둥에 붙어 있는 것처럼 보입니다. 선을 빼고 글자만 놓습니다. */
 .cy-root[data-skin="neon"] .cy-right-header {
   position:fixed;top:0;left:0;width:var(--hud-w);height:var(--nav-h);z-index:5;
   display:flex;flex-direction:column;justify-content:center;gap:4px;
   padding:0 28px;
-  border-right:1px solid rgba(43,240,255,.18);
 }
 
 .cy-root[data-skin="neon"] .cy-title {
-  font-family:var(--display);font-size:2rem;line-height:1;letter-spacing:.02em;
+  font-family:var(--display);font-size: 1.68rem;line-height:1;letter-spacing:.02em;
   color:#F2FDFF;
   text-shadow:0 0 6px rgba(43,240,255,.9),0 0 22px rgba(43,240,255,.45),0 0 44px rgba(138,91,255,.35);
 }
 
 .cy-root[data-skin="neon"] .cy-url {
-  font-family:var(--body);font-size:1rem;color:var(--sub-ink);letter-spacing:.04em;
+  font-family:var(--body);font-size: 0.84rem;color:var(--sub-ink);letter-spacing:.04em;
 }
 
 .cy-root[data-skin="neon"] .cy-url::after {
@@ -2243,7 +2244,7 @@ body.lt-skin-neon {
 .cy-root[data-skin="neon"] .cy-tab-btn {
   position:relative;background:none;border:0;cursor:pointer;
   padding:14px clamp(10px,1.4vw,22px) 16px;
-  font-family:var(--display);font-size:1.55rem;letter-spacing:.06em;
+  font-family:var(--display);font-size: 1.3rem;letter-spacing:.06em;
   color:var(--sub-ink);transition:color .25s,text-shadow .25s;
 }
 
@@ -2295,20 +2296,39 @@ body.lt-skin-neon {
 }
 
 /* ---------- HUD (left panel) ---------- */
+/* 화면 가장자리에 붙은 기둥이 아니라 떠 있는 유리판입니다. 사방에
+   여백을 두고, 모서리를 잘라 오른쪽 콘솔 창과 같은 말투로 맞췄습니다.
+
+   그림자는 filter 로 겁니다. box-shadow 는 clip-path 에 같이 잘려
+   잘린 모서리 바깥으로 못 나갑니다. drop-shadow 는 잘린 모양을 따라
+   갑니다. 뒤의 격자 바닥이 살짝 비치도록 반투명 + backdrop-filter.
+
+   --hud-w 는 그대로 둡니다. 카메라 계산(NeonStage)이 왼쪽에서 비워 둘
+   폭으로 읽는 값이라, 카드가 그 안에서 여백만큼 들어앉는 것입니다. */
 .cy-root[data-skin="neon"] .cy-left-panel {
-  position:fixed;top:var(--nav-h);left:0;bottom:0;width:var(--hud-w);z-index:3;
-  background:linear-gradient(180deg, rgba(7,11,36,.9), rgba(3,4,13,.94));
-  border-right:1px solid rgba(43,240,255,.28);
-  box-shadow:inset -1px 0 0 rgba(138,91,255,.12), 12px 0 50px rgba(3,4,13,.55);
+  position:fixed;
+  top:calc(var(--nav-h) + 14px);
+  left:18px;
+  bottom:18px;
+  width:calc(var(--hud-w) - 36px);
+  z-index:3;
+  background:linear-gradient(180deg, rgba(7,11,36,.78), rgba(3,4,13,.86));
+  border:1px solid rgba(43,240,255,.34);
+  box-shadow:
+    inset 0 1px 0 rgba(43,240,255,.18),
+    inset 0 0 40px rgba(43,240,255,.05);
+  clip-path:polygon(0 18px,18px 0,100% 0,100% calc(100% - 18px),calc(100% - 18px) 100%,0 100%);
+  filter:drop-shadow(0 18px 34px rgba(3,4,13,.8)) drop-shadow(0 0 18px rgba(43,240,255,.16));
+  backdrop-filter:blur(7px);
   display:flex;flex-direction:column;
 }
 
 .cy-root[data-skin="neon"] .cy-left-header {
-  padding:14px 28px 12px;border-bottom:1px dashed rgba(43,240,255,.22);
+  padding:12px 22px 10px;border-bottom:1px dashed rgba(43,240,255,.22);
 }
 
 .cy-root[data-skin="neon"] .cy-today-count {
-  font-family:'Share Tech Mono',monospace;font-size:1.3rem;letter-spacing:.08em;color:var(--sub-ink)
+  font-family:'Share Tech Mono',monospace;font-size: 1.09rem;letter-spacing:.08em;color:var(--sub-ink)
 }
 
 .cy-root[data-skin="neon"] .cy-today-count .text-orange {
@@ -2321,7 +2341,7 @@ body.lt-skin-neon {
 
 .cy-root[data-skin="neon"] .cy-left-content {
   flex:1;overflow-y:auto;overscroll-behavior:contain;
-  padding:22px 28px 36px;display:flex;flex-direction:column;gap:20px;
+  padding:18px 22px 28px;display:flex;flex-direction:column;gap:16px;
   scrollbar-width:thin;scrollbar-color:rgba(43,240,255,.4) transparent;
 }
 
@@ -2378,16 +2398,16 @@ body.lt-skin-neon {
 }
 
 .cy-root[data-skin="neon"] .cy-profile-name .name-bold {
-  font-family:var(--display);font-size:2.3rem;line-height:1.1;color:#F2FDFF;
+  font-family:var(--display);font-size: 1.93rem;line-height:1.1;color:#F2FDFF;
   text-shadow:0 0 10px rgba(255,43,214,.7),0 0 30px rgba(255,43,214,.35);
 }
 
 .cy-root[data-skin="neon"] .cy-profile-name .title-sub {
-  margin-top:6px;font-size:1.3rem;line-height:1.45;color:var(--sub-ink)
+  margin-top:6px;font-size: 1.09rem;line-height:1.45;color:var(--sub-ink)
 }
 
 .cy-root[data-skin="neon"] .cy-intro-text {
-  font-size:1.45rem;line-height:1.6;color:var(--ink);
+  font-size: 1.22rem;line-height:1.6;color:var(--ink);
   padding:14px 16px;border:1px solid rgba(43,240,255,.25);
   background:rgba(43,240,255,.05);
 }
@@ -2397,7 +2417,7 @@ body.lt-skin-neon {
 }
 
 .cy-root[data-skin="neon"] .cy-today-is {
-  font-size:1.3rem;letter-spacing:.06em;color:var(--sub-ink)
+  font-size: 1.09rem;letter-spacing:.06em;color:var(--sub-ink)
 }
 
 .cy-root[data-skin="neon"] .cy-today-is .text-orange {
@@ -2410,7 +2430,7 @@ body.lt-skin-neon {
 
 .cy-root[data-skin="neon"] .cy-left-dropdown>summary {
   list-style:none;cursor:pointer;padding:12px 16px;
-  font-family:var(--display);font-size:1.4rem;color:#E9DEFF;
+  font-family:var(--display);font-size: 1.18rem;color:#E9DEFF;
   display:flex;justify-content:space-between;align-items:center;
 }
 
@@ -2435,7 +2455,7 @@ body.lt-skin-neon {
 }
 
 .cy-root[data-skin="neon"] .cy-left-dropdown a {
-  display:block;padding:10px 0;font-size:1.3rem;text-decoration:none;color:var(--ink)
+  display:block;padding:10px 0;font-size: 1.09rem;text-decoration:none;color:var(--ink)
 }
 
 .cy-root[data-skin="neon"] .cy-left-dropdown a::before {
@@ -2452,7 +2472,7 @@ body.lt-skin-neon {
 }
 
 .cy-root[data-skin="neon"] .cy-bgm-heading {
-  font-family:'Orbitron',var(--display);font-weight:700;font-size:1.05rem;letter-spacing:.14em;color:var(--accent);text-shadow:0 0 8px rgba(43,240,255,.6);margin-bottom:10px
+  font-family:'Orbitron',var(--display);font-weight:700;font-size: 0.88rem;letter-spacing:.14em;color:var(--accent);text-shadow:0 0 8px rgba(43,240,255,.6);margin-bottom:10px
 }
 
 .cy-root[data-skin="neon"] .cy-bgm-list {
@@ -2462,7 +2482,7 @@ body.lt-skin-neon {
 .cy-root[data-skin="neon"] .cy-bgm-track {
   width:100%;display:flex;align-items:center;gap:10px;
   background:none;border:0;cursor:pointer;text-align:left;
-  padding:7px 8px;font-size:1.3rem;color:var(--sub-ink);
+  padding:7px 8px;font-size: 1.09rem;color:var(--sub-ink);
   border-left:2px solid transparent;transition:background .2s,color .2s;
 }
 
@@ -2510,7 +2530,7 @@ body.lt-skin-neon {
 .cy-root[data-skin="neon"] .cy-bgm-controls button {
   min-width:46px;height:40px;padding:0 10px;cursor:pointer;
   background:rgba(43,240,255,.06);border:1px solid rgba(43,240,255,.45);
-  color:var(--accent);font-size:1.05rem;
+  color:var(--accent);font-size: 0.88rem;
   clip-path:polygon(0 6px,6px 0,100% 0,100% calc(100% - 6px),calc(100% - 6px) 100%,0 100%);
   transition:background .2s,box-shadow .2s;
 }
@@ -2524,11 +2544,11 @@ body.lt-skin-neon {
 }
 
 .cy-root[data-skin="neon"] .cy-bgm-credit {
-  margin-top:10px;font-size:1rem;color:rgba(124,141,192,.8)
+  margin-top:10px;font-size: 0.84rem;color:rgba(124,141,192,.8)
 }
 
 .cy-root[data-skin="neon"] .cy-bgm-note {
-  margin-top:8px;font-size:1.1rem;color:var(--point-soft)
+  margin-top:8px;font-size: 0.92rem;color:var(--point-soft)
 }
 
 .cy-root[data-skin="neon"] .cy-bgm-stage {
@@ -2562,7 +2582,7 @@ body.lt-skin-neon {
   clip-path:polygon(0 22px,22px 0,100% 0,100% calc(100% - 22px),calc(100% - 22px) 100%,0 100%);
   backface-visibility:hidden;
   scrollbar-width:thin;scrollbar-color:rgba(43,240,255,.5) rgba(3,4,13,.4);
-  transition:border-color .4s, box-shadow .4s, filter .4s;
+  transition:border-color .4s, box-shadow .4s;
   cursor:default;
 }
 
@@ -2579,13 +2599,37 @@ body.lt-skin-neon {
 }
 
 /* side (not selected) panels */
+/* 옆으로 물러난 창입니다. 너무 죽이면 있는지도 모르게 되고, 너무 살리면
+   앞 창과 다툽니다. 테두리만 또렷하게 남겨 "저기 또 있다" 가 읽히게 합니다. */
+/* filter 를 쓰면 안 됩니다.
+
+   이 창들은 CSS3D 로 원근 안에 놓여 있는데, 3D 문맥 안의 요소에 filter 가
+   걸리면 브라우저가 그 요소를 따로 평평하게 그려 붙입니다. 회전도 원근도
+   사라지고 좌우로 미끄러지는 판때기가 됩니다. 원본 데모부터 그랬습니다.
+
+   물러난 느낌은 필터 대신 세 가지로 냅니다. 매 프레임 자바스크립트가
+   넣는 opacity(깊이에 따라), 보라색 테두리, 그리고 바깥 번짐.
+   opacity 와 box-shadow 는 3D 를 깨지 않는 것을 화면으로 확인했습니다. */
 .cy-root[data-skin="neon"] .cy-right-content:not(.is-active) {
-  overflow:hidden;cursor:pointer;filter:saturate(.7) brightness(.8);
-  border-color:rgba(138,91,255,.55);
+  overflow:hidden;cursor:pointer;
+  /* 앞 창보다 밝고 푸른 기가 도는 바탕입니다. 앞 창과 같은 색으로 두면
+     배경이 거의 검정이라 창이 거기 있는지조차 안 보입니다. */
+  background:
+    linear-gradient(180deg, rgba(155,114,255,.14), transparent 140px),
+    linear-gradient(180deg, rgba(26,24,74,.92), rgba(14,12,44,.94));
+  border-color:rgba(155,114,255,.85);
+  box-shadow:
+    0 0 0 1px rgba(3,4,13,.9),
+    0 0 30px rgba(155,114,255,.35),
+    inset 0 0 40px rgba(43,240,255,.05);
 }
 
 .cy-root[data-skin="neon"] .cy-right-content:not(.is-active):hover {
-  filter:saturate(1) brightness(1);border-color:var(--point);box-shadow:0 0 34px rgba(255,43,214,.35)
+  border-color:var(--point);
+  box-shadow:
+    0 0 0 1px rgba(3,4,13,.9),
+    0 0 38px rgba(255,43,214,.5),
+    inset 0 0 40px rgba(255,43,214,.08);
 }
 
 .cy-root[data-skin="neon"] .cy-panel-label {
@@ -2595,7 +2639,7 @@ body.lt-skin-neon {
 .cy-root[data-skin="neon"] .cy-panel-label span {
   position:absolute;left:-40px;right:-40px;top:-34px;height:var(--ph);
   display:flex;align-items:center;justify-content:center;
-  font-family:var(--display);font-size:5rem;letter-spacing:.06em;color:#F2FDFF;
+  font-family:var(--display);font-size: 4.2rem;letter-spacing:.06em;color:#F2FDFF;
   text-shadow:0 0 12px rgba(255,43,214,.9),0 0 40px rgba(255,43,214,.5);
   background:radial-gradient(ellipse at center, rgba(3,4,13,.72), rgba(3,4,13,.35));
   opacity:0;transition:opacity .4s;
@@ -2621,7 +2665,7 @@ body.lt-skin-neon {
 .cy-root[data-skin="neon"] .cy-section-title {
   display:flex;align-items:baseline;flex-wrap:wrap;gap:0;
   margin:0 0 20px;padding-bottom:12px;
-  font-family:var(--display);font-size:2rem;line-height:1.2;color:#F2FDFF;
+  font-family:var(--display);font-size: 1.68rem;line-height:1.2;color:#F2FDFF;
   text-shadow:0 0 8px rgba(43,240,255,.85),0 0 26px rgba(43,240,255,.35);
   border-bottom:1px solid rgba(43,240,255,.3);
   position:relative;
@@ -2632,7 +2676,7 @@ body.lt-skin-neon {
 }
 
 .cy-root[data-skin="neon"] .cy-sub-text {
-  font-family:var(--body);font-size:1.3rem;letter-spacing:.02em;color:var(--leaf);
+  font-family:var(--body);font-size: 1.09rem;letter-spacing:.02em;color:var(--leaf);
   text-shadow:0 0 8px rgba(138,91,255,.6);
 }
 
@@ -2661,11 +2705,11 @@ body.lt-skin-neon {
 
 .cy-root[data-skin="neon"] .cy-gb-loading,
 .cy-root[data-skin="neon"] .cy-empty-box {
-  font-size:1.45rem;color:var(--sub-ink);padding:10px 0
+  font-size: 1.22rem;color:var(--sub-ink);padding:10px 0
 }
 
 .cy-root[data-skin="neon"] .cy-guestbook-list {
-  font-size:1.5rem;line-height:1.6
+  font-size: 1.26rem;line-height:1.6
 }
 
 .cy-root[data-skin="neon"] .cy-guestbook-item {
@@ -2689,18 +2733,18 @@ body.lt-skin-neon {
 }
 
 .cy-root[data-skin="neon"] .cg-date {
-  margin-left:10px;font-size:1.15rem;color:var(--sub-ink);white-space:nowrap
+  margin-left:10px;font-size: 0.97rem;color:var(--sub-ink);white-space:nowrap
 }
 
 .cy-root[data-skin="neon"] .cy-gb-signin {
-  margin-top:18px;display:flex;flex-wrap:wrap;align-items:center;gap:12px;font-size:1.3rem;color:var(--sub-ink)
+  margin-top:18px;display:flex;flex-wrap:wrap;align-items:center;gap:12px;font-size: 1.09rem;color:var(--sub-ink)
 }
 
 .cy-root[data-skin="neon"] .cy-gb-google,
 .cy-root[data-skin="neon"] .cy-oe-btn,
 .cy-root[data-skin="neon"] .cy-back-btn {
   display:inline-flex;align-items:center;gap:8px;cursor:pointer;text-decoration:none;
-  padding:10px 18px;font-family:var(--body);font-size:1.3rem;
+  padding:10px 18px;font-family:var(--body);font-size: 1.09rem;
   color:#F2FDFF;background:rgba(255,43,214,.12);border:1px solid var(--point);
   clip-path:polygon(0 8px,8px 0,100% 0,100% calc(100% - 8px),calc(100% - 8px) 100%,0 100%);
   transition:background .2s, box-shadow .2s;
@@ -2714,7 +2758,7 @@ body.lt-skin-neon {
 
 /* profile */
 .cy-root[data-skin="neon"] .cy-text-block {
-  font-size:1.6rem;line-height:1.75;color:var(--ink)
+  font-size: 1.34rem;line-height:1.75;color:var(--ink)
 }
 
 .cy-root[data-skin="neon"] .cy-text-block p {
@@ -2734,7 +2778,7 @@ body.lt-skin-neon {
 }
 
 .cy-root[data-skin="neon"] .cy-contact-list {
-  list-style:none;margin:20px 0 0;padding:0;font-size:1.5rem
+  list-style:none;margin:20px 0 0;padding:0;font-size: 1.26rem
 }
 
 .cy-root[data-skin="neon"] .cy-contact-list li {
@@ -2782,12 +2826,12 @@ body.lt-skin-neon {
 }
 
 .cy-root[data-skin="neon"] .cy-board-category {
-  align-self:flex-start;font-size:1.1rem;padding:2px 10px;color:var(--point-soft);
+  align-self:flex-start;font-size: 0.92rem;padding:2px 10px;color:var(--point-soft);
   border:1px solid rgba(255,43,214,.6);background:rgba(255,43,214,.08)
 }
 
 .cy-root[data-skin="neon"] .cy-board-title {
-  font-family:var(--display);font-size:1.65rem;line-height:1.3;color:#F2FDFF
+  font-family:var(--display);font-size: 1.39rem;line-height:1.3;color:#F2FDFF
 }
 
 .cy-root[data-skin="neon"] .cy-board-link:hover .cy-board-title {
@@ -2795,22 +2839,22 @@ body.lt-skin-neon {
 }
 
 .cy-root[data-skin="neon"] .cy-board-summary {
-  font-size:1.3rem;line-height:1.55;color:var(--sub-ink);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;word-break:break-all
+  font-size: 1.09rem;line-height:1.55;color:var(--sub-ink);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;word-break:break-all
 }
 
 .cy-root[data-skin="neon"] .cy-board-date {
-  font-size:1.15rem;color:var(--accent);opacity:.8
+  font-size: 0.97rem;color:var(--accent);opacity:.8
 }
 
 /* photo / oekaki */
 .cy-root[data-skin="neon"] .cy-oe-help-btn {
   margin-left:auto;align-self:center;width:36px;height:36px;cursor:pointer;
-  font-family:'Orbitron',sans-serif;font-size:1.1rem;color:var(--accent);
+  font-family:'Orbitron',sans-serif;font-size: 0.92rem;color:var(--accent);
   background:rgba(43,240,255,.08);border:1px solid var(--accent);border-radius:50%;
 }
 
 .cy-root[data-skin="neon"] .cy-oe-help {
-  font-size:1.35rem;line-height:1.7;color:var(--ink);padding:16px 18px;margin-bottom:18px;border:1px dashed rgba(138,91,255,.5);background:rgba(138,91,255,.06)
+  font-size: 1.13rem;line-height:1.7;color:var(--ink);padding:16px 18px;margin-bottom:18px;border:1px dashed rgba(138,91,255,.5);background:rgba(138,91,255,.06)
 }
 
 .cy-root[data-skin="neon"] .cy-oe-help p {
@@ -2858,7 +2902,7 @@ body.lt-skin-neon {
 }
 
 .cy-root[data-skin="neon"] .cy-oe-title {
-  background:none;border:0;padding:0;text-align:left;cursor:pointer;font-family:var(--display);font-size:1.6rem;line-height:1.35;color:#F2FDFF
+  background:none;border:0;padding:0;text-align:left;cursor:pointer;font-family:var(--display);font-size: 1.34rem;line-height:1.35;color:#F2FDFF
 }
 
 .cy-root[data-skin="neon"] .cy-oe-title:hover {
@@ -2870,11 +2914,11 @@ body.lt-skin-neon {
 }
 
 .cy-root[data-skin="neon"] .cy-oe-author {
-  font-size:1.3rem;color:var(--point-soft)
+  font-size: 1.09rem;color:var(--point-soft)
 }
 
 .cy-root[data-skin="neon"] .cy-oe-date {
-  font-size:1.1rem;color:var(--sub-ink)
+  font-size: 0.92rem;color:var(--sub-ink)
 }
 
 .cy-root[data-skin="neon"] .cy-gb-pagination {
@@ -2882,7 +2926,7 @@ body.lt-skin-neon {
 }
 
 .cy-root[data-skin="neon"] .cy-gb-page {
-  min-width:44px;height:44px;cursor:pointer;font-family:'Orbitron',sans-serif;font-size:1.05rem;
+  min-width:44px;height:44px;cursor:pointer;font-family:'Orbitron',sans-serif;font-size: 0.88rem;
   background:transparent;border:1px solid rgba(43,240,255,.4);color:var(--sub-ink)
 }
 
@@ -2899,7 +2943,7 @@ body.lt-skin-neon {
 }
 
 .cy-root[data-skin="neon"] .cy-oe-title-text {
-  font-family:var(--display);font-size:1.9rem;color:#F2FDFF;text-shadow:0 0 10px rgba(43,240,255,.6)
+  font-family:var(--display);font-size: 1.6rem;color:#F2FDFF;text-shadow:0 0 10px rgba(43,240,255,.6)
 }
 
 .cy-root[data-skin="neon"] .cy-oe-big {
@@ -2907,7 +2951,7 @@ body.lt-skin-neon {
 }
 
 .cy-root[data-skin="neon"] .cy-oe-detail-meta {
-  font-size:1.3rem;color:var(--sub-ink)
+  font-size: 1.09rem;color:var(--sub-ink)
 }
 
 .cy-root[data-skin="neon"] .cy-oe-detail-meta b {
@@ -2915,7 +2959,7 @@ body.lt-skin-neon {
 }
 
 .cy-root[data-skin="neon"] .cy-oe-replies {
-  list-style:none;margin:0;padding:0;font-size:1.4rem;line-height:1.6
+  list-style:none;margin:0;padding:0;font-size: 1.18rem;line-height:1.6
 }
 
 .cy-root[data-skin="neon"] .cy-oe-reply {
@@ -2929,7 +2973,7 @@ body.lt-skin-neon {
 /* console hint under carousel */
 .cy-root[data-skin="neon"] .cy-console-hint {
   position:fixed;z-index:2;bottom:18px;left:var(--hud-w);right:0;text-align:center;pointer-events:none;
-  font-size:1.05rem;letter-spacing:.12em;color:rgba(124,141,192,.85);
+  font-size: 0.88rem;letter-spacing:.12em;color:rgba(124,141,192,.85);
 }
 
 .cy-root[data-skin="neon"] .cy-console-hint kbd {
@@ -2980,12 +3024,12 @@ body.lt-skin-neon {
 }
 
 .cy-root[data-skin="neon"] .lt-intro-copy {
-  margin:0;max-width:24em;font-size:1.5rem;line-height:1.6;color:var(--ink)
+  margin:0;max-width:24em;font-size: 1.26rem;line-height:1.6;color:var(--ink)
 }
 
 .cy-root[data-skin="neon"] .lt-intro-cta {
   margin-top:10px;display:inline-flex;align-items:center;gap:12px;cursor:pointer;
-  padding:16px 34px;font-family:var(--display);font-size:1.5rem;letter-spacing:.06em;color:#F2FDFF;
+  padding:16px 34px;font-family:var(--display);font-size: 1.26rem;letter-spacing:.06em;color:#F2FDFF;
   background:rgba(43,240,255,.08);border:1px solid var(--accent);
   box-shadow:0 0 24px rgba(43,240,255,.35), inset 0 0 18px rgba(43,240,255,.15);
   clip-path:polygon(0 12px,12px 0,100% 0,100% calc(100% - 12px),calc(100% - 12px) 100%,0 100%);
@@ -3030,7 +3074,7 @@ body.lt-skin-neon {
     width:100%;height:64px;border-right:0;flex-direction:row;align-items:center;justify-content:space-between;padding:0 16px
   }
   .cy-root[data-skin="neon"] .cy-title {
-    font-size:1.6rem
+    font-size: 1.34rem
   }
   .cy-root[data-skin="neon"] .cy-url {
     display:none
@@ -3039,7 +3083,7 @@ body.lt-skin-neon {
     top:64px;left:0;height:68px;justify-content:space-around;padding:0 6px;gap:0
   }
   .cy-root[data-skin="neon"] .cy-tab-btn {
-    font-size:1.3rem;padding:12px 6px 14px
+    font-size: 1.09rem;padding:12px 6px 14px
   }
   .cy-root[data-skin="neon"] .cy-left-panel {
     width:min(88vw,380px);transform:translateX(-102%);transition:transform .45s var(--ease-out);z-index:6
@@ -3049,14 +3093,14 @@ body.lt-skin-neon {
   }
   .cy-root[data-skin="neon"] .cy-hud-toggle {
     display:inline-flex;align-items:center;gap:6px;cursor:pointer;
-    padding:8px 12px;font-family:'Orbitron',sans-serif;font-size:.85rem;letter-spacing:.1em;
+    padding:8px 12px;font-family:'Orbitron',sans-serif;font-size: 0.8rem;letter-spacing:.1em;
     color:var(--accent);background:rgba(43,240,255,.08);border:1px solid var(--accent)
   }
   .cy-root[data-skin="neon"] .cy-right-content {
     padding:24px 20px 32px
   }
   .cy-root[data-skin="neon"] .cy-section-title {
-    font-size:1.45rem
+    font-size: 1.22rem
   }
   .cy-root[data-skin="neon"] .cy-board-link {
     grid-template-columns:1fr
@@ -3102,7 +3146,7 @@ body.lt-skin-neon {
   margin: 0 0 8px;
   padding: 0;
   font-family: var(--display);
-  font-size: 1.1rem;
+  font-size: 0.92rem;
   letter-spacing: 0.08em;
   color: var(--accent);
   text-shadow: 0 0 10px rgba(43, 240, 255, 0.45);
@@ -3117,7 +3161,7 @@ body.lt-skin-neon {
   margin-bottom: 6px;
   border: 1px solid rgba(43, 240, 255, 0.22);
   background: rgba(10, 16, 52, 0.55);
-  font-size: 1.15rem;
+  font-size: 0.97rem;
   line-height: 1.5;
   color: var(--ink);
   cursor: pointer;
@@ -3137,7 +3181,7 @@ body.lt-skin-neon {
 
 .cy-root[data-skin="neon"] .cy-settings-choice-label {
   font-family: var(--display);
-  font-size: 1rem;
+  font-size: 0.84rem;
   letter-spacing: 0.04em;
   color: var(--heading);
 }
@@ -3146,13 +3190,13 @@ body.lt-skin-neon {
    이름과 설명이 뭉칩니다. */
 .cy-root[data-skin="neon"] .cy-settings-hint {
   flex-basis: 100%;
-  font-size: 1rem;
+  font-size: 0.84rem;
   color: var(--sub-ink);
 }
 
 .cy-root[data-skin="neon"] .cy-settings-note {
   margin: 6px 0 0;
-  font-size: 1rem;
+  font-size: 0.84rem;
   color: var(--point);
 }
 
@@ -3193,7 +3237,7 @@ body.lt-skin-neon {
 /* 저장 결과 한 줄입니다. 클래식 규칙이 되돌려지므로 여기서 정합니다. */
 .cy-root[data-skin="neon"] .cy-gb-message {
   display: block;
-  font-size: 1rem;
+  font-size: 0.84rem;
   color: var(--sub-ink);
 }
 .cy-root[data-skin="neon"] .cy-gb-message.is-error {
