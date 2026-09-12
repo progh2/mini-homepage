@@ -1,0 +1,1451 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>함쌤 작업실</title>
+<meta name="description" content="미림마이스터고등학교 정보·컴퓨터 교사. 도름스에서 수업·업무용 앱을 만들고 나눕니다."/>
+<meta property="og:title" content="함쌤 작업실"/>
+<meta property="og:description" content="미림마이스터고등학교 정보·컴퓨터 교사. 도름스에서 수업·업무용 앱을 만들고 나눕니다."/>
+<meta property="og:image" content="https://progh2.github.io/mini-homepage/assets/og-cover.png"/>
+<link rel="icon" href="https://progh2.github.io/mini-homepage/icon.png" type="image/png"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Share+Tech+Mono&family=Do+Hyeon&family=Nanum+Gothic+Coding:wght@400;700&display=swap" rel="stylesheet"/>
+<style>
+/* =========================================================
+   함쌤 작업실 — CYBER CONSOLE EDITION
+   80s console title/menu screen · three.js WebGL + CSS3D
+   ========================================================= */
+:root{
+  --nav-h: 84px;
+  --hud-w: 380px;
+  --ease-out: cubic-bezier(.16,1,.3,1);
+}
+*,*::before,*::after{box-sizing:border-box}
+html,body{margin:0;height:100%;overflow:hidden;background:#03040D}
+body{
+  color:var(--ink);
+  font-family:var(--body);
+  -webkit-font-smoothing:antialiased;
+}
+a{color:inherit}
+button{font:inherit;color:inherit}
+img{display:block;max-width:100%}
+:focus-visible{outline:2px solid var(--point);outline-offset:3px}
+
+.cy-root{
+  position:fixed;inset:0;font-family:var(--body);color:var(--ink);word-break:keep-all;overflow-wrap:anywhere;
+  background:
+    radial-gradient(120% 80% at 50% 120%, rgba(255,43,214,.10), transparent 60%),
+    radial-gradient(90% 70% at 50% -10%, rgba(138,91,255,.14), transparent 60%),
+    var(--paper);
+}
+/* CRT scanlines + vignette over everything, very light */
+.cy-root::after{
+  content:"";position:fixed;inset:0;pointer-events:none;z-index:40;
+  background:
+    repeating-linear-gradient(to bottom, rgba(255,255,255,.028) 0 1px, transparent 1px 3px),
+    radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,.55) 100%);
+  mix-blend-mode:screen;
+}
+.text-orange{color:var(--point)}
+.text-black{color:var(--accent)}
+
+/* ---------- 3D background host ---------- */
+.cy-background-pattern{position:fixed;inset:0;z-index:0}
+.cy-background-pattern canvas{display:block;width:100%!important;height:100%!important}
+
+/* ---------- frame pieces ---------- */
+.cy-book-wrapper{position:fixed;inset:0;z-index:2}
+.cy-book-outer,.cy-book-inner{position:static}
+.cy-bindings{display:none}
+
+/* top console bar background */
+.cy-book-outer::before{
+  content:"";position:fixed;left:0;right:0;top:0;height:var(--nav-h);z-index:3;
+  background:linear-gradient(to bottom, rgba(3,4,13,.96), rgba(7,11,36,.82));
+  border-bottom:1px solid rgba(43,240,255,.35);
+  box-shadow:0 1px 0 rgba(43,240,255,.08), 0 10px 40px rgba(3,4,13,.6);
+}
+.cy-book-outer::after{ /* thin moving light on bar edge */
+  content:"";position:fixed;left:0;right:0;top:calc(var(--nav-h) - 1px);height:1px;z-index:4;pointer-events:none;
+  background:linear-gradient(90deg, transparent 0, var(--accent) 45%, var(--leaf) 55%, transparent 100%);
+  background-size:40% 100%;background-repeat:no-repeat;
+  animation:barSweep 7s linear infinite;opacity:.9;
+}
+@keyframes barSweep{from{background-position:-40% 0}to{background-position:140% 0}}
+
+/* brand block (top-left) */
+.cy-right-header{
+  position:fixed;top:0;left:0;width:var(--hud-w);height:var(--nav-h);z-index:5;
+  display:flex;flex-direction:column;justify-content:center;gap:4px;
+  padding:0 28px;
+  border-right:1px solid rgba(43,240,255,.18);
+}
+.cy-title{
+  font-family:var(--display);font-size:2rem;line-height:1;letter-spacing:.02em;
+  color:#F2FDFF;
+  text-shadow:0 0 6px rgba(43,240,255,.9),0 0 22px rgba(43,240,255,.45),0 0 44px rgba(138,91,255,.35);
+}
+.cy-url{
+  font-family:var(--body);font-size:1rem;color:var(--sub-ink);letter-spacing:.04em;
+}
+.cy-url::after{content:"_";margin-left:2px;color:var(--accent);animation:blink 1.1s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
+
+/* top navigation = console menu */
+.cy-tabs{
+  position:fixed;top:0;left:var(--hud-w);right:0;height:var(--nav-h);z-index:5;
+  display:flex;align-items:center;justify-content:center;gap:clamp(6px,1.6vw,26px);
+  padding:0 24px;
+}
+.cy-tab-btn{
+  position:relative;background:none;border:0;cursor:pointer;
+  padding:14px clamp(10px,1.4vw,22px) 16px;
+  font-family:var(--display);font-size:1.55rem;letter-spacing:.06em;
+  color:var(--sub-ink);transition:color .25s,text-shadow .25s;
+}
+.cy-tab-line{display:inline-flex;align-items:center;gap:.35em}
+.cy-tab-line::before,.cy-tab-line::after{
+  font-family:'Orbitron',sans-serif;font-weight:500;font-size:.9em;
+  color:var(--accent);opacity:0;transition:opacity .25s,transform .35s var(--ease-out);
+}
+.cy-tab-line::before{content:"[";transform:translateX(8px)}
+.cy-tab-line::after{content:"]";transform:translateX(-8px)}
+.cy-tab-btn:hover{color:#FFD6F6;text-shadow:0 0 10px rgba(255,43,214,.7)}
+.cy-tab-btn:hover .cy-tab-line::before,.cy-tab-btn:hover .cy-tab-line::after{opacity:.55;transform:none}
+.cy-tab-btn.active{color:#F2FDFF;text-shadow:0 0 8px rgba(43,240,255,.95),0 0 26px rgba(43,240,255,.5)}
+.cy-tab-btn.active .cy-tab-line::before,.cy-tab-btn.active .cy-tab-line::after{opacity:1;transform:none;text-shadow:0 0 10px var(--accent)}
+.cy-tab-btn::after{ /* active underline bar */
+  content:"";position:absolute;left:18%;right:18%;bottom:6px;height:2px;
+  background:var(--accent);box-shadow:0 0 10px var(--accent),0 0 22px var(--accent);
+  transform:scaleX(0);transition:transform .45s var(--ease-out);
+}
+.cy-tab-btn.active::after{transform:scaleX(1)}
+
+/* ---------- HUD (left panel) ---------- */
+.cy-left-panel{
+  position:fixed;top:var(--nav-h);left:0;bottom:0;width:var(--hud-w);z-index:3;
+  background:linear-gradient(180deg, rgba(7,11,36,.9), rgba(3,4,13,.94));
+  border-right:1px solid rgba(43,240,255,.28);
+  box-shadow:inset -1px 0 0 rgba(138,91,255,.12), 12px 0 50px rgba(3,4,13,.55);
+  display:flex;flex-direction:column;
+}
+.cy-left-header{
+  padding:14px 28px 12px;border-bottom:1px dashed rgba(43,240,255,.22);
+}
+.cy-today-count{font-family:'Share Tech Mono',monospace;font-size:1.3rem;letter-spacing:.08em;color:var(--sub-ink)}
+.cy-today-count .text-orange{color:var(--point);text-shadow:0 0 8px rgba(255,43,214,.8)}
+.cy-today-count .text-black{color:var(--accent);text-shadow:0 0 8px rgba(43,240,255,.7)}
+.cy-left-content{
+  flex:1;overflow-y:auto;overscroll-behavior:contain;
+  padding:22px 28px 36px;display:flex;flex-direction:column;gap:20px;
+  scrollbar-width:thin;scrollbar-color:rgba(43,240,255,.4) transparent;
+}
+/* visual order — DOM order kept */
+.cy-profile-pic{order:1}
+.cy-profile-name{order:2}
+.cy-intro-text{order:3}
+.cy-today-is{order:4}
+.cy-left-dropdown{order:5}
+.cy-bgm{order:6}
+
+.cy-profile-pic{
+  position:relative;aspect-ratio:1/1;
+  padding:3px;
+  background:linear-gradient(135deg,var(--accent),var(--leaf) 60%,var(--point));
+  clip-path:polygon(0 18px,18px 0,100% 0,100% calc(100% - 18px),calc(100% - 18px) 100%,0 100%);
+  filter:drop-shadow(0 0 14px rgba(43,240,255,.35));
+}
+.cy-profile-pic img{
+  width:100%;height:100%;object-fit:cover;
+  clip-path:polygon(0 16px,16px 0,100% 0,100% calc(100% - 16px),calc(100% - 16px) 100%,0 100%);
+  filter:saturate(1.1) contrast(1.05);
+}
+.cy-profile-pic::after{ /* scanline sweep on photo */
+  content:"";position:absolute;inset:3px;pointer-events:none;
+  background:linear-gradient(to bottom, transparent 0, rgba(43,240,255,.18) 50%, transparent 100%);
+  background-size:100% 30%;background-repeat:no-repeat;
+  animation:scan 4.5s linear infinite;mix-blend-mode:screen;
+  clip-path:inherit;
+}
+@keyframes scan{from{background-position:0 -40%}to{background-position:0 140%}}
+
+.cy-profile-name .name-bold{
+  font-family:var(--display);font-size:2.3rem;line-height:1.1;color:#F2FDFF;
+  text-shadow:0 0 10px rgba(255,43,214,.7),0 0 30px rgba(255,43,214,.35);
+}
+.cy-profile-name .title-sub{margin-top:6px;font-size:1.3rem;line-height:1.45;color:var(--sub-ink)}
+.cy-intro-text{
+  font-size:1.45rem;line-height:1.6;color:var(--ink);
+  padding:14px 16px;border:1px solid rgba(43,240,255,.25);
+  background:rgba(43,240,255,.05);
+}
+.cy-intro-text::before{content:"> ";color:var(--accent)}
+.cy-today-is{font-size:1.3rem;letter-spacing:.06em;color:var(--sub-ink)}
+.cy-today-is .text-orange{color:var(--point-soft);text-shadow:0 0 8px rgba(255,43,214,.5)}
+
+.cy-left-dropdown{border:1px solid rgba(138,91,255,.45);background:rgba(138,91,255,.06)}
+.cy-left-dropdown>summary{
+  list-style:none;cursor:pointer;padding:12px 16px;
+  font-family:var(--display);font-size:1.4rem;color:#E9DEFF;
+  display:flex;justify-content:space-between;align-items:center;
+}
+.cy-left-dropdown>summary::-webkit-details-marker{display:none}
+.cy-left-dropdown>summary::after{content:"+";font-family:'Orbitron',sans-serif;color:var(--leaf);transition:transform .3s}
+.cy-left-dropdown[open]>summary::after{transform:rotate(45deg)}
+.cy-left-dropdown ul{list-style:none;margin:0;padding:0 16px 12px}
+.cy-left-dropdown li+li{border-top:1px dashed rgba(138,91,255,.25)}
+.cy-left-dropdown a{display:block;padding:10px 0;font-size:1.3rem;text-decoration:none;color:var(--ink)}
+.cy-left-dropdown a::before{content:"» ";color:var(--leaf)}
+.cy-left-dropdown a:hover{color:var(--accent);text-shadow:0 0 8px rgba(43,240,255,.6)}
+
+/* BGM */
+.cy-bgm{border-top:1px dashed rgba(43,240,255,.22);padding-top:18px;position:relative}
+.cy-bgm-heading{font-family:'Orbitron',var(--display);font-weight:700;font-size:1.05rem;letter-spacing:.14em;color:var(--accent);text-shadow:0 0 8px rgba(43,240,255,.6);margin-bottom:10px}
+.cy-bgm-list{list-style:none;margin:0;padding:0}
+.cy-bgm-track{
+  width:100%;display:flex;align-items:center;gap:10px;
+  background:none;border:0;cursor:pointer;text-align:left;
+  padding:7px 8px;font-size:1.3rem;color:var(--sub-ink);
+  border-left:2px solid transparent;transition:background .2s,color .2s;
+}
+.cy-bgm-track:hover{color:var(--ink);background:rgba(43,240,255,.06)}
+.cy-bgm-track.is-current{color:#F2FDFF;border-left-color:var(--point);background:linear-gradient(90deg,rgba(255,43,214,.16),transparent)}
+.cy-bgm-no{color:var(--leaf);min-width:2.2em}
+.cy-bgm-name{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cy-bgm-mark{width:14px;height:14px;display:inline-flex;align-items:flex-end;gap:2px}
+.cy-bgm-track.is-current .cy-bgm-mark::before,
+.cy-bgm-track.is-current .cy-bgm-mark::after{content:"";width:5px;height:40%;background:var(--point);box-shadow:0 0 6px var(--point)}
+.cy-bgm.is-playing .cy-bgm-track.is-current .cy-bgm-mark::before{animation:eq .7s ease-in-out infinite alternate}
+.cy-bgm.is-playing .cy-bgm-track.is-current .cy-bgm-mark::after{animation:eq .9s ease-in-out infinite alternate-reverse}
+@keyframes eq{from{height:20%}to{height:100%}}
+.cy-bgm-controls{display:flex;align-items:center;gap:8px;margin-top:12px}
+.cy-bgm-controls button{
+  min-width:46px;height:40px;padding:0 10px;cursor:pointer;
+  background:rgba(43,240,255,.06);border:1px solid rgba(43,240,255,.45);
+  color:var(--accent);font-size:1.05rem;
+  clip-path:polygon(0 6px,6px 0,100% 0,100% calc(100% - 6px),calc(100% - 6px) 100%,0 100%);
+  transition:background .2s,box-shadow .2s;
+}
+.cy-bgm-controls button:hover{background:rgba(43,240,255,.18);box-shadow:0 0 14px rgba(43,240,255,.4)}
+.cy-bgm-controls input[type=range]{flex:1;min-width:0;accent-color:var(--point)}
+.cy-bgm-credit{margin-top:10px;font-size:1rem;color:rgba(124,141,192,.8)}
+.cy-bgm-note{margin-top:8px;font-size:1.1rem;color:var(--point-soft)}
+.cy-bgm-stage{position:absolute;width:200px;height:120px;left:-9999px;top:0;opacity:0;pointer-events:none}
+
+/* ---------- 3D panel layer ---------- */
+.cy-right-panel{position:static}
+.cy-css3d{position:fixed!important;inset:0;z-index:1;pointer-events:none;overflow:visible!important}
+
+/* each tabpanel = floating console window */
+.cy-right-content{
+  --pw:820px;--ph:680px;
+  width:var(--pw);height:var(--ph);
+  overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;
+  padding:34px 40px 44px;
+  background:
+    linear-gradient(180deg, rgba(43,240,255,.06), transparent 120px),
+    linear-gradient(180deg, rgba(8,12,40,.94), rgba(4,6,22,.95));
+  border:1px solid rgba(43,240,255,.55);
+  box-shadow:
+    0 0 0 1px rgba(3,4,13,.9),
+    0 0 28px rgba(43,240,255,.22),
+    0 0 90px rgba(138,91,255,.18),
+    inset 0 0 40px rgba(43,240,255,.06);
+  clip-path:polygon(0 22px,22px 0,100% 0,100% calc(100% - 22px),calc(100% - 22px) 100%,0 100%);
+  backface-visibility:hidden;
+  scrollbar-width:thin;scrollbar-color:rgba(43,240,255,.5) rgba(3,4,13,.4);
+  transition:border-color .4s, box-shadow .4s, filter .4s;
+  cursor:default;
+}
+.cy-right-content::-webkit-scrollbar{width:8px}
+.cy-right-content::-webkit-scrollbar-thumb{background:linear-gradient(var(--accent),var(--leaf));border-radius:0}
+.cy-right-content::-webkit-scrollbar-track{background:rgba(3,4,13,.5)}
+/* side (not selected) panels */
+.cy-right-content:not(.is-active){
+  overflow:hidden;cursor:pointer;filter:saturate(.7) brightness(.8);
+  border-color:rgba(138,91,255,.55);
+}
+.cy-right-content:not(.is-active):hover{filter:saturate(1) brightness(1);border-color:var(--point);box-shadow:0 0 34px rgba(255,43,214,.35)}
+.cy-panel-label{
+  position:sticky;top:0;height:0;z-index:5;pointer-events:none;display:block;
+}
+.cy-panel-label span{
+  position:absolute;left:-40px;right:-40px;top:-34px;height:var(--ph);
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--display);font-size:5rem;letter-spacing:.06em;color:#F2FDFF;
+  text-shadow:0 0 12px rgba(255,43,214,.9),0 0 40px rgba(255,43,214,.5);
+  background:radial-gradient(ellipse at center, rgba(3,4,13,.72), rgba(3,4,13,.35));
+  opacity:0;transition:opacity .4s;
+}
+.cy-right-content:not(.is-active) .cy-panel-label span{opacity:1;pointer-events:auto;cursor:pointer}
+.cy-panel-label span::before{content:"[ ";font-family:'Orbitron',sans-serif;font-weight:500;color:var(--point)}
+.cy-panel-label span::after{content:" ]";font-family:'Orbitron',sans-serif;font-weight:500;color:var(--point)}
+
+/* ---------- content inside panels (2x type) ---------- */
+.cy-content-box+.cy-content-box{margin-top:44px}
+.cy-section-title{
+  display:flex;align-items:baseline;flex-wrap:wrap;gap:0;
+  margin:0 0 20px;padding-bottom:12px;
+  font-family:var(--display);font-size:2rem;line-height:1.2;color:#F2FDFF;
+  text-shadow:0 0 8px rgba(43,240,255,.85),0 0 26px rgba(43,240,255,.35);
+  border-bottom:1px solid rgba(43,240,255,.3);
+  position:relative;
+}
+.cy-section-title::before{content:"[";font-family:'Orbitron',sans-serif;font-weight:500;color:var(--accent);margin-right:.35em}
+.cy-sub-text{
+  font-family:var(--body);font-size:1.3rem;letter-spacing:.02em;color:var(--leaf);
+  text-shadow:0 0 8px rgba(138,91,255,.6);
+}
+.cy-section-title>.cy-sub-text::before{content:"]";font-family:'Orbitron',sans-serif;font-weight:500;font-size:1.2em;color:var(--accent);text-shadow:0 0 8px rgba(43,240,255,.85);margin:0 .7em 0 .3em}
+.cy-section-title::after{ /* corner tick */
+  content:"";position:absolute;right:0;bottom:-1px;width:64px;height:3px;background:var(--point);box-shadow:0 0 10px var(--point)
+}
+
+/* home */
+.cy-miniroom-inner{
+  position:relative;border:1px solid rgba(43,240,255,.4);padding:6px;background:rgba(43,240,255,.04);
+}
+.cy-miniroom-inner img{width:100%;height:auto;image-rendering:auto}
+.cy-miniroom-inner::after{
+  content:"";position:absolute;inset:6px;pointer-events:none;
+  background:repeating-linear-gradient(to bottom, rgba(3,4,13,.16) 0 1px, transparent 1px 3px);
+}
+.cy-gb-loading,.cy-empty-box{font-size:1.45rem;color:var(--sub-ink);padding:10px 0}
+.cy-guestbook-list{font-size:1.5rem;line-height:1.6}
+.cy-guestbook-item{padding:14px 0;border-bottom:1px dashed rgba(43,240,255,.18)}
+.cy-guestbook-item:last-child{border-bottom:0}
+.cg-author{color:var(--point-soft);font-weight:700;text-shadow:0 0 8px rgba(255,43,214,.45)}
+.cg-colon{color:var(--sub-ink)}
+.cg-text{color:var(--ink)}
+.cg-date{margin-left:10px;font-size:1.15rem;color:var(--sub-ink);white-space:nowrap}
+.cy-gb-signin{margin-top:18px;display:flex;flex-wrap:wrap;align-items:center;gap:12px;font-size:1.3rem;color:var(--sub-ink)}
+.cy-gb-google,.cy-oe-btn,.cy-back-btn{
+  display:inline-flex;align-items:center;gap:8px;cursor:pointer;text-decoration:none;
+  padding:10px 18px;font-family:var(--body);font-size:1.3rem;
+  color:#F2FDFF;background:rgba(255,43,214,.12);border:1px solid var(--point);
+  clip-path:polygon(0 8px,8px 0,100% 0,100% calc(100% - 8px),calc(100% - 8px) 100%,0 100%);
+  transition:background .2s, box-shadow .2s;
+}
+.cy-gb-google:hover,.cy-oe-btn:hover,.cy-back-btn:hover{background:rgba(255,43,214,.3);box-shadow:0 0 18px rgba(255,43,214,.5)}
+
+/* profile */
+.cy-text-block{font-size:1.6rem;line-height:1.75;color:var(--ink)}
+.cy-text-block p{margin:0;padding:10px 0 10px 22px;position:relative;border-bottom:1px dashed rgba(43,240,255,.14)}
+.cy-text-block p::before{content:"›";position:absolute;left:0;color:var(--accent);text-shadow:0 0 8px var(--accent)}
+.cy-text-block a{color:var(--accent);text-decoration:none;border-bottom:1px solid rgba(43,240,255,.4);word-break:break-all}
+.cy-text-block a:hover{color:#F2FDFF;text-shadow:0 0 10px var(--accent)}
+.cy-contact-list{list-style:none;margin:20px 0 0;padding:0;font-size:1.5rem}
+.cy-contact-list li{display:flex;gap:16px;padding:10px 0;border-bottom:1px dashed rgba(138,91,255,.25)}
+.cy-contact-label{min-width:6em;color:var(--leaf)}
+.cy-contact-list a{color:var(--accent);text-decoration:none}
+
+/* board */
+.cy-board-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:16px}
+.cy-board-link{
+  display:grid;grid-template-columns:170px 1fr;gap:20px;align-items:start;
+  padding:14px;text-decoration:none;color:inherit;
+  border:1px solid rgba(43,240,255,.2);background:rgba(43,240,255,.03);
+  transition:border-color .2s, background .2s, box-shadow .2s;
+}
+.cy-board-link:hover{border-color:var(--accent);background:rgba(43,240,255,.08);box-shadow:0 0 22px rgba(43,240,255,.2)}
+.cy-board-preview{display:block;aspect-ratio:16/10;overflow:hidden;border:1px solid rgba(138,91,255,.5);background:#070B24}
+.cy-board-preview img{width:100%;height:100%;object-fit:cover}
+.cy-board-text{display:flex;flex-direction:column;gap:8px;min-width:0}
+.cy-board-head{display:flex;flex-direction:column;gap:6px}
+.cy-board-category{
+  align-self:flex-start;font-size:1.1rem;padding:2px 10px;color:var(--point-soft);
+  border:1px solid rgba(255,43,214,.6);background:rgba(255,43,214,.08)
+}
+.cy-board-title{font-family:var(--display);font-size:1.65rem;line-height:1.3;color:#F2FDFF}
+.cy-board-link:hover .cy-board-title{text-shadow:0 0 10px rgba(43,240,255,.8)}
+.cy-board-summary{font-size:1.3rem;line-height:1.55;color:var(--sub-ink);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;word-break:break-all}
+.cy-board-date{font-size:1.15rem;color:var(--accent);opacity:.8}
+
+/* photo / oekaki */
+.cy-oe-help-btn{
+  margin-left:auto;align-self:center;width:36px;height:36px;cursor:pointer;
+  font-family:'Orbitron',sans-serif;font-size:1.1rem;color:var(--accent);
+  background:rgba(43,240,255,.08);border:1px solid var(--accent);border-radius:50%;
+}
+.cy-oe-help{font-size:1.35rem;line-height:1.7;color:var(--ink);padding:16px 18px;margin-bottom:18px;border:1px dashed rgba(138,91,255,.5);background:rgba(138,91,255,.06)}
+.cy-oe-help p{margin:0 0 8px}
+.cy-oe-help b{color:var(--point-soft)}
+.cy-oe-help-tip{color:var(--sub-ink)}
+.cy-oe-list{list-style:none;margin:18px 0 0;padding:0;display:flex;flex-direction:column;gap:16px}
+.cy-oe-item{display:grid;grid-template-columns:150px 1fr;gap:20px;padding:12px;border:1px solid rgba(43,240,255,.18);background:rgba(43,240,255,.03)}
+.cy-oe-thumb{position:relative;padding:0;border:1px solid rgba(138,91,255,.6);background:#F4F1FF;aspect-ratio:1/1;cursor:pointer;overflow:hidden}
+.cy-oe-thumb img{width:100%;height:100%;object-fit:cover}
+.cy-oe-loading{position:absolute;inset:0;background:linear-gradient(90deg,#0b1030,#1b1650,#0b1030);background-size:200% 100%;animation:shimmer 1.4s linear infinite}
+@keyframes shimmer{to{background-position:-200% 0}}
+.cy-oe-side{display:flex;flex-direction:column;gap:8px;min-width:0}
+.cy-oe-side-head{display:flex;flex-direction:column;gap:6px}
+.cy-oe-title{background:none;border:0;padding:0;text-align:left;cursor:pointer;font-family:var(--display);font-size:1.6rem;line-height:1.35;color:#F2FDFF}
+.cy-oe-title:hover{text-shadow:0 0 10px rgba(43,240,255,.8)}
+.cy-oe-title.is-empty{color:var(--sub-ink)}
+.cy-oe-author{font-size:1.3rem;color:var(--point-soft)}
+.cy-oe-date{font-size:1.1rem;color:var(--sub-ink)}
+.cy-gb-pagination{display:flex;gap:8px;justify-content:center;margin-top:22px}
+.cy-gb-page{
+  min-width:44px;height:44px;cursor:pointer;font-family:'Orbitron',sans-serif;font-size:1.05rem;
+  background:transparent;border:1px solid rgba(43,240,255,.4);color:var(--sub-ink)
+}
+.cy-gb-page.is-active{color:#03040D;background:var(--accent);box-shadow:0 0 16px var(--accent)}
+.cy-oe-detail{display:flex;flex-direction:column;gap:16px}
+.cy-oe-detail-head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.cy-oe-title-text{font-family:var(--display);font-size:1.9rem;color:#F2FDFF;text-shadow:0 0 10px rgba(43,240,255,.6)}
+.cy-oe-big{width:100%;max-width:520px;align-self:center;aspect-ratio:1/1;background:#F4F1FF;border:1px solid var(--accent);box-shadow:0 0 30px rgba(43,240,255,.25)}
+.cy-oe-detail-meta{font-size:1.3rem;color:var(--sub-ink)}
+.cy-oe-detail-meta b{color:var(--point-soft);font-weight:400}
+.cy-oe-replies{list-style:none;margin:0;padding:0;font-size:1.4rem;line-height:1.6}
+.cy-oe-reply{padding:10px 0;border-bottom:1px dashed rgba(43,240,255,.18)}
+.cy-oe-reply-author{color:var(--point-soft);margin-right:10px}
+
+/* console hint under carousel */
+.cy-console-hint{
+  position:fixed;z-index:2;bottom:18px;left:var(--hud-w);right:0;text-align:center;pointer-events:none;
+  font-size:1.05rem;letter-spacing:.12em;color:rgba(124,141,192,.85);
+}
+.cy-console-hint kbd{
+  font-family:'Share Tech Mono',monospace;padding:1px 8px;margin:0 2px;
+  border:1px solid rgba(43,240,255,.5);color:var(--accent);
+}
+
+/* ---------- title screen (landing) ---------- */
+.lt-intro{
+  position:fixed;inset:0;z-index:30;display:grid;place-items:center;
+  background:radial-gradient(ellipse at center, rgba(3,4,13,.82), rgba(3,4,13,.97) 70%);
+  transition:opacity .8s var(--ease-out), transform .8s var(--ease-out);
+}
+.lt-intro.is-leaving{opacity:0;transform:scale(1.06);pointer-events:none}
+.lt-intro-spiral{
+  position:absolute;width:min(78vmin,760px);aspect-ratio:1/1;border-radius:50%;
+  background:
+    radial-gradient(circle, transparent 0 15%, rgba(3,4,13,.9) 15.2% 16%, transparent 16.2%),
+    repeating-radial-gradient(circle, rgba(43,240,255,.0) 0 7px, rgba(43,240,255,.10) 7px 8px),
+    conic-gradient(from 0deg, rgba(43,240,255,.35), rgba(138,91,255,.28), rgba(255,43,214,.32), rgba(43,240,255,.05), rgba(43,240,255,.35));
+  -webkit-mask:radial-gradient(circle, transparent 0 14%, #000 14.5% 70%, transparent 71%);
+          mask:radial-gradient(circle, transparent 0 14%, #000 14.5% 70%, transparent 71%);
+  animation:disc 14s linear infinite;
+  filter:blur(.3px) drop-shadow(0 0 40px rgba(138,91,255,.4));
+  opacity:.42;
+}
+@keyframes disc{to{transform:rotate(360deg)}}
+.lt-intro-card{position:relative;text-align:center;display:flex;flex-direction:column;align-items:center;gap:22px;padding:24px}
+.lt-intro-title{
+  font-family:var(--display);font-size:clamp(3.4rem,9vw,7.4rem);line-height:1;color:#F2FDFF;letter-spacing:.02em;
+  text-shadow:0 0 10px rgba(43,240,255,1),0 0 34px rgba(43,240,255,.6),0 0 80px rgba(138,91,255,.6),4px 0 0 rgba(255,43,214,.55),-4px 0 0 rgba(43,240,255,.4);
+  animation:flicker 5s steps(1) infinite;
+}
+@keyframes flicker{0%,100%{opacity:1}92%{opacity:1}93%{opacity:.55}94%{opacity:1}96%{opacity:.8}97%{opacity:1}}
+.lt-intro-copy{margin:0;max-width:24em;font-size:1.5rem;line-height:1.6;color:var(--ink)}
+.lt-intro-cta{
+  margin-top:10px;display:inline-flex;align-items:center;gap:12px;cursor:pointer;
+  padding:16px 34px;font-family:var(--display);font-size:1.5rem;letter-spacing:.06em;color:#F2FDFF;
+  background:rgba(43,240,255,.08);border:1px solid var(--accent);
+  box-shadow:0 0 24px rgba(43,240,255,.35), inset 0 0 18px rgba(43,240,255,.15);
+  clip-path:polygon(0 12px,12px 0,100% 0,100% calc(100% - 12px),calc(100% - 12px) 100%,0 100%);
+  animation:pulse 2.2s ease-in-out infinite;
+}
+.lt-intro-cta::before{content:"PRESS START";font-family:'Orbitron',sans-serif;font-weight:700;font-size:.8em;color:var(--point);text-shadow:0 0 10px var(--point);margin-right:4px}
+.lt-intro-cta:hover{background:rgba(43,240,255,.2)}
+@keyframes pulse{50%{box-shadow:0 0 44px rgba(43,240,255,.6), inset 0 0 24px rgba(43,240,255,.25)}}
+
+/* ---------- 2D fallback (no WebGL/three) ---------- */
+.no-3d .cy-right-content{position:fixed;top:calc(var(--nav-h) + 24px);left:calc(var(--hud-w) + 40px);right:40px;bottom:24px;width:auto;height:auto;z-index:1;display:none}
+.no-3d .cy-right-content.is-active{display:block}
+.no-3d .cy-panel-label{display:none}
+
+/* ---------- mobile ---------- */
+.cy-hud-toggle{display:none}
+@media (max-width: 900px){
+  :root{--nav-h:132px;--hud-w:0px}
+  .cy-right-header{width:100%;height:64px;border-right:0;flex-direction:row;align-items:center;justify-content:space-between;padding:0 16px}
+  .cy-title{font-size:1.6rem}
+  .cy-url{display:none}
+  .cy-tabs{top:64px;left:0;height:68px;justify-content:space-around;padding:0 6px;gap:0}
+  .cy-tab-btn{font-size:1.3rem;padding:12px 6px 14px}
+  .cy-left-panel{width:min(88vw,380px);transform:translateX(-102%);transition:transform .45s var(--ease-out);z-index:6}
+  .cy-left-panel.is-open{transform:none}
+  .cy-hud-toggle{
+    display:inline-flex;align-items:center;gap:6px;cursor:pointer;
+    padding:8px 12px;font-family:'Orbitron',sans-serif;font-size:.85rem;letter-spacing:.1em;
+    color:var(--accent);background:rgba(43,240,255,.08);border:1px solid var(--accent)
+  }
+  .cy-right-content{padding:24px 20px 32px}
+  .cy-section-title{font-size:1.45rem}
+  .cy-board-link{grid-template-columns:1fr}
+  .cy-oe-item{grid-template-columns:110px 1fr}
+  .cy-console-hint{display:none}
+}
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{animation-duration:0s!important;animation-iteration-count:1!important;transition-duration:.01s!important}
+}
+</style>
+</head>
+<body>
+<div class="cy-root" style="--paper:#03040D;--ink:#D8F6FF;--accent:#2BF0FF;--page-top:#070B24;--page-mid:#0A1034;--page-bottom:#03040D;--frame:rgba(43,240,255,.35);--frame-strong:#2BF0FF;--frame-hover:#FF2BD6;--heading:#F2FDFF;--sub-ink:#7C8DC0;--leaf:#9B72FF;--point:#FF2BD6;--point-soft:#FF8CEB;--mint:#0A1034;--mint-tint:#0C1440;--blue-tint:#0E1848;--danger:#FF4D6D;--display:'Orbitron','Do Hyeon',system-ui,sans-serif;--body:'Share Tech Mono','Nanum Gothic Coding',ui-monospace,monospace">
+  <div class="cy-background-pattern"></div>
+  <div class="cy-book-wrapper" inert="">
+    <div class="cy-book-outer">
+      <div class="cy-bindings"><div class="cy-ring"></div><div class="cy-ring"></div><div class="cy-ring"></div><div class="cy-ring"></div></div>
+      <div class="cy-book-inner">
+
+        <div class="cy-left-panel">
+          <div class="cy-left-header"><span class="cy-today-count">TODAY <span class="text-orange">2</span> | TOTAL <span class="text-black">127</span></span></div>
+          <div class="cy-left-content">
+            <div class="cy-today-is">TODAY IS.. <span class="text-orange">…</span></div>
+            <div class="cy-profile-pic"><img src="https://progh2.github.io/mini-homepage/assets/profile.webp" alt="함쌤"/></div>
+            <div class="cy-intro-text">지루한 것에서 벗어나 재미난 것 속으로 풍덩~☆</div>
+            <div class="cy-bgm">
+              <div class="cy-bgm-heading">♬ MINI HOMPY BGM</div>
+              <ul class="cy-bgm-list">
+                <li><button type="button" class="cy-bgm-track is-current" title="Suonatore di Liuto / Kevin MacLeod" data-video="ZffDOCZy_bA"><span class="cy-bgm-mark"></span><span class="cy-bgm-no">01.</span><span class="cy-bgm-name">Suonatore di Liuto</span></button></li>
+                <li><button type="button" class="cy-bgm-track" title="Midnight Tale / Kevin MacLeod" data-video="qWmfZlw3EFI"><span class="cy-bgm-mark"></span><span class="cy-bgm-no">02.</span><span class="cy-bgm-name">Midnight Tale</span></button></li>
+                <li><button type="button" class="cy-bgm-track" title="Folk Round / Kevin MacLeod" data-video="VOwN8oR4Fhg"><span class="cy-bgm-mark"></span><span class="cy-bgm-no">03.</span><span class="cy-bgm-name">Folk Round</span></button></li>
+                <li><button type="button" class="cy-bgm-track" title="Village Consort / Kevin MacLeod" data-video="-_n0ib4fA0g"><span class="cy-bgm-mark"></span><span class="cy-bgm-no">04.</span><span class="cy-bgm-name">Village Consort</span></button></li>
+                <li><button type="button" class="cy-bgm-track" title="Pippin the Hunchback / Kevin MacLeod" data-video="W4lM5cBIj6w"><span class="cy-bgm-mark"></span><span class="cy-bgm-no">05.</span><span class="cy-bgm-name">Pippin the Hunchback</span></button></li>
+              </ul>
+              <div class="cy-bgm-controls"><button type="button" aria-label="재생">▶</button><button type="button" aria-label="다음곡">▶▶</button><button type="button" aria-label="음소거">🔊</button><input id="bgm-volume" type="range" min="0" max="100" aria-label="볼륨" name="bgm-volume" value="40"/></div>
+              <div class="cy-bgm-credit">Kevin MacLeod (incompetech.com), CC BY 3.0</div>
+              <div class="cy-bgm-stage"><div></div></div>
+            </div>
+            <div class="cy-profile-name"><div class="name-bold">함쌤</div><div class="title-sub">미림마이스터고등학교 정보·컴퓨터 교사</div></div>
+            <details class="cy-left-dropdown"><summary>파도타기</summary><ul>
+              <li><a href="https://dorms.school/u/17074aa0-a3a8-44f8-b40a-d7c044c5ade6" target="_blank" rel="noopener noreferrer">도름스 커뮤니티 나의 활동</a></li>
+              <li><a href="https://www.instagram.com/gihunham/" target="_blank" rel="noopener noreferrer">Instagram</a></li>
+              <li><a href="https://github.com/progh2" target="_blank" rel="noopener noreferrer">GitHub</a></li>
+              <li><a href="https://pcallpang.github.io/meyo-lab/" target="_blank" rel="noopener noreferrer">미요Lab 미요앱 실험실</a></li>
+            </ul></details>
+          </div>
+        </div>
+
+        <div class="cy-right-panel">
+          <div class="cy-right-header"><span class="cy-title">함쌤 작업실</span><span class="cy-url">progh2.github.io/mini-homepage</span></div>
+
+          <!-- HOME -->
+          <div class="cy-right-content" role="tabpanel" id="cy-panel-home" aria-labelledby="cy-tab-home" data-label="홈">
+            <div class="cy-content-box cy-miniroom-box">
+              <div class="cy-section-title">Mini Room<span class="cy-sub-text">미니룸</span></div>
+              <div class="cy-miniroom-inner"><img src="https://progh2.github.io/mini-homepage/assets/miniroom.webp" alt="함쌤 작업실 미니룸"/></div>
+            </div>
+            <div class="cy-content-box">
+              <div class="cy-section-title">What friends say<span class="cy-sub-text">한마디로 표현한다면~</span></div>
+              <div class="cy-guestbook-list"><div class="cy-guestbook-item"><span class="cg-author">평온나날 <span class="cg-colon">:</span> </span><span class="cg-text">다들 방가방가~</span><span class="cg-date">(2026.09.09 23:59)</span></div><div class="cy-guestbook-item"><span class="cg-author">로나리아 <span class="cg-colon">:</span> </span><span class="cg-text">선생님 안녕하십니까! 귀엽고 멋진 미니홈피 잘 보고 갑니다! 👏🏻👏🏻👏🏻👩🏻‍💻🙂 웹사이트 디자인 정말 귀여워요.! (저 Yumin 입니다!)</span><span class="cg-date">(2026.09.08 21:13)</span></div><div class="cy-guestbook-item"><span class="cg-author">이경민 <span class="cg-colon">:</span> </span><span class="cg-text">와....... 너무 이쁘다.... 세상에나...</span><span class="cg-date">(2026.08.30 23:24)</span></div><div class="cy-guestbook-item"><span class="cg-author">이준혁 <span class="cg-colon">:</span> </span><span class="cg-text">캬~ 미요쌤 왔다갑니다. 멋진 미니홈피입니다 ㅎㅎ 비밀글로도 할 수 있군요 !!</span><span class="cg-date">(2026.08.30 22:24)</span></div><div class="cy-guestbook-item"><span class="cg-author">평온나날 <span class="cg-colon">:</span> </span><span class="cg-text">내 집에 내가 말 남기기.. 안녕하세요~</span><span class="cg-date">(2026.08.30 19:02)</span></div></div>
+              <div class="cy-gb-signin"><a class="cy-gb-google" href="https://progh2.github.io/mini-homepage/" target="_blank" rel="noopener noreferrer">구글 로그인</a><span class="cy-gb-signin-text">하면 한마디를 남길 수 있어요.</span></div>
+            </div>
+          </div>
+
+          <!-- PROFILE -->
+          <div class="cy-right-content" role="tabpanel" id="cy-panel-profile" aria-labelledby="cy-tab-profile" data-label="프로필">
+            <div class="cy-content-box">
+              <div class="cy-section-title">소개<span class="cy-sub-text">도름스 @평온나날</span></div>
+              <div class="cy-text-block"><p>미림마이스터고등학교 정보·컴퓨터 교사입니다.</p><p>도름스에서는 교사 인증을 마친 @평온나날로 활동합니다.</p><p>서울 고등학교 정보·컴퓨터 교사입니다.</p><p>도름스 @평온나날 <a href="https://dorms.school/u/17074aa0-a3a8-44f8-b40a-d7c044c5ade6" target="_blank" rel="noopener noreferrer">https://dorms.school/u/17074aa0-a3a8-44f8-b40a-d7c044c5ade6</a></p><p>GitHub <a href="https://github.com/progh2" target="_blank" rel="noopener noreferrer">https://github.com/progh2</a></p><p>Instagram <a href="https://www.instagram.com/gihunham" target="_blank" rel="noopener noreferrer">@gihunham</a></p></div>
+            </div>
+          </div>
+
+          <!-- BOARD -->
+          <div class="cy-right-content" role="tabpanel" id="cy-panel-board" aria-labelledby="cy-tab-board" data-label="게시판">
+            <div class="cy-content-box">
+              <div class="cy-section-title">게시판<span class="cy-sub-text">앱과 게시글</span></div>
+              <ul class="cy-board-list"><li class="cy-board-item"><a class="cy-board-link" href="https://dorms.school/apps/08587d13-6ce9-4a3e-a612-bbaa05c1757b" target="_blank" rel="noopener noreferrer"><span class="cy-board-preview"><img src="https://progh2.github.io/mini-homepage/assets/dorms/08587d13-6ce9-4a3e-a612-bbaa05c1757b.webp" alt="별밭 윷놀이" loading="lazy"/></span><span class="cy-board-text"><span class="cy-board-head"><span class="cy-board-category">기타</span><span class="cy-board-title">별밭 윷놀이</span></span><span class="cy-board-summary">본격 3D 전통 윷놀이입니다. 봇끼리 플레이도 지원해서 플레이 감상도 가능합니다. 은근 중독성 있어요~ 물론 사용자 참가도 가능합니다.</span><span class="cy-board-date">2026-09-10</span></span></a></li><li class="cy-board-item"><a class="cy-board-link" href="https://dorms.school/apps/e4978f46-0194-40fd-a1a2-45d165aa4a2a" target="_blank" rel="noopener noreferrer"><span class="cy-board-preview"><img src="https://progh2.github.io/mini-homepage/assets/dorms/e4978f46-0194-40fd-a1a2-45d165aa4a2a.webp" alt="기초 통계량 실험실 · 숫자로 데이터 읽기" loading="lazy"/></span><span class="cy-board-text"><span class="cy-board-head"><span class="cy-board-category">교과·수업</span><span class="cy-board-title">기초 통계량 실험실 · 숫자로 데이터 읽기</span></span><span class="cy-board-summary">https://progh2.github.io/stat-lab/</span><span class="cy-board-date">2026-09-07</span></span></a></li><li class="cy-board-item"><a class="cy-board-link" href="https://dorms.school/apps/0de6a104-bf19-4751-a297-9fee61e301f3" target="_blank" rel="noopener noreferrer"><span class="cy-board-preview"><img src="https://progh2.github.io/mini-homepage/assets/dorms/0de6a104-bf19-4751-a297-9fee61e301f3.webp" alt="급식쪽지" loading="lazy"/></span><span class="cy-board-text"><span class="cy-board-head"><span class="cy-board-category">기타</span><span class="cy-board-title">급식쪽지</span></span><span class="cy-board-summary">오늘 급식, 바탕화면에서 바로 확인 학교 급식 메뉴와 학사일정을 포스트잇처럼 화면에 붙여두세요. 인증키 없이 바로 쓸 수 있어요.</span><span class="cy-board-date">2026-09-07</span></span></a></li><li class="cy-board-item"><a class="cy-board-link" href="https://dorms.school/apps/4d98ca63-783e-47b9-8115-ac1a439b5740" target="_blank" rel="noopener noreferrer"><span class="cy-board-preview"><img src="https://progh2.github.io/mini-homepage/assets/dorms/4d98ca63-783e-47b9-8115-ac1a439b5740.webp" alt="미드나잇 클럽 - 야근용 째즈 BGM" loading="lazy"/></span><span class="cy-board-text"><span class="cy-board-head"><span class="cy-board-category">기타</span><span class="cy-board-title">미드나잇 클럽 - 야근용 째즈 BGM</span></span><span class="cy-board-summary">밤이 깊을수록 클럽도 어두워지고 야근도 계속됩니다. 그럴때 째즈의 바이브에 빠져보세요.</span><span class="cy-board-date">2026-09-07</span></span></a></li><li class="cy-board-item"><a class="cy-board-link" href="https://dorms.school/apps/6f8b3332-cdf0-46ac-914e-2fbb82a329af" target="_blank" rel="noopener noreferrer"><span class="cy-board-preview"><img src="https://progh2.github.io/mini-homepage/assets/dorms/6f8b3332-cdf0-46ac-914e-2fbb82a329af.webp" alt="음유시인의 홀 - 야근용 RPG BGM DJ" loading="lazy"/></span><span class="cy-board-text"><span class="cy-board-head"><span class="cy-board-category">기타</span><span class="cy-board-title">음유시인의 홀 - 야근용 RPG BGM DJ</span></span><span class="cy-board-summary">야근하는데 음악이 필요하세요? 옛날 콘솔 RPG 배경음악과 함께하시면 어떨까요?</span><span class="cy-board-date">2026-09-03</span></span></a></li><li class="cy-board-item"><a class="cy-board-link" href="https://dorms.school/apps/0991102a-3733-4586-bae9-8fd28690d11c" target="_blank" rel="noopener noreferrer"><span class="cy-board-preview"><img src="https://progh2.github.io/mini-homepage/assets/dorms/0991102a-3733-4586-bae9-8fd28690d11c.webp" alt="야근용 Classic BGM DJ" loading="lazy"/></span><span class="cy-board-text"><span class="cy-board-head"><span class="cy-board-category">기타</span><span class="cy-board-title">야근용 Classic BGM DJ</span></span><span class="cy-board-summary">품격있는 야근을 위한 음악이 필요하신가요? 여기 세바티안 집사가 준비한 클래식 음악과 함께하세요.</span><span class="cy-board-date">2026-09-03</span></span></a></li><li class="cy-board-item"><a class="cy-board-link" href="https://dorms.school/apps/087e63e4-5926-4048-a6f9-df557cb80148" target="_blank" rel="noopener noreferrer"><span class="cy-board-preview"><img src="https://progh2.github.io/mini-homepage/assets/dorms/087e63e4-5926-4048-a6f9-df557cb80148.webp" alt="캣모아 - 교사를 위한 일정 수집 고양이" loading="lazy"/></span><span class="cy-board-text"><span class="cy-board-head"><span class="cy-board-category">기타</span><span class="cy-board-title">캣모아 - 교사를 위한 일정 수집 고양이</span></span><span class="cy-board-summary">일정 자료를 고양이에게 던지세요 한글 문서 · PDF · 스크린샷 · 쿨메신저 쪽지 · 복사한 텍스트. AI가 일정을 뽑아내고, 확인 한 번이면</span><span class="cy-board-date">2026-08-29</span></span></a></li><li class="cy-board-item"><a class="cy-board-link" href="https://dorms.school/apps/ec1de254-f0e1-4d4e-afbd-bb337cbd510b" target="_blank" rel="noopener noreferrer"><span class="cy-board-preview"><img src="https://progh2.github.io/mini-homepage/assets/dorms/ec1de254-f0e1-4d4e-afbd-bb337cbd510b.webp" alt="서울시교육청 연구정보원에서 호스팅하는 학교 홈페이지를 위한 급식 식단 업로드 양식 생성기" loading="lazy"/></span><span class="cy-board-text"><span class="cy-board-head"><span class="cy-board-category">기타</span><span class="cy-board-title">서울시교육청 연구정보원에서 호스팅하는 학교 홈페이지를 위한 급식 식단 업로드 양식 생성기</span></span><span class="cy-board-summary">월별 식단표 엑셀 또는 나이스 급식 API로, 서울시교육청 연구정보원에서 호스팅하는 학교 홈페이지를 위한 급식 업로드 양식(mlsvTmplat)</span><span class="cy-board-date">2026-08-25</span></span></a></li><li class="cy-board-item"><a class="cy-board-link" href="https://dorms.school/apps/f5537d57-7931-4900-aa0f-a1ec658a7f2d" target="_blank" rel="noopener noreferrer"><span class="cy-board-preview"><img src="https://progh2.github.io/mini-homepage/assets/dorms/f5537d57-7931-4900-aa0f-a1ec658a7f2d.webp" alt="깃허브 레포 매니저" loading="lazy"/></span><span class="cy-board-text"><span class="cy-board-head"><span class="cy-board-category">기타</span><span class="cy-board-title">깃허브 레포 매니저</span></span><span class="cy-board-summary">깃허브 저장소 관리 프로그램</span><span class="cy-board-date">2026-08-24</span></span></a></li><li class="cy-board-item"><a class="cy-board-link" href="https://dorms.school/apps/2bf24f62-dbb3-421f-99fd-221b53073c46" target="_blank" rel="noopener noreferrer"><span class="cy-board-preview"><img src="https://progh2.github.io/mini-homepage/assets/dorms/2bf24f62-dbb3-421f-99fd-221b53073c46.webp" alt="직업계고 AI 면접 모의고사 시뮬레이터" loading="lazy"/></span><span class="cy-board-text"><span class="cy-board-head"><span class="cy-board-category">진로·입시</span><span class="cy-board-title">직업계고 AI 면접 모의고사 시뮬레이터</span></span><span class="cy-board-summary">AI 면접 연습 앱에 오신 것을 환영합니다! 학과와 면접 유형을 선택한 후, AI 면접관이 제시하는 질문에 답변을 입력하세요. 각 답변에 대한 </span><span class="cy-board-date">2026-08-24</span></span></a></li><li class="cy-board-item"><a class="cy-board-link" href="https://dorms.school/apps/2ad7411b-2a13-4057-a0f5-c8757d156d25" target="_blank" rel="noopener noreferrer"><span class="cy-board-preview"><img src="https://progh2.github.io/mini-homepage/assets/dorms/2ad7411b-2a13-4057-a0f5-c8757d156d25.webp" alt="인터넷 랙 줄여주는 팁 적용 프로그램" loading="lazy"/></span><span class="cy-board-text"><span class="cy-board-head"><span class="cy-board-category">기타</span><span class="cy-board-title">인터넷 랙 줄여주는 팁 적용 프로그램</span></span><span class="cy-board-summary">인터넷 랙 줄여주는 설정을 클릭 한번으로 적용하는 간단한 GUI 프로그램</span><span class="cy-board-date">2026-08-24</span></span></a></li></ul>
+            </div>
+          </div>
+
+          <!-- PHOTO / 낙서장 -->
+          <div class="cy-right-content" role="tabpanel" id="cy-panel-photo" aria-labelledby="cy-tab-photo" data-label="낙서장">
+            <div class="cy-content-box">
+              <div class="cy-section-title">오에카키<span class="cy-sub-text">그림으로 남기는 방명록</span><button type="button" class="cy-oe-help-btn" aria-expanded="false" aria-label="오에카키가 무엇인지 보기" title="이게 뭔가요?">?</button></div>
+              <div class="cy-oe-help" hidden>
+                <p><b>오에카키(お絵かき)</b>는 2000년대 초 게시판에서 유행하던 그림 방명록입니다. 따로 프로그램을 깔지 않고 웹페이지에서 바로 그려 올리고, 서로 덧글을 달았습니다.</p>
+                <p>잘 그릴 필요 없습니다. 낙서가 제 맛입니다. 지나간 자리에 그림 한 장 남겨 주세요.</p>
+              </div>
+              <div class="cy-gb-signin"><a class="cy-gb-google" href="https://progh2.github.io/mini-homepage/?tab=photo" target="_blank" rel="noopener noreferrer">구글 로그인</a><span class="cy-gb-signin-text">하면 그림을 남길 수 있어요.</span></div>
+              <div class="cy-oe-view"><div class="cy-gb-loading">그림을 불러오는 중…</div></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="cy-tabs" role="tablist" aria-label="미니홈피 메뉴">
+          <button type="button" role="tab" id="cy-tab-home" aria-selected="true" aria-controls="cy-panel-home" class="cy-tab-btn active"><span class="cy-tab-line">홈</span></button>
+          <button type="button" role="tab" id="cy-tab-profile" aria-selected="false" aria-controls="cy-panel-profile" class="cy-tab-btn"><span class="cy-tab-line">프로필</span></button>
+          <button type="button" role="tab" id="cy-tab-board" aria-selected="false" aria-controls="cy-panel-board" class="cy-tab-btn"><span class="cy-tab-line">게시판</span></button>
+          <button type="button" role="tab" id="cy-tab-photo" aria-selected="false" aria-controls="cy-panel-photo" class="cy-tab-btn"><span class="cy-tab-line">낙서장</span></button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="lt-intro">
+    <div class="lt-intro-spiral"></div>
+    <div class="lt-intro-card">
+      <span class="lt-intro-title">함쌤 작업실</span>
+      <p class="lt-intro-copy">미림마이스터고등학교 정보·컴퓨터 교사. 도름스에서 수업·업무용 앱을 만들고 나눕니다.</p>
+      <button type="button" class="lt-intro-cta">모든 활동 구경하기<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg></button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+/* CSS3DRenderer — three.js r128 examples/js/renderers/CSS3DRenderer.js (MIT) */
+( function () {
+
+	/**
+ * Based on http://www.emagix.net/academic/mscs-project/item/camera-sync-with-css3-and-webgl-threejs
+ */
+
+	class CSS3DObject extends THREE.Object3D {
+
+		constructor( element ) {
+
+			super();
+			this.element = element || document.createElement( 'div' );
+			this.element.style.position = 'absolute';
+			this.element.style.pointerEvents = 'auto';
+			this.addEventListener( 'removed', function () {
+
+				this.traverse( function ( object ) {
+
+					if ( object.element instanceof Element && object.element.parentNode !== null ) {
+
+						object.element.parentNode.removeChild( object.element );
+
+					}
+
+				} );
+
+			} );
+
+		}
+
+		copy( source, recursive ) {
+
+			super.copy( source, recursive );
+			this.element = source.element.cloneNode( true );
+			return this;
+
+		}
+
+	}
+
+	CSS3DObject.prototype.isCSS3DObject = true;
+
+	class CSS3DSprite extends CSS3DObject {
+
+		constructor( element ) {
+
+			super( element );
+
+		}
+
+	}
+
+	CSS3DSprite.prototype.isCSS3DSprite = true; //
+
+	const _matrix = new THREE.Matrix4();
+
+	class CSS3DRenderer {
+
+		constructor() {
+
+			const _this = this;
+
+			let _width, _height;
+
+			let _widthHalf, _heightHalf;
+
+			const cache = {
+				camera: {
+					fov: 0,
+					style: ''
+				},
+				objects: new WeakMap()
+			};
+			const domElement = document.createElement( 'div' );
+			domElement.style.overflow = 'hidden';
+			this.domElement = domElement;
+			const cameraElement = document.createElement( 'div' );
+			cameraElement.style.transformStyle = 'preserve-3d';
+			cameraElement.style.pointerEvents = 'none';
+			domElement.appendChild( cameraElement );
+
+			this.getSize = function () {
+
+				return {
+					width: _width,
+					height: _height
+				};
+
+			};
+
+			this.render = function ( scene, camera ) {
+
+				const fov = camera.projectionMatrix.elements[ 5 ] * _heightHalf;
+
+				if ( cache.camera.fov !== fov ) {
+
+					domElement.style.perspective = camera.isPerspectiveCamera ? fov + 'px' : '';
+					cache.camera.fov = fov;
+
+				}
+
+				if ( scene.autoUpdate === true ) scene.updateMatrixWorld();
+				if ( camera.parent === null ) camera.updateMatrixWorld();
+				let tx, ty;
+
+				if ( camera.isOrthographicCamera ) {
+
+					tx = - ( camera.right + camera.left ) / 2;
+					ty = ( camera.top + camera.bottom ) / 2;
+
+				}
+
+				const cameraCSSMatrix = camera.isOrthographicCamera ? 'scale(' + fov + ')' + 'translate(' + epsilon( tx ) + 'px,' + epsilon( ty ) + 'px)' + getCameraCSSMatrix( camera.matrixWorldInverse ) : 'translateZ(' + fov + 'px)' + getCameraCSSMatrix( camera.matrixWorldInverse );
+				const style = cameraCSSMatrix + 'translate(' + _widthHalf + 'px,' + _heightHalf + 'px)';
+
+				if ( cache.camera.style !== style ) {
+
+					cameraElement.style.transform = style;
+					cache.camera.style = style;
+
+				}
+
+				renderObject( scene, scene, camera, cameraCSSMatrix );
+
+			};
+
+			this.setSize = function ( width, height ) {
+
+				_width = width;
+				_height = height;
+				_widthHalf = _width / 2;
+				_heightHalf = _height / 2;
+				domElement.style.width = width + 'px';
+				domElement.style.height = height + 'px';
+				cameraElement.style.width = width + 'px';
+				cameraElement.style.height = height + 'px';
+
+			};
+
+			function epsilon( value ) {
+
+				return Math.abs( value ) < 1e-10 ? 0 : value;
+
+			}
+
+			function getCameraCSSMatrix( matrix ) {
+
+				const elements = matrix.elements;
+				return 'matrix3d(' + epsilon( elements[ 0 ] ) + ',' + epsilon( - elements[ 1 ] ) + ',' + epsilon( elements[ 2 ] ) + ',' + epsilon( elements[ 3 ] ) + ',' + epsilon( elements[ 4 ] ) + ',' + epsilon( - elements[ 5 ] ) + ',' + epsilon( elements[ 6 ] ) + ',' + epsilon( elements[ 7 ] ) + ',' + epsilon( elements[ 8 ] ) + ',' + epsilon( - elements[ 9 ] ) + ',' + epsilon( elements[ 10 ] ) + ',' + epsilon( elements[ 11 ] ) + ',' + epsilon( elements[ 12 ] ) + ',' + epsilon( - elements[ 13 ] ) + ',' + epsilon( elements[ 14 ] ) + ',' + epsilon( elements[ 15 ] ) + ')';
+
+			}
+
+			function getObjectCSSMatrix( matrix ) {
+
+				const elements = matrix.elements;
+				const matrix3d = 'matrix3d(' + epsilon( elements[ 0 ] ) + ',' + epsilon( elements[ 1 ] ) + ',' + epsilon( elements[ 2 ] ) + ',' + epsilon( elements[ 3 ] ) + ',' + epsilon( - elements[ 4 ] ) + ',' + epsilon( - elements[ 5 ] ) + ',' + epsilon( - elements[ 6 ] ) + ',' + epsilon( - elements[ 7 ] ) + ',' + epsilon( elements[ 8 ] ) + ',' + epsilon( elements[ 9 ] ) + ',' + epsilon( elements[ 10 ] ) + ',' + epsilon( elements[ 11 ] ) + ',' + epsilon( elements[ 12 ] ) + ',' + epsilon( elements[ 13 ] ) + ',' + epsilon( elements[ 14 ] ) + ',' + epsilon( elements[ 15 ] ) + ')';
+				return 'translate(-50%,-50%)' + matrix3d;
+
+			}
+
+			function renderObject( object, scene, camera, cameraCSSMatrix ) {
+
+				if ( object.isCSS3DObject ) {
+
+					object.onBeforeRender( _this, scene, camera );
+					let style;
+
+					if ( object.isCSS3DSprite ) {
+
+						// http://swiftcoder.wordpress.com/2008/11/25/constructing-a-billboard-matrix/
+						_matrix.copy( camera.matrixWorldInverse );
+
+						_matrix.transpose();
+
+						_matrix.copyPosition( object.matrixWorld );
+
+						_matrix.scale( object.scale );
+
+						_matrix.elements[ 3 ] = 0;
+						_matrix.elements[ 7 ] = 0;
+						_matrix.elements[ 11 ] = 0;
+						_matrix.elements[ 15 ] = 1;
+						style = getObjectCSSMatrix( _matrix );
+
+					} else {
+
+						style = getObjectCSSMatrix( object.matrixWorld );
+
+					}
+
+					const element = object.element;
+					const cachedObject = cache.objects.get( object );
+
+					if ( cachedObject === undefined || cachedObject.style !== style ) {
+
+						element.style.transform = style;
+						const objectData = {
+							style: style
+						};
+						cache.objects.set( object, objectData );
+
+					}
+
+					element.style.display = object.visible ? '' : 'none';
+
+					if ( element.parentNode !== cameraElement ) {
+
+						cameraElement.appendChild( element );
+
+					}
+
+					object.onAfterRender( _this, scene, camera );
+
+				}
+
+				for ( let i = 0, l = object.children.length; i < l; i ++ ) {
+
+					renderObject( object.children[ i ], scene, camera, cameraCSSMatrix );
+
+				}
+
+			}
+
+		}
+
+	}
+
+	THREE.CSS3DObject = CSS3DObject;
+	THREE.CSS3DRenderer = CSS3DRenderer;
+	THREE.CSS3DSprite = CSS3DSprite;
+
+} )();
+
+</script>
+<script>
+(function(){
+'use strict';
+
+/* ---------------- constants ---------------- */
+const SITE = 'https://progh2.github.io/mini-homepage';
+const FS = 'https://firestore.googleapis.com/v1/projects/mini-homepage-addd7/databases/(default)/documents';
+const KEY = 'AIzaSyC9aKizKkwQcr5SOuCpmA8HBS_sT1oC6js';
+const REDUCED = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const MQ_MOBILE = window.matchMedia('(max-width: 900px)');
+
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const root = $('.cy-root');
+const wrapper = $('.cy-book-wrapper');
+const panels = $$('.cy-right-content');
+const tabs = $$('.cy-tab-btn');
+const N = panels.length;
+const STEP = Math.PI * 2 / N;
+
+/* ---------------- helpers ---------------- */
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const pad2 = n => String(n).padStart(2, '0');
+const fmtDate = d => `${d.getFullYear()}.${pad2(d.getMonth()+1)}.${pad2(d.getDate())}`;
+const fmtTime = d => `${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
+const wrapAngle = a => { a = (a + Math.PI) % (Math.PI * 2); if (a < 0) a += Math.PI * 2; return a - Math.PI; };
+
+function fsVal(v){
+  if (!v) return undefined;
+  if ('stringValue' in v) return v.stringValue;
+  if ('integerValue' in v) return Number(v.integerValue);
+  if ('doubleValue' in v) return v.doubleValue;
+  if ('booleanValue' in v) return v.booleanValue;
+  if ('timestampValue' in v) return new Date(v.timestampValue);
+  if ('nullValue' in v) return null;
+  if ('arrayValue' in v) return (v.arrayValue.values || []).map(fsVal);
+  if ('mapValue' in v){ const o = {}; for (const k in (v.mapValue.fields||{})) o[k] = fsVal(v.mapValue.fields[k]); return o; }
+}
+function fsDoc(d){ const o = { id: d.name.split('/').pop() }; for (const k in (d.fields||{})) o[k] = fsVal(d.fields[k]); return o; }
+async function fsGet(path, params = ''){
+  const r = await fetch(`${FS}/${path}?key=${KEY}${params}`);
+  if (!r.ok) throw new Error(`HTTP ${r.status}`);
+  return r.json();
+}
+async function fsQuery(structuredQuery){
+  const r = await fetch(`${FS}:runQuery?key=${KEY}`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ structuredQuery }) });
+  if (!r.ok) throw new Error(`HTTP ${r.status}`);
+  return (await r.json()).filter(x => x.document).map(x => fsDoc(x.document));
+}
+
+/* same link rules as the original (URLs, bare domains, @instagram) */
+const LINK_RE = /(https?:\/\/[^\s<>()]+|(?<![@\w.-])(?:[\w-]+\.)+(?:com|net|org|io|kr|dev|app|school|me|co)(?:\/[^\s<>()]*)?|(?<![\w.@-])@[A-Za-z0-9._]{2,30}\b)/gu;
+function linkify(line){
+  let out = '', last = 0;
+  for (const m of line.matchAll(LINK_RE)){
+    const i = m.index; out += esc(line.slice(last, i));
+    let link = m[0], tail = '';
+    const t = /[.,!?;:)\]]+$/.exec(link); if (t){ tail = t[0]; link = link.slice(0, -tail.length); }
+    const href = link.startsWith('@') ? `https://www.instagram.com/${link.slice(1)}` : link.startsWith('http') ? link : `https://${link}`;
+    out += `<a href="${esc(href)}" target="_blank" rel="noopener noreferrer">${esc(link)}</a>${esc(tail)}`;
+    last = i + m[0].length;
+  }
+  return out + esc(line.slice(last));
+}
+
+/* =========================================================
+   1. THREE.JS — WebGL background + CSS3D carousel
+   ========================================================= */
+let has3D = typeof THREE !== 'undefined' && THREE.CSS3DRenderer;
+let camera, glRenderer, cssRenderer, glScene, cssScene, objects = [];
+let layout = {};
+let rot = 0, rotTarget = 0, active = 0;
+let orbitGroup, orbitSpin, markers = [], floorGlow, gridMat, particleMat, shapes = [];
+let mouseX = 0, mouseY = 0;
+const FOV = 36;
+const K_YAW = 0.42;           // how much side panels turn toward the viewer
+
+function computeLayout(){
+  const W = window.innerWidth, H = window.innerHeight;
+  const mobile = MQ_MOBILE.matches;
+  const cs = getComputedStyle(document.documentElement);
+  const navH = parseFloat(cs.getPropertyValue('--nav-h')) || 84;
+  const hudW = mobile ? 0 : (parseFloat(cs.getPropertyValue('--hud-w')) || 380);
+  const regionW = W - hudW, regionH = H - navH;
+  const pw = Math.round(mobile ? Math.min(W * 0.9, 620) : Math.max(420, Math.min(regionW * 0.64, 880)));
+  const ph = Math.round(Math.max(380, Math.min(regionH * (mobile ? 0.84 : 0.8), 1000)));
+  const R = mobile ? pw * 1.02 : pw * 0.85;            // orbit radius (x)
+  const Rz = mobile ? pw * 0.9 : pw * 0.8;             // orbit depth (z) — slightly flattened circle
+  const cx = hudW / 2;                        // shift carousel into the free region
+  const cy = -(navH / 2) + (mobile ? 0 : -6);
+  const floorY = cy - ph / 2 - 70;
+  layout = { W, H, mobile, navH, hudW, regionW, regionH, pw, ph, R, Rz, cx, cy, floorY };
+  panels.forEach(p => { p.style.setProperty('--pw', pw + 'px'); p.style.setProperty('--ph', ph + 'px'); });
+}
+
+function makeGlowTexture(inner, outer){
+  const c = document.createElement('canvas'); c.width = c.height = 128;
+  const g = c.getContext('2d'); const grd = g.createRadialGradient(64,64,0,64,64,64);
+  grd.addColorStop(0, inner); grd.addColorStop(.35, outer); grd.addColorStop(1, 'rgba(0,0,0,0)');
+  g.fillStyle = grd; g.fillRect(0,0,128,128);
+  const t = new THREE.CanvasTexture(c); return t;
+}
+
+function initThree(){
+  computeLayout();
+  const { W, H } = layout;
+
+  camera = new THREE.PerspectiveCamera(FOV, W / H, 1, 40000);
+  glScene = new THREE.Scene();
+  cssScene = new THREE.Scene();
+
+  /* --- WebGL renderer (background) --- */
+  try {
+    glRenderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    glRenderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    glRenderer.setSize(W, H);
+    glRenderer.setClearColor(0x03040D, 0);
+    $('.cy-background-pattern').appendChild(glRenderer.domElement);
+    buildBackground();
+  } catch (e) { console.warn('[cyber] WebGL unavailable, CSS3D only', e); glRenderer = null; }
+
+  /* --- CSS3D renderer (real DOM panels in 3D space) --- */
+  cssRenderer = new THREE.CSS3DRenderer();
+  cssRenderer.setSize(W, H);
+  cssRenderer.domElement.classList.add('cy-css3d');
+  $('.cy-right-panel').appendChild(cssRenderer.domElement);
+
+  panels.forEach((el, i) => {
+    const label = document.createElement('div');
+    label.className = 'cy-panel-label'; label.setAttribute('aria-hidden', 'true');
+    label.innerHTML = `<span>${esc(el.dataset.label || '')}</span>`;
+    el.prepend(label);
+    const obj = new THREE.CSS3DObject(el);
+    obj.userData.index = i;
+    cssScene.add(obj); objects.push(obj);
+  });
+
+  placeCamera();
+  window.addEventListener('resize', onResize);
+  MQ_MOBILE.addEventListener?.('change', onResize);
+  window.addEventListener('pointermove', e => { mouseX = e.clientX / window.innerWidth - .5; mouseY = e.clientY / window.innerHeight - .5; }, { passive: true });
+  requestAnimationFrame(tick);
+}
+
+function placeCamera(){
+  const { W, H } = layout;
+  camera.aspect = W / H;
+  camera.position.set(0, 0, (H / 2) / Math.tan(THREE.MathUtils.degToRad(FOV / 2))); // 1 world unit = 1 css px at z=0
+  camera.lookAt(0, 0, 0);
+  camera.updateProjectionMatrix();
+}
+
+function buildBackground(){
+  const { R, cx, floorY } = layout;
+  glScene.fog = new THREE.FogExp2(0x03040D, 0.00011);
+
+  /* neon grid floor (shader, scrolling toward the viewer) */
+  gridMat = new THREE.ShaderMaterial({
+    transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
+    extensions: { derivatives: true },
+    uniforms: {
+      uTime: { value: 0 }, uSpeed: { value: REDUCED ? 0 : 120 },
+      uCell: { value: 110 }, uC1: { value: new THREE.Color(0x2BF0FF) }, uC2: { value: new THREE.Color(0x9B72FF) },
+      uCenter: { value: new THREE.Vector2(cx, -900) }
+    },
+    vertexShader: `varying vec3 vW; void main(){ vec4 w = modelMatrix * vec4(position,1.0); vW = w.xyz; gl_Position = projectionMatrix * viewMatrix * w; }`,
+    fragmentShader: `
+      uniform float uTime, uSpeed, uCell; uniform vec3 uC1, uC2; uniform vec2 uCenter; varying vec3 vW;
+      float gl(vec2 p, float cell, float w){ vec2 q = p / cell; vec2 g = abs(fract(q - 0.5) - 0.5) / (fwidth(q) * w); return 1.0 - min(min(g.x, g.y), 1.0); }
+      void main(){
+        vec2 p = vW.xz; p.y += uTime * uSpeed;
+        float minor = gl(p, uCell, 1.0);
+        float major = gl(p, uCell * 5.0, 1.6);
+        float d = length(vW.xz - uCenter);
+        float fade = exp(-d * 0.00024);
+        vec3 col = uC1 * minor * 0.55 + uC2 * major * 0.9;
+        float a = (minor * 0.45 + major * 0.9) * fade;
+        gl_FragColor = vec4(col * a, a);
+      }`
+  });
+  const floor = new THREE.Mesh(new THREE.PlaneGeometry(30000, 30000, 1, 1), gridMat);
+  floor.rotation.x = -Math.PI / 2; floor.position.set(0, floorY, -6000);
+  floor.name = 'floor'; glScene.add(floor);
+
+  /* horizon glow band */
+  const hz = new THREE.Mesh(new THREE.PlaneGeometry(60000, 5200), new THREE.ShaderMaterial({
+    transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
+    vertexShader: `varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }`,
+    fragmentShader: `varying vec2 vUv; void main(){ float y = vUv.y; float band = exp(-pow((y - 0.18) * 6.0, 2.0)); vec3 c = mix(vec3(1.0,0.17,0.84), vec3(0.54,0.36,1.0), smoothstep(0.1,0.5,y)); gl_FragColor = vec4(c * band * 0.32, band * 0.32); }`
+  }));
+  hz.position.set(0, floorY + 900, -16000); hz.name = 'horizon'; glScene.add(hz);
+
+  /* orbit rings under the carousel */
+  orbitGroup = new THREE.Group();
+  orbitGroup.position.set(cx, floorY + 2, -layout.Rz);
+  orbitGroup.userData.baseR = R;
+  orbitGroup.scale.set(1, 1, layout.Rz / R);
+  glScene.add(orbitGroup);
+  orbitSpin = new THREE.Group(); orbitGroup.add(orbitSpin);
+  const ringMat = new THREE.MeshBasicMaterial({ color: 0x2BF0FF, transparent: true, opacity: .55, blending: THREE.AdditiveBlending, side: THREE.DoubleSide, depthWrite: false });
+  const ring = new THREE.Mesh(new THREE.RingGeometry(R - 2.5, R + 2.5, 160), ringMat);
+  ring.rotation.x = -Math.PI / 2; ring.name = 'ring'; orbitSpin.add(ring);
+  // dashed outer ring (magenta) — counter rotates
+  const dashPts = []; const segs = 96; const R2 = R * 1.12;
+  for (let i = 0; i < segs; i++){ const a0 = i / segs * Math.PI * 2, a1 = (i + .45) / segs * Math.PI * 2;
+    dashPts.push(new THREE.Vector3(Math.cos(a0) * R2, 0, Math.sin(a0) * R2), new THREE.Vector3(Math.cos(a1) * R2, 0, Math.sin(a1) * R2)); }
+  const dash = new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(dashPts), new THREE.LineBasicMaterial({ color: 0xFF2BD6, transparent: true, opacity: .55, blending: THREE.AdditiveBlending }));
+  dash.name = 'dash'; orbitSpin.add(dash);
+  // inner faint ring
+  const ring3 = new THREE.Mesh(new THREE.RingGeometry(R * .55 - 1, R * .55 + 1, 120), new THREE.MeshBasicMaterial({ color: 0x9B72FF, transparent: true, opacity: .35, blending: THREE.AdditiveBlending, side: THREE.DoubleSide, depthWrite: false }));
+  ring3.rotation.x = -Math.PI / 2; orbitSpin.add(ring3);
+
+  // markers (one per panel) on the orbit
+  for (let i = 0; i < N; i++){
+    const m = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.OctahedronGeometry(16)), new THREE.LineBasicMaterial({ color: 0x2BF0FF, transparent: true, opacity: .9, blending: THREE.AdditiveBlending }));
+    glScene.add(m); markers.push(m);
+  }
+  // glow disc under the selected panel
+  floorGlow = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.MeshBasicMaterial({ map: makeGlowTexture('rgba(43,240,255,.9)', 'rgba(43,240,255,.22)'), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false }));
+  floorGlow.rotation.x = -Math.PI / 2; glScene.add(floorGlow);
+
+  /* drifting particles */
+  const COUNT = layout.mobile ? 700 : 1600;
+  const pos = new Float32Array(COUNT * 3), col = new Float32Array(COUNT * 3), spd = new Float32Array(COUNT), size = new Float32Array(COUNT);
+  const palette = [new THREE.Color(0x2BF0FF), new THREE.Color(0xFF2BD6), new THREE.Color(0x9B72FF), new THREE.Color(0xD8F6FF)];
+  for (let i = 0; i < COUNT; i++){
+    pos[i*3] = (Math.random() - .5) * 9000; pos[i*3+1] = Math.random() * 3400; pos[i*3+2] = -Math.random() * 9000 + 600;
+    const c = palette[(Math.random() * palette.length) | 0]; col[i*3] = c.r; col[i*3+1] = c.g; col[i*3+2] = c.b;
+    spd[i] = 18 + Math.random() * 60; size[i] = 3 + Math.random() * 7;
+  }
+  const pg = new THREE.BufferGeometry();
+  pg.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  pg.setAttribute('pcolor', new THREE.BufferAttribute(col, 3));
+  pg.setAttribute('speed', new THREE.BufferAttribute(spd, 1));
+  pg.setAttribute('psize', new THREE.BufferAttribute(size, 1));
+  particleMat = new THREE.ShaderMaterial({
+    transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
+    uniforms: { uTime: { value: 0 }, uFloor: { value: floorY }, uScale: { value: layout.H }, uMove: { value: REDUCED ? 0 : 1 } },
+    vertexShader: `
+      attribute vec3 pcolor; attribute float speed; attribute float psize; uniform float uTime, uFloor, uScale, uMove; varying vec3 vC; varying float vA;
+      void main(){
+        vec3 p = position;
+        p.y = uFloor + mod(p.y + uTime * speed * uMove, 3400.0);
+        p.x += sin(uTime * 0.3 + position.z * 0.01) * 30.0 * uMove;
+        vec4 mv = modelViewMatrix * vec4(p, 1.0);
+        gl_PointSize = psize * (uScale * 0.9 / -mv.z);
+        gl_Position = projectionMatrix * mv;
+        vC = pcolor; vA = smoothstep(0.0, 300.0, p.y - uFloor) * (1.0 - smoothstep(2600.0, 3400.0, p.y - uFloor));
+      }`,
+    fragmentShader: `varying vec3 vC; varying float vA; void main(){ vec2 d = gl_PointCoord - .5; float r = length(d); float a = smoothstep(.5, 0.0, r); a *= a; gl_FragColor = vec4(vC * a * vA, a * vA); }`
+  });
+  const pts = new THREE.Points(pg, particleMat); pts.name = 'particles'; glScene.add(pts);
+
+  /* distant wireframe monoliths */
+  const defs = [
+    { g: new THREE.IcosahedronGeometry(520, 1), p: [-3600, 700, -7000], c: 0x9B72FF },
+    { g: new THREE.OctahedronGeometry(640, 0), p: [4200, 1100, -8600], c: 0x2BF0FF },
+    { g: new THREE.TorusKnotGeometry(360, 70, 90, 8, 2, 3), p: [900, 2300, -11000], c: 0xFF2BD6 }
+  ];
+  defs.forEach((d, i) => {
+    const m = new THREE.LineSegments(new THREE.EdgesGeometry(d.g, 1), new THREE.LineBasicMaterial({ color: d.c, transparent: true, opacity: .32, blending: THREE.AdditiveBlending }));
+    m.position.set(...d.p); m.userData.spin = .05 + i * .03; m.userData.base = new THREE.Vector3(...d.p);
+    glScene.add(m); shapes.push(m);
+  });
+}
+
+function rebuildBackgroundGeometry(){
+  if (!glRenderer) return;
+  const { R, Rz, cx, floorY } = layout;
+  const floor = glScene.getObjectByName('floor'); if (floor) floor.position.y = floorY;
+  const hz = glScene.getObjectByName('horizon'); if (hz) hz.position.y = floorY + 900;
+  if (particleMat){ particleMat.uniforms.uFloor.value = floorY; particleMat.uniforms.uScale.value = layout.H; }
+  if (gridMat) gridMat.uniforms.uCenter.value.set(cx, -900);
+  if (orbitGroup){
+    orbitGroup.position.set(cx, floorY + 2, -Rz);
+    const s = R / orbitGroup.userData.baseR; orbitGroup.scale.set(s, 1, Rz / orbitGroup.userData.baseR);
+  }
+}
+
+function onResize(){
+  computeLayout(); placeCamera();
+  if (glRenderer) glRenderer.setSize(layout.W, layout.H);
+  cssRenderer.setSize(layout.W, layout.H);
+  rebuildBackgroundGeometry();
+}
+
+let last = performance.now(), elapsed = 0;
+function tick(now){
+  const dt = Math.min(.05, (now - last) / 1000); last = now; elapsed += dt;
+  const { R, Rz, cx, cy, floorY, ph } = layout;
+
+  // eased carousel rotation (frame-rate independent)
+  const ease = 1 - Math.pow(REDUCED ? 1e-9 : 0.0025, dt);
+  rot += (rotTarget - rot) * ease;
+  if (Math.abs(rotTarget - rot) < 1e-4) rot = rotTarget;
+  const settled = rot === rotTarget;
+
+  objects.forEach((o, i) => {
+    const phi = wrapAngle(i * STEP + rot);
+    const f = (Math.cos(phi) + 1) / 2;                 // 1 front … 0 back
+    const isFront = i === active && settled;
+    const bob = isFront ? 0 : Math.sin(elapsed * 1.1 + i * 1.7) * 10;
+    o.position.set(cx + R * Math.sin(phi), cy + bob, -Rz + Rz * Math.cos(phi));
+    o.rotation.y = phi * K_YAW;
+    if (isFront){ o.position.x = Math.round(o.position.x); o.position.y = Math.round(o.position.y); o.position.z = 0; o.rotation.y = 0; }
+    o.element.style.opacity = (0.1 + 0.9 * Math.pow(f, 0.85)).toFixed(3);
+    o.element.style.zIndex = String(Math.round(f * 100));
+    o.visible = f > 0.02;
+
+    if (markers[i]){
+      const mk = markers[i];
+      mk.position.set(cx + R * Math.sin(phi), floorY + 34 + Math.sin(elapsed * 2 + i) * 6, -Rz + Rz * Math.cos(phi));
+      mk.rotation.y += dt * (i === active ? 2.2 : .6);
+      mk.material.color.setHex(i === active ? 0xFF2BD6 : 0x2BF0FF);
+      mk.scale.setScalar(i === active ? 1.5 : 1);
+    }
+  });
+
+  if (glRenderer){
+    if (gridMat) gridMat.uniforms.uTime.value = elapsed;
+    if (particleMat) particleMat.uniforms.uTime.value = elapsed;
+    if (orbitGroup){
+      orbitSpin.rotation.y = -rot;
+      const dash = orbitSpin.getObjectByName('dash'); if (dash && !REDUCED) dash.rotation.y += dt * .08;
+    }
+    if (floorGlow){
+      const w = layout.pw * 1.25; floorGlow.scale.set(w, w * .45, 1);
+      floorGlow.position.set(cx, floorY + 3, 0);
+      floorGlow.material.opacity = .55 + Math.sin(elapsed * 2.2) * .15;
+    }
+    shapes.forEach(s => {
+      if (!REDUCED){ s.rotation.x += dt * s.userData.spin * .6; s.rotation.y += dt * s.userData.spin; }
+      s.position.x = s.userData.base.x - mouseX * 260; s.position.y = s.userData.base.y + mouseY * 160;
+    });
+    glRenderer.render(glScene, camera);
+  }
+  cssRenderer.render(cssScene, camera);
+  requestAnimationFrame(tick);
+}
+
+/* =========================================================
+   2. MENU / SELECTION
+   ========================================================= */
+function select(i, { focusTab = false, instant = false } = {}){
+  i = ((i % N) + N) % N;
+  const delta = wrapAngle((-i * STEP) - rotTarget);
+  rotTarget += delta;
+  if (instant) rot = rotTarget;
+  active = i;
+  tabs.forEach((t, k) => {
+    const on = k === i;
+    t.classList.toggle('active', on);
+    t.setAttribute('aria-selected', on ? 'true' : 'false');
+    t.tabIndex = on ? 0 : -1;
+  });
+  panels.forEach((p, k) => {
+    p.classList.toggle('is-active', k === i);
+    p.setAttribute('aria-hidden', k === i ? 'false' : 'true');
+    p.tabIndex = k === i ? 0 : -1;
+    if (has3D) $$(':scope > .cy-content-box', p).forEach(b => b.toggleAttribute('inert', k !== i));
+  });
+  if (focusTab) tabs[i].focus();
+  const id = tabs[i].id.replace('cy-tab-', '');
+  try { const url = new URL(location.href); url.searchParams.set('tab', id); history.replaceState(null, '', url); } catch (e) {}
+}
+
+tabs.forEach((t, i) => {
+  t.addEventListener('click', () => select(i));
+  t.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight'){ e.preventDefault(); select(active + 1, { focusTab: true }); }
+    if (e.key === 'ArrowLeft'){ e.preventDefault(); select(active - 1, { focusTab: true }); }
+    if (e.key === 'Home'){ e.preventDefault(); select(0, { focusTab: true }); }
+    if (e.key === 'End'){ e.preventDefault(); select(N - 1, { focusTab: true }); }
+  });
+});
+
+/* clicking a side panel brings it to the front (capture phase so its links don't fire) */
+panels.forEach((p, i) => {
+  p.addEventListener('click', e => {
+    if (i !== active){ e.preventDefault(); e.stopPropagation(); select(i); }
+  }, true);
+});
+/* global arrow keys (when not typing) */
+document.addEventListener('keydown', e => {
+  if (wrapper.hasAttribute('inert')) return;
+  const tag = (document.activeElement && document.activeElement.tagName) || '';
+  if (/INPUT|TEXTAREA|SELECT/.test(tag) || document.activeElement?.getAttribute('role') === 'tab') return;
+  if (e.key === 'ArrowRight') select(active + 1);
+  if (e.key === 'ArrowLeft') select(active - 1);
+});
+
+/* swipe on touch */
+let tx0 = null, ty0 = null;
+window.addEventListener('touchstart', e => { const t = e.touches[0]; tx0 = t.clientX; ty0 = t.clientY; }, { passive: true });
+window.addEventListener('touchend', e => {
+  if (tx0 === null) return; const t = e.changedTouches[0];
+  const dx = t.clientX - tx0, dy = t.clientY - ty0; tx0 = null;
+  if (Math.abs(dx) > 70 && Math.abs(dx) > Math.abs(dy) * 1.6 && !e.target.closest('.cy-left-panel')) select(active + (dx < 0 ? 1 : -1));
+}, { passive: true });
+
+/* =========================================================
+   3. TITLE SCREEN
+   ========================================================= */
+const intro = $('.lt-intro');
+function enter(skipAnim){
+  wrapper.removeAttribute('inert');
+  document.body.classList.remove('lt-active');
+  if (!intro) return;
+  if (skipAnim){ intro.remove(); return; }
+  intro.classList.add('is-leaving');
+  // one orchestrated moment: carousel spins in once
+  if (has3D && !REDUCED) rot = rotTarget - Math.PI * 1.25;
+  setTimeout(() => { intro.remove(); tabs[active].focus({ preventScroll: true }); }, 800);
+}
+const initialTab = (() => {
+  const q = new URLSearchParams(location.search).get('tab');
+  const idx = tabs.findIndex(t => t.id === `cy-tab-${q}`);
+  return idx;
+})();
+
+/* =========================================================
+   4. HUD extras (mobile drawer + console hint)
+   ========================================================= */
+const hudBtn = document.createElement('button');
+hudBtn.type = 'button'; hudBtn.className = 'cy-hud-toggle'; hudBtn.textContent = 'STATUS';
+hudBtn.setAttribute('aria-expanded', 'false');
+$('.cy-right-header').appendChild(hudBtn);
+hudBtn.addEventListener('click', () => {
+  const open = $('.cy-left-panel').classList.toggle('is-open');
+  hudBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+});
+const hint = document.createElement('div');
+hint.className = 'cy-console-hint'; hint.setAttribute('aria-hidden', 'true');
+hint.innerHTML = '<kbd>◀</kbd> <kbd>▶</kbd> 방향키나 옆 패널 클릭으로 메뉴 이동';
+root.appendChild(hint);
+
+/* =========================================================
+   5. LIVE DATA (read-only from the original site's Firestore)
+   ========================================================= */
+async function loadProfile(){
+  try {
+    const d = fsDoc(await fsGet('site/profile'));
+    if (d.teacherName) $('.cy-profile-name .name-bold').textContent = d.teacherName;
+    if (d.catalogDescription) $('.cy-profile-name .title-sub').textContent = d.catalogDescription;
+    if (d.introDescription) $('.cy-intro-text').textContent = d.introDescription;
+    if (Array.isArray(d.aboutLines) && d.aboutLines.length)
+      $('#cy-panel-profile .cy-text-block').innerHTML = d.aboutLines.filter(Boolean).map(l => `<p>${linkify(l)}</p>`).join('');
+  } catch (e) { /* keep baked snapshot */ }
+}
+async function loadCounter(){
+  try {
+    const d = fsDoc(await fsGet('counters/site'));
+    const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Seoul' }).format(new Date());
+    $('.cy-today-count .text-orange').textContent = (d.day === today ? d.today : 0).toLocaleString();
+    $('.cy-today-count .text-black').textContent = Number(d.total || 0).toLocaleString();
+  } catch (e) {}
+}
+async function loadWeather(){
+  try {
+    const q = new URLSearchParams({ latitude: '37.478', longitude: '126.936', current: 'temperature_2m,weather_code', timezone: 'Asia/Seoul' });
+    const r = await fetch(`https://api.open-meteo.com/v1/forecast?${q}`); const j = await r.json();
+    const c = j.current?.weather_code, t = j.current?.temperature_2m;
+    const w = c <= 1 ? ['맑음','☀️'] : c <= 3 ? ['흐림','☁️'] : (c === 45 || c === 48) ? ['안개','🌫️'] : (c >= 51 && c <= 67) ? ['비','🌧️'] : (c >= 71 && c <= 77) ? ['눈','❄️'] : (c >= 80 && c <= 82) ? ['소나기','🌦️'] : (c >= 85 && c <= 86) ? ['눈','❄️'] : c >= 95 ? ['뇌우','⛈️'] : null;
+    if (w) $('.cy-today-is .text-orange').textContent = `${w[0]} ${w[1]}${typeof t === 'number' ? ` ${Math.round(t)}°` : ''}`;
+  } catch (e) {}
+}
+function gbItem(e){
+  const d = e.createdAt instanceof Date ? e.createdAt : new Date();
+  return `<div class="cy-guestbook-item"><span class="cg-author">${esc(e.author)} <span class="cg-colon">:</span> </span><span class="cg-text">${esc(e.text)}</span><span class="cg-date">(${fmtDate(d)} ${fmtTime(d)})</span></div>`;
+}
+async function loadGuestbook(){
+  try {
+    const j = await fsGet('guestbook', '&pageSize=100&orderBy=createdAt%20desc');
+    const list = (j.documents || []).map(fsDoc).filter(e => e.approved !== false && e.text);
+    $('#cy-panel-home .cy-guestbook-list').innerHTML = list.length ? list.map(gbItem).join('') : '<div class="cy-gb-loading">아직 한줄평이 없어요. 첫 줄을 남겨 주세요!</div>';
+  } catch (e) {}
+}
+
+/* 낙서장 (오에카키) */
+let oe = [], oePage = 0; const OE_PER = 5; const oeImg = new Map();
+const oeView = $('#cy-panel-photo .cy-oe-view');
+function renderOeList(){
+  const pages = Math.max(1, Math.ceil(oe.length / OE_PER));
+  oePage = Math.min(oePage, pages - 1);
+  const items = oe.slice(oePage * OE_PER, oePage * OE_PER + OE_PER);
+  oeView.innerHTML = !oe.length ? '<div class="cy-gb-loading">아직 그림이 없어요.</div>' :
+    `<ul class="cy-oe-list">${items.map(e => `
+      <li class="cy-oe-item" data-id="${esc(e.id)}">
+        <button type="button" class="cy-oe-thumb" aria-label="${esc(e.author)} 님의 그림 열기">${oeImg.get(e.id) ? `<img src="${oeImg.get(e.id)}" alt="${esc(e.comment || e.author + ' 님의 그림')}" loading="lazy"/>` : '<span class="cy-oe-loading" aria-label="그림 불러오는 중"></span>'}</button>
+        <div class="cy-oe-side"><div class="cy-oe-side-head">
+          <button type="button" class="cy-oe-title${e.comment ? '' : ' is-empty'}">${esc(e.comment || '제목 없음')}</button>
+          <span class="cy-oe-author">${esc(e.author)}</span>
+          <span class="cy-oe-date">${fmtDate(e.createdAt)} ${fmtTime(e.createdAt)}</span>
+        </div></div>
+      </li>`).join('')}</ul>
+    ${pages > 1 ? `<div class="cy-gb-pagination">${Array.from({ length: pages }, (_, i) => `<button type="button" class="cy-gb-page${i === oePage ? ' is-active' : ''}" data-page="${i}"${i === oePage ? ' aria-current="page"' : ''}>${i + 1}</button>`).join('')}</div>` : ''}`;
+  items.forEach(e => { if (!oeImg.has(e.id)) fetchOeImage(e); });
+}
+async function fetchOeImage(e){
+  try {
+    let src = e.image;
+    if (!src){ const d = fsDoc(await fsGet(`oekaki/${e.id}/image/data`)); src = d.image; }
+    if (!src) return;
+    oeImg.set(e.id, src);
+    const li = oeView.querySelector(`.cy-oe-item[data-id="${CSS.escape(e.id)}"] .cy-oe-thumb`);
+    if (li) li.innerHTML = `<img src="${src}" alt="${esc(e.comment || e.author + ' 님의 그림')}"/>`;
+  } catch (err) {}
+}
+async function openOe(id){
+  const e = oe.find(x => x.id === id); if (!e) return;
+  oeView.innerHTML = `<div class="cy-oe-detail">
+    <div class="cy-oe-detail-head"><span class="cy-oe-title-text">${esc(e.comment || '제목 없음')}</span><button type="button" class="cy-back-btn">목록으로</button></div>
+    ${oeImg.get(id) ? `<img class="cy-oe-big" src="${oeImg.get(id)}" alt="${esc(e.comment || '그림')}"/>` : '<div class="cy-oe-big"></div>'}
+    <div class="cy-oe-detail-meta"><b>${esc(e.author)}</b> · ${fmtDate(e.createdAt)} ${fmtTime(e.createdAt)}</div>
+    <ul class="cy-oe-replies"><li class="cy-gb-loading">덧글을 불러오는 중…</li></ul>
+  </div>`;
+  const panel = $('#cy-panel-photo'); panel.scrollTop = 0;
+  try {
+    const j = await fsGet(`oekaki/${id}/comments`, '&orderBy=createdAt&pageSize=100');
+    const list = (j.documents || []).map(fsDoc);
+    const ul = oeView.querySelector('.cy-oe-replies'); if (!ul) return;
+    ul.innerHTML = list.length ? list.map(c => `<li class="cy-oe-reply"><span class="cy-oe-reply-author">${esc(c.author)}</span><span class="cy-oe-reply-text">${esc(c.text)}</span></li>`).join('') : '<li class="cy-gb-loading">아직 덧글이 없어요.</li>';
+  } catch (err) { const ul = oeView.querySelector('.cy-oe-replies'); if (ul) ul.innerHTML = ''; }
+}
+oeView.addEventListener('click', e => {
+  if ($('#cy-panel-photo') !== panels[active]) return;
+  const pg = e.target.closest('.cy-gb-page'); if (pg){ oePage = +pg.dataset.page; renderOeList(); $('#cy-panel-photo').scrollTop = 0; return; }
+  if (e.target.closest('.cy-back-btn')){ renderOeList(); return; }
+  const it = e.target.closest('.cy-oe-thumb, .cy-oe-title'); if (it){ openOe(it.closest('.cy-oe-item').dataset.id); }
+});
+const helpBtn = $('.cy-oe-help-btn');
+helpBtn.addEventListener('click', () => {
+  const box = $('.cy-oe-help'); box.hidden = !box.hidden; helpBtn.setAttribute('aria-expanded', String(!box.hidden));
+});
+async function loadOekaki(){
+  try {
+    const list = await fsQuery({ from: [{ collectionId: 'oekaki' }], where: { fieldFilter: { field: { fieldPath: 'hidden' }, op: 'EQUAL', value: { booleanValue: false } } }, limit: 60 });
+    oe = list.map(d => ({ ...d, createdAt: d.createdAt instanceof Date ? d.createdAt : new Date(0) })).sort((a, b) => b.createdAt - a.createdAt);
+    renderOeList();
+  } catch (e) {
+    oeView.innerHTML = '<div class="cy-gb-loading">그림을 불러오지 못했어요. 잠시 뒤 새로고침해 주세요.</div>';
+  }
+}
+
+/* =========================================================
+   6. BGM (YouTube IFrame API, same tracks as the original)
+   ========================================================= */
+const bgm = $('.cy-bgm');
+const tracks = $$('.cy-bgm-track', bgm);
+const [btnPlay, btnNext, btnMute] = $$('.cy-bgm-controls button', bgm);
+const vol = $('#bgm-volume');
+let yt = null, ytReady = false, cur = 0, playing = false, wantPlay = false, muted = false;
+let apiLoading = null;
+function loadYT(){
+  if (apiLoading) return apiLoading;
+  apiLoading = new Promise((res, rej) => {
+    if (window.YT && window.YT.Player) return res(window.YT);
+    window.onYouTubeIframeAPIReady = () => res(window.YT);
+    const s = document.createElement('script'); s.src = 'https://www.youtube.com/iframe_api'; s.async = true;
+    s.onerror = () => rej(new Error('yt')); document.head.appendChild(s);
+  });
+  return apiLoading;
+}
+function setCurrent(i){ cur = (i + tracks.length) % tracks.length; tracks.forEach((t, k) => t.classList.toggle('is-current', k === cur)); }
+function setPlayingUI(p){ playing = p; bgm.classList.toggle('is-playing', p); btnPlay.textContent = p ? '❚❚' : '▶'; btnPlay.setAttribute('aria-label', p ? '일시정지' : '재생'); }
+function showNote(msg){ let n = $('.cy-bgm-note', bgm); if (!n){ n = document.createElement('div'); n.className = 'cy-bgm-note'; $('.cy-bgm-credit', bgm).after(n); } n.textContent = msg; }
+async function ensurePlayer(){
+  if (yt) return yt;
+  const YT = await loadYT();
+  return new Promise(res => {
+    yt = new YT.Player($('.cy-bgm-stage > div', bgm), {
+      width: 200, height: 120, videoId: tracks[cur].dataset.video,
+      playerVars: { controls: 0, disablekb: 1, modestbranding: 1, rel: 0, playsinline: 1 },
+      events: {
+        onReady: () => { ytReady = true; yt.setVolume(+vol.value); if (muted) yt.mute(); res(yt); },
+        onStateChange: e => {
+          if (e.data === 1) setPlayingUI(true);
+          else if (e.data === 2) setPlayingUI(false);
+          else if (e.data === 0){ setCurrent(cur + 1); yt.loadVideoById(tracks[cur].dataset.video); }
+        },
+        onError: () => { showNote('BGM 을 불러오지 못했어요.'); setPlayingUI(false); }
+      }
+    });
+  });
+}
+async function playTrack(i){
+  setCurrent(i);
+  try { const p = await ensurePlayer(); p.loadVideoById(tracks[cur].dataset.video); }
+  catch (e) { showNote('BGM 을 불러오지 못했어요.'); }
+}
+tracks.forEach((t, i) => t.addEventListener('click', () => playTrack(i)));
+btnPlay.addEventListener('click', async () => {
+  try {
+    const p = await ensurePlayer();
+    if (playing) p.pauseVideo(); else p.playVideo();
+  } catch (e) { showNote('BGM 을 불러오지 못했어요.'); }
+});
+btnNext.addEventListener('click', () => playTrack(cur + 1));
+btnMute.addEventListener('click', () => {
+  muted = !muted; btnMute.textContent = muted ? '🔇' : '🔊'; btnMute.setAttribute('aria-label', muted ? '음소거 해제' : '음소거');
+  if (ytReady){ muted ? yt.mute() : yt.unMute(); }
+});
+vol.addEventListener('input', () => { if (ytReady) yt.setVolume(+vol.value); });
+
+/* =========================================================
+   7. BOOT
+   ========================================================= */
+if (has3D){
+  try { initThree(); }
+  catch (e){ console.warn('[cyber] 3D init failed — 2D fallback', e); has3D = false; }
+}
+if (!has3D){ root.classList.add('no-3d'); }
+
+const startIdx = initialTab >= 0 ? initialTab : 0;
+select(startIdx, { instant: true });
+if (initialTab >= 0) enter(true);
+else $('.lt-intro-cta').addEventListener('click', () => enter(false));
+
+loadProfile(); loadCounter(); loadWeather(); loadGuestbook(); loadOekaki();
+})();
+
+</script>
+</body>
+</html>

@@ -9,6 +9,7 @@
 import type { FirebaseApp } from "firebase/app";
 import type { Auth, User } from "firebase/auth";
 import type { Firestore, QueryConstraint, Timestamp } from "firebase/firestore";
+import type { SkinName } from "@/config/theme";
 import { ownerUid, siteTimezone } from "@/config/linktree";
 
 type Sdk = {
@@ -724,6 +725,10 @@ export type ProfileOverride = {
   introDescription?: string;
   catalogDescription?: string;
   aboutLines?: string[];
+  /* 아래 둘은 글이 아니라 홈피 설정입니다. 주인장이 고르면 모든
+     방문자에게 그대로 적용됩니다. 뜻과 기본값은 src/lib/skin.ts 참조. */
+  skin?: SkinName;
+  skipIntro?: boolean;
 };
 
 export function subscribeProfile(onChange: (value: ProfileOverride) => void) {
@@ -751,7 +756,14 @@ export function subscribeProfile(onChange: (value: ProfileOverride) => void) {
   };
 }
 
-export async function saveProfile(value: ProfileOverride) {
+/* 문서 전체를 다시 씁니다. merge 를 쓰지 않는 이유가 있습니다. 빈 값을
+   떨어뜨려 "비우면 설정 파일 값으로 돌아간다" 를 만드는데, merge 로는
+   빠진 칸이 지워지지 않아 되돌릴 방법이 없어집니다.
+
+   대신 지금 저장된 값을 current 로 받아 합칩니다. 이게 없으면 소개 글을
+   저장할 때마다 스킨이 초기화되고, 스킨을 바꿀 때마다 소개 글이 날아갑니다.
+   부르는 쪽에서 구독 중인 값을 그대로 넘기면 됩니다. */
+export async function saveProfile(patch: ProfileOverride, current: ProfileOverride = {}) {
   const { doc, setDoc } = (await loadSdk()).store;
   const store = await getDb();
   const instance = await getAuthOrNull();
@@ -760,8 +772,10 @@ export async function saveProfile(value: ProfileOverride) {
   const me = toSignedInUser(instance.currentUser);
   if (!isOwner(me)) throw new Error("주인장만 고칠 수 있어요.");
 
+  const value = { ...current, ...patch };
+
   /* 빈 값은 아예 넣지 않습니다. 설정 파일 값으로 돌아갑니다. */
-  const clean: Record<string, string | string[]> = {};
+  const clean: Record<string, string | string[] | boolean> = {};
   const name = (value.teacherName ?? "").trim();
   const intro = (value.introDescription ?? "").trim();
   const sub = (value.catalogDescription ?? "").trim();
@@ -773,6 +787,11 @@ export async function saveProfile(value: ProfileOverride) {
   if (lines.length) {
     clean.aboutLines = lines.slice(0, PROFILE_LIMITS.lines).map(l => l.slice(0, PROFILE_LIMITS.line));
   }
+
+  /* 기본값이면 칸을 만들지 않습니다. 기본값이 무엇인지는 skin.ts 한 곳에만
+     두고, 문서에는 기본과 다른 것만 남깁니다. */
+  if (value.skin === "neon") clean.skin = "neon";
+  if (value.skipIntro === true) clean.skipIntro = true;
 
   await setDoc(doc(store, "site", "profile"), clean);
 }

@@ -224,13 +224,18 @@ service cloud.firestore {
 
     /* 주인장이 화면에서 고치는 프로필입니다. 설정 파일 값을 덮어씁니다.
        읽기는 누구나(화면에 보여야 하므로), 쓰기는 주인장만.
-       글자 수를 막지 않으면 큰 문서를 밀어 넣을 수 있습니다. */
+       글자 수를 막지 않으면 큰 문서를 밀어 넣을 수 있습니다.
+
+       skin 과 skipIntro 는 글이 아니라 홈피 설정입니다. 주인장이 고르면
+       모든 방문자에게 적용되므로 읽기는 열려 있어야 합니다. 기본값
+       (classic, false)이면 클라이언트가 칸 자체를 만들지 않습니다.
+       그래서 둘 다 "있으면 검사" 로 씁니다. */
     match /site/profile {
       allow read: if true;
 
       allow write: if request.auth != null
         && request.auth.uid == ownerUid()
-        && request.resource.data.keys().hasOnly(['teacherName', 'introDescription', 'catalogDescription', 'aboutLines'])
+        && request.resource.data.keys().hasOnly(['teacherName', 'introDescription', 'catalogDescription', 'aboutLines', 'skin', 'skipIntro'])
         && (!('teacherName' in request.resource.data)
           || (request.resource.data.teacherName is string
             && request.resource.data.teacherName.size() <= 20))
@@ -242,7 +247,11 @@ service cloud.firestore {
             && request.resource.data.catalogDescription.size() <= 120))
         && (!('aboutLines' in request.resource.data)
           || (request.resource.data.aboutLines is list
-            && request.resource.data.aboutLines.size() <= 6));
+            && request.resource.data.aboutLines.size() <= 6))
+        && (!('skin' in request.resource.data)
+          || request.resource.data.skin in ['classic', 'neon'])
+        && (!('skipIntro' in request.resource.data)
+          || request.resource.data.skipIntro is bool);
     }
 
     /* 그 밖의 모든 경로는 차단합니다. */
