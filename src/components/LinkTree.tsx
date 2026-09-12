@@ -1,12 +1,15 @@
 "use client";
 
-import { useEffect, useId, useRef, useState } from "react";
+import { Component, useEffect, useId, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
+import dynamic from "next/dynamic";
 import { Spiral, type SpiralProps } from "@paper-design/shaders-react";
 import { asset } from "@/lib/asset";
 import { setDraw } from "@/lib/drawParam";
+import { applyRemoteSettings, skinStore } from "@/lib/skin";
 import { linkify } from "@/lib/linkify";
 import BgmPlayer, { type BgmHandle } from "@/components/BgmPlayer";
 import Oekaki from "@/components/Oekaki";
+import SiteSettings from "@/components/SiteSettings";
 import {
   GUESTBOOK_LIMITS,
   addGuestbookEntry,
@@ -40,8 +43,44 @@ import {
   profileSections,
   waveLinks
 } from "@/config/linktree";
-import { theme } from "@/config/theme";
+import { theme, themes, skinFonts, type SkinName } from "@/config/theme";
 import { UNKNOWN_WEATHER, fetchWeather, formatTodayWeather } from "@/lib/weather";
+
+/* 네온 무대는 스킨을 고른 사람만 받습니다. 셰이더와 3D 코드가
+   25KB 남짓이라, 클래식만 보는 사람의 첫 화면에 얹을 이유가 없습니다.
+   three 자체는 NeonStage 안에서 한 겹 더 늦게 불러옵니다.
+
+   ssr: false 인 이유: 정적 export 라 서버에는 스킨 정보가 없고,
+   3D 는 브라우저에서만 뜻이 있습니다. */
+const NeonStage = dynamic(() => import("@/components/NeonStage"), { ssr: false });
+
+/* 네온 무대를 못 불러와도 미니홈피가 통째로 사라지지 않게 막습니다.
+
+   next/dynamic 은 청크를 못 받으면 렌더 도중에 예외를 던집니다. 안
+   잡으면 흰 화면만 남습니다. 3D 하나 못 쓰는 일로 사이트 전체가 죽는
+   것은 맞바꿀 만한 거래가 아닙니다. 2D 로 내려가 그대로 보여 줍니다. */
+class NeonBoundary extends Component<
+  { onError: () => void; children: ReactNode },
+  { failed: boolean }
+> {
+  state = { failed: false };
+
+  static getDerivedStateFromError() {
+    return { failed: true };
+  }
+
+  componentDidCatch(error: unknown) {
+    console.warn("[neon] 3D 무대를 불러오지 못해 2D 로 보여 줍니다.", error);
+    this.props.onError();
+  }
+
+  render() {
+    /* 실패한 뒤에도 자식을 계속 그리면 같은 예외가 다시 나고, React 는
+       반복을 끊으려고 트리 전체를 버립니다. 결국 흰 화면입니다.
+       한 번 실패하면 그리지 않습니다. 부모가 곧 2D 쪽으로 갈아탑니다. */
+    return this.state.failed ? null : this.props.children;
+  }
+}
 
 const ALL_TABS = ["home", "profile", "story", "board", "photo"] as const;
 type TabName = (typeof ALL_TABS)[number];
@@ -84,31 +123,42 @@ const spiralProps = {
   maxPixelCount: 1_500_000
 } satisfies Partial<SpiralProps>;
 
-/* theme.ts 의 값을 CSS 변수로 만들어 최상위 요소에 심습니다. globals.css 가
+/* 스킨의 색을 CSS 변수로 만들어 최상위 요소에 심습니다. globals.css 가
    var(--이름) 으로 받습니다. 진입 화면도 이 안에 있으므로 같은 변수를 씁니다.
-   새 색을 더하려면 theme.ts, 이 목록, globals.css 를 함께 고치세요. */
-const rootStyle = {
-  "--paper": theme.colors.paper,
-  "--ink": theme.colors.ink,
-  "--accent": theme.colors.accent,
-  "--page-top": theme.colors.pageTop,
-  "--page-mid": theme.colors.pageMid,
-  "--page-bottom": theme.colors.pageBottom,
-  "--frame": theme.colors.frame,
-  "--frame-strong": theme.colors.frameStrong,
-  "--frame-hover": theme.colors.frameHover,
-  "--heading": theme.colors.heading,
-  "--sub-ink": theme.colors.subInk,
-  "--leaf": theme.colors.leaf,
-  "--point": theme.colors.point,
-  "--point-soft": theme.colors.pointSoft,
-  "--mint": theme.colors.mint,
-  "--mint-tint": theme.colors.mintTint,
-  "--blue-tint": theme.colors.blueTint,
-  "--danger": theme.colors.danger,
-  "--display": "'Pretendard', 'Noto Sans KR', system-ui, sans-serif",
-  "--body": "'Pretendard', 'Noto Sans KR', system-ui, sans-serif"
-} as React.CSSProperties;
+   새 색을 더하려면 theme.ts, 이 목록, globals.css 를 함께 고치세요.
+
+   스킨마다 한 번만 만들어 두고 돌려씁니다. 매 렌더마다 새 객체를 만들면
+   style 이 늘 달라 보여 React 가 18개 변수를 계속 다시 심습니다. */
+const ROOT_STYLES: Record<SkinName, React.CSSProperties> = {
+  classic: skinStyle("classic"),
+  neon: skinStyle("neon")
+};
+
+function skinStyle(skin: SkinName): React.CSSProperties {
+  const c = themes[skin].colors;
+  return {
+    "--paper": c.paper,
+    "--ink": c.ink,
+    "--accent": c.accent,
+    "--page-top": c.pageTop,
+    "--page-mid": c.pageMid,
+    "--page-bottom": c.pageBottom,
+    "--frame": c.frame,
+    "--frame-strong": c.frameStrong,
+    "--frame-hover": c.frameHover,
+    "--heading": c.heading,
+    "--sub-ink": c.subInk,
+    "--leaf": c.leaf,
+    "--point": c.point,
+    "--point-soft": c.pointSoft,
+    "--mint": c.mint,
+    "--mint-tint": c.mintTint,
+    "--blue-tint": c.blueTint,
+    "--danger": c.danger,
+    "--display": skinFonts[skin].display,
+    "--body": skinFonts[skin].body
+  } as React.CSSProperties;
+}
 
 function ChevronDown({ size = 18 }: { size?: number }) {
   return (
@@ -118,7 +168,7 @@ function ChevronDown({ size = 18 }: { size?: number }) {
   );
 }
 
-function IntroOverlay({ onBrowse }: { onBrowse: () => void }) {
+function IntroOverlay({ skin, onBrowse }: { skin: SkinName; onBrowse: () => void }) {
   const ctaRef = useRef<HTMLButtonElement>(null);
 
   /* 뒤쪽은 inert 로 막아 두었으므로, 들어오자마자 누를 곳에 포커스를 둡니다. */
@@ -128,7 +178,14 @@ function IntroOverlay({ onBrowse }: { onBrowse: () => void }) {
 
   return (
     <div className="lt-intro">
-      <Spiral className="lt-intro-spiral" {...spiralProps} />
+      {/* classic 의 소용돌이는 셰이더로 그립니다. neon 은 같은 자리를
+          CSS 원판으로 채우므로 셰이더를 띄우지 않습니다. 어두운 화면에
+          하늘색 셰이더가 겹치면 어울리지도 않고, 그만큼 덜 그립니다. */}
+      {skin === "neon" ? (
+        <div className="lt-intro-spiral" aria-hidden="true" />
+      ) : (
+        <Spiral className="lt-intro-spiral" {...spiralProps} />
+      )}
       <div className="lt-intro-card">
         <span className="lt-intro-title">{profile.introTitle}</span>
         <p className="lt-intro-copy">{profile.introDescription}</p>
@@ -177,11 +234,26 @@ function HomeTab() {
 }
 
 /* 설정 파일 값을 기본으로 두고 주인장이 고친 것만 덮어씁니다.
-   Firebase 를 안 붙였으면 설정 파일 값 그대로입니다. */
+   Firebase 를 안 붙였으면 설정 파일 값 그대로입니다.
+
+   같은 문서에 스킨과 인트로 설정도 들어 있어 여기서 함께 넘깁니다.
+   구독이 두 벌이면 읽기도 두 배가 되고 두 값이 어긋날 수 있습니다. */
 function useProfileOverride() {
   const [over, setOver] = useState<ProfileOverride>({});
-  useEffect(() => subscribeProfile(setOver), []);
+  useEffect(
+    () =>
+      subscribeProfile(value => {
+        setOver(value);
+        applyRemoteSettings(value);
+      }),
+    []
+  );
   return over;
+}
+
+/* 지금 적용된 홈피 설정입니다. 자세한 규칙은 src/lib/skin.ts 에 있습니다. */
+function useSiteSettings() {
+  return useSyncExternalStore(skinStore.subscribe, skinStore.getSnapshot, skinStore.getServerSnapshot);
 }
 
 function ProfileEditor({ over, onClose }: { over: ProfileOverride; onClose: () => void }) {
@@ -200,12 +272,17 @@ function ProfileEditor({ over, onClose }: { over: ProfileOverride; onClose: () =
     setBusy(true);
     setError(null);
     try {
-      await saveProfile({
-        teacherName: name,
-        introDescription: intro,
-        catalogDescription: sub,
-        aboutLines: lines.split("\n")
-      });
+      /* over 를 함께 넘겨야 같은 문서에 있는 홈피 설정(스킨, 인트로)이
+         살아남습니다. saveProfile 은 문서를 통째로 다시 씁니다. */
+      await saveProfile(
+        {
+          teacherName: name,
+          introDescription: intro,
+          catalogDescription: sub,
+          aboutLines: lines.split("\n")
+        },
+        over
+      );
       onClose();
     } catch (e) {
       setError(e instanceof Error ? e.message : "저장하지 못했어요.");
@@ -349,6 +426,9 @@ function ProfileTab({ viewer }: { viewer: SignedInUser | null }) {
           })}
         </div>
       ))}
+
+      {/* 주인장이 아니면 아무것도 그리지 않습니다. */}
+      <SiteSettings viewer={viewer} over={over} />
     </>
   );
 }
@@ -801,7 +881,18 @@ export default function LinkTree() {
   const [viewer, setViewer] = useState<SignedInUser | null>(null);
   const [activeTab, setActiveTab] = useState<TabName>("home");
   const [introSkipped, setIntroSkipped] = useState(false);
+  const { skin, skipIntro } = useSiteSettings();
   const bgmRef = useRef<BgmHandle>(null);
+  /* 아래 셋은 네온에서만 씁니다. 클래식에서는 늘 기본값이라
+     화면에 아무 영향이 없습니다. */
+  const backgroundRef = useRef<HTMLDivElement>(null);
+  const [neon3dFailed, setNeon3dFailed] = useState(false);
+  const [hudOpen, setHudOpen] = useState(false);
+  const neon = skin === "neon";
+
+  /* 주인장이 인트로를 꺼 두었으면 아무에게도 안 보입니다. introSkipped 는
+     이번 방문에서 "구경하기" 를 눌렀거나 탭 딥링크로 들어온 경우입니다. */
+  const showIntro = !skipIntro && !introSkipped;
 
   useEffect(() => subscribeUser(setViewer), []);
 
@@ -820,23 +911,81 @@ export default function LinkTree() {
     }
   }, []);
 
+  /* 네온 글꼴입니다. 클래식은 쓰지 않으므로 스킨을 따라 붙였다 뗍니다.
+     구글 폰트 서버로 요청이 한 번 나갑니다. 이 사이트는 이미 유튜브와
+     날씨 서버를 부르고 있어 새로 생기는 성질의 것은 아닙니다.
+
+     폰트가 오기 전에는 theme.ts 의 대체 글꼴로 그려지고 도착하면
+     바뀝니다(display=swap). 글자가 안 보이는 구간은 없습니다.
+
+     3D 무대가 아니라 여기 있는 이유: 무대를 못 불러온 경우에도
+     글꼴은 있어야 네온답게 보입니다. */
+  useEffect(() => {
+    if (!neon) return;
+    const links = [
+      { rel: "preconnect", href: "https://fonts.googleapis.com", crossOrigin: "" },
+      { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
+      {
+        rel: "stylesheet",
+        href:
+          "https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900" +
+          "&family=Share+Tech+Mono&family=Do+Hyeon" +
+          "&family=Nanum+Gothic+Coding:wght@400;700&display=swap",
+        crossOrigin: ""
+      }
+    ].map(spec => {
+      const el = document.createElement("link");
+      el.rel = spec.rel;
+      el.href = spec.href;
+      if (spec.crossOrigin) el.crossOrigin = spec.crossOrigin;
+      el.dataset.neonFont = "1";
+      document.head.appendChild(el);
+      return el;
+    });
+    return () => links.forEach(el => el.remove());
+  }, [neon]);
+
+  /* 네온은 화면 전체를 채우는 고정 레이아웃이라 body 가 스크롤되면
+     안 됩니다. html, body 는 cy-root 바깥이라 스킨 선택자로 닿지
+     못하므로 여기서 클래스를 붙였다 뗍니다. */
+  useEffect(() => {
+    if (skin !== "neon") return;
+    document.body.classList.add("lt-skin-neon");
+    return () => document.body.classList.remove("lt-skin-neon");
+  }, [skin]);
+
   /* 인트로가 떠 있는 동안에는 뒤쪽이 스크롤되지 않게 막습니다. */
   useEffect(() => {
-    if (introSkipped) return;
+    if (!showIntro) return;
     document.body.classList.add("lt-intro-open");
     return () => document.body.classList.remove("lt-intro-open");
-  }, [introSkipped]);
+  }, [showIntro]);
+
+  /* 탭 하나의 내용입니다. 클래식은 보고 있는 것 하나만, 네온은 넷을
+     모두 만들어 원을 그려야 하므로 같은 함수를 두 곳에서 씁니다. */
+  const panelFor = (tab: string) => {
+    if (tab === "home") return <HomeTab />;
+    if (tab === "profile") return <ProfileTab viewer={viewer} />;
+    if (tab === "story") return <StoryTab />;
+    if (tab === "board") return <BoardTab />;
+    if (tab === "photo") return <PhotoTab />;
+    return null;
+  };
 
   /* 본문을 항상 그려 두고 인트로를 그 위에 덮습니다. (.lt-intro 는 position: fixed 입니다)
      BGM 플레이어가 미리 준비되어 있어야 인트로 클릭 한 번으로 재생이 시작됩니다. */
   return (
-    <div className="cy-root" style={rootStyle}>
-      <div className="cy-background-pattern"></div>
+    <div
+      className={"cy-root" + (neon && neon3dFailed ? " no-3d" : "")}
+      data-skin={skin}
+      style={ROOT_STYLES[skin]}
+    >
+      <div className="cy-background-pattern" ref={backgroundRef}></div>
 
       {/* 인트로는 fixed 로 덮기만 하므로 뒤 콘텐츠가 DOM 에 그대로 살아 있습니다.
           inert 를 걸어야 탭 포커스와 스크린리더 접근이 함께 막힙니다.
           overflow: hidden(body.lt-intro-open)은 스크롤만 막고 포커스는 못 막습니다. */}
-      <div className="cy-book-wrapper" inert={!introSkipped}>
+      <div className="cy-book-wrapper" inert={showIntro}>
         <div className="cy-book-outer">
 
           {/* 바인더 링 */}
@@ -848,7 +997,12 @@ export default function LinkTree() {
 
           <div className="cy-book-inner">
             {/* 좌측 패널 */}
-            <div className="cy-left-panel">
+            {/* id 는 네온에서만 답니다. 서랍 단추가 가리킬 곳이 필요한
+                쪽은 네온뿐이고, 클래식 마크업은 그대로 두려는 것입니다. */}
+            <div
+              id={neon ? "cy-hud" : undefined}
+              className={"cy-left-panel" + (neon && hudOpen ? " is-open" : "")}
+            >
               <div className="cy-left-header">
                 <VisitCounter />
               </div>
@@ -895,20 +1049,51 @@ export default function LinkTree() {
               <div className="cy-right-header">
                 <span className="cy-title">{TAB_TITLES[activeTab]}</span>
                 <span className="cy-url">{profile.displayUrl}</span>
+                {/* 좁은 화면에서 왼쪽 정보판을 서랍처럼 여는 단추입니다.
+                    넓은 화면에서는 CSS 가 감춥니다. */}
+                {neon ? (
+                  <button
+                    type="button"
+                    className="cy-hud-toggle"
+                    aria-expanded={hudOpen}
+                    aria-controls="cy-hud"
+                    onClick={() => setHudOpen(open => !open)}
+                  >
+                    STATUS
+                  </button>
+                ) : null}
               </div>
 
-              <div
-                className="cy-right-content"
-                role="tabpanel"
-                id={`cy-panel-${activeTab}`}
-                aria-labelledby={`cy-tab-${activeTab}`}
-              >
-                {activeTab === "home" && <HomeTab />}
-                {activeTab === "profile" && <ProfileTab viewer={viewer} />}
-                {activeTab === "story" && <StoryTab />}
-                {activeTab === "board" && <BoardTab />}
-                {activeTab === "photo" && <PhotoTab />}
-              </div>
+              {/* 네온은 탭 넷을 모두 만들어 3D 로 돌립니다. 클래식은
+                  보고 있는 하나만 만듭니다. 스킨을 바꿔도 왼쪽의 BGM 과
+                  방문 수는 이 갈림길 바깥에 있어 끊기지 않습니다. */}
+              {neon && !neon3dFailed ? (
+                <NeonBoundary onError={() => setNeon3dFailed(true)}>
+                  <NeonStage
+                    tabs={TABS}
+                    labels={NAV_LABELS}
+                    active={activeTab}
+                    onSelect={tab => setActiveTab(tab as TabName)}
+                    renderPanel={panelFor}
+                    backgroundRef={backgroundRef}
+                    locked={showIntro}
+                    onFallback={() => setNeon3dFailed(true)}
+                  />
+                </NeonBoundary>
+              ) : (
+                /* 클래식이거나, 네온인데 3D 를 못 쓰는 경우입니다.
+                   네온의 2D 폴백 CSS 는 is-active 인 창만 보여 주므로
+                   보고 있는 탭에 그 표시를 답니다. 클래식 마크업은
+                   예전 그대로입니다. */
+                <div
+                  className={"cy-right-content" + (neon ? " is-active" : "")}
+                  role="tabpanel"
+                  id={`cy-panel-${activeTab}`}
+                  aria-labelledby={`cy-tab-${activeTab}`}
+                >
+                  {panelFor(activeTab)}
+                </div>
+              )}
             </div>
 
             {/* 탭 영역 */}
@@ -941,8 +1126,15 @@ export default function LinkTree() {
         </div>
       </div>
 
-      {!introSkipped ? (
+      {neon && !neon3dFailed ? (
+        <div className="cy-console-hint" aria-hidden="true">
+          <kbd>◀</kbd> <kbd>▶</kbd> 방향키나 옆 창을 눌러 메뉴를 옮깁니다
+        </div>
+      ) : null}
+
+      {showIntro ? (
         <IntroOverlay
+          skin={skin}
           onBrowse={() => {
             /* 클릭 안에서 재생을 걸어야 브라우저가 소리를 허용합니다. */
             bgmRef.current?.start();
