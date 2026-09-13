@@ -1,5 +1,17 @@
 [
   {
+    "id": "b3e5ae09-7839-4842-84ed-49e02f57d427",
+    "title": "세실리아의 음악 응접실",
+    "summary": "세실리아의 음악 응접실 — 집사가 안내하는 3D 클래식 BGM 감상실",
+    "category": "기타",
+    "date": "2026-09-13",
+    "href": "https://dorms.school/apps/b3e5ae09-7839-4842-84ed-49e02f57d427",
+    "appUrl": "https://progh2.github.io/classic-bgm-dj-3d/",
+    "dorms": 7,
+    "comments": 4,
+    "preview": "/assets/dorms/b3e5ae09-7839-4842-84ed-49e02f57d427.webp"
+  },
+  {
     "id": "08587d13-6ce9-4a3e-a612-bbaa05c1757b",
     "title": "별밭 윷놀이",
     "summary": "본격 3D 전통 윷놀이입니다. 봇끼리 플레이도 지원해서 플레이 감상도 가능합니다. 은근 중독성 있어요~ 물론 사용자 참가도 가능합니다.",
@@ -7,8 +19,8 @@
     "date": "2026-09-10",
     "href": "https://dorms.school/apps/08587d13-6ce9-4a3e-a612-bbaa05c1757b",
     "appUrl": "https://progh2.github.io/yutnori",
-    "dorms": 5,
-    "comments": 10,
+    "dorms": 6,
+    "comments": 13,
     "preview": "/assets/dorms/08587d13-6ce9-4a3e-a612-bbaa05c1757b.webp"
   },
   {
@@ -115,7 +127,7 @@
     "date": "2026-08-24",
     "href": "https://dorms.school/apps/2bf24f62-dbb3-421f-99fd-221b53073c46",
     "appUrl": "https://partyrock.aws/u/hamteacher/ksGF_z3I_3/AI",
-    "dorms": 8,
+    "dorms": 9,
     "comments": 5,
     "preview": "/assets/dorms/2bf24f62-dbb3-421f-99fd-221b53073c46.webp"
   },
