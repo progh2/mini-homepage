@@ -2115,6 +2115,9 @@ body.lt-skin-neon {
 }
 
 .cy-root[data-skin="neon"] {
+  /* 체크박스, 스크롤바처럼 브라우저가 직접 그리는 것들을 어두운 쪽으로
+     그리게 합니다. 이게 없으면 어두운 화면에 흰 네모가 뜹니다. */
+  color-scheme: dark;
   --nav-h: 84px;
   --hud-w: 380px;
   --ease-out: cubic-bezier(.16,1,.3,1);
@@ -2217,13 +2220,13 @@ body.lt-skin-neon {
 }
 
 .cy-root[data-skin="neon"] .cy-title {
-  font-family:var(--display);font-size: 1.68rem;line-height:1;letter-spacing:.02em;
+  font-family:var(--display);font-size: 1.48rem;line-height:1;letter-spacing:.02em;
   color:#F2FDFF;
   text-shadow:0 0 6px rgba(43,240,255,.9),0 0 22px rgba(43,240,255,.45),0 0 44px rgba(138,91,255,.35);
 }
 
 .cy-root[data-skin="neon"] .cy-url {
-  font-family:var(--body);font-size: 0.84rem;color:var(--sub-ink);letter-spacing:.04em;
+  font-family:var(--body);font-size: 0.74rem;color:var(--sub-ink);letter-spacing:.04em;
 }
 
 .cy-root[data-skin="neon"] .cy-url::after {
@@ -2244,7 +2247,7 @@ body.lt-skin-neon {
 .cy-root[data-skin="neon"] .cy-tab-btn {
   position:relative;background:none;border:0;cursor:pointer;
   padding:14px clamp(10px,1.4vw,22px) 16px;
-  font-family:var(--display);font-size: 1.3rem;letter-spacing:.06em;
+  font-family:var(--display);font-size: 1.14rem;letter-spacing:.06em;
   color:var(--sub-ink);transition:color .25s,text-shadow .25s;
 }
 
@@ -2328,7 +2331,7 @@ body.lt-skin-neon {
 }
 
 .cy-root[data-skin="neon"] .cy-today-count {
-  font-family:'Share Tech Mono',monospace;font-size: 1.09rem;letter-spacing:.08em;color:var(--sub-ink)
+  font-family:'Share Tech Mono',monospace;font-size: 0.96rem;letter-spacing:.08em;color:var(--sub-ink)
 }
 
 .cy-root[data-skin="neon"] .cy-today-count .text-orange {
@@ -2398,16 +2401,16 @@ body.lt-skin-neon {
 }
 
 .cy-root[data-skin="neon"] .cy-profile-name .name-bold {
-  font-family:var(--display);font-size: 1.93rem;line-height:1.1;color:#F2FDFF;
+  font-family:var(--display);font-size: 1.7rem;line-height:1.1;color:#F2FDFF;
   text-shadow:0 0 10px rgba(255,43,214,.7),0 0 30px rgba(255,43,214,.35);
 }
 
 .cy-root[data-skin="neon"] .cy-profile-name .title-sub {
-  margin-top:6px;font-size: 1.09rem;line-height:1.45;color:var(--sub-ink)
+  margin-top:6px;font-size: 0.96rem;line-height:1.45;color:var(--sub-ink)
 }
 
 .cy-root[data-skin="neon"] .cy-intro-text {
-  font-size: 1.22rem;line-height:1.6;color:var(--ink);
+  font-size: 1.07rem;line-height:1.6;color:var(--ink);
   padding:14px 16px;border:1px solid rgba(43,240,255,.25);
   background:rgba(43,240,255,.05);
 }
@@ -2417,7 +2420,7 @@ body.lt-skin-neon {
 }
 
 .cy-root[data-skin="neon"] .cy-today-is {
-  font-size: 1.09rem;letter-spacing:.06em;color:var(--sub-ink)
+  font-size: 0.96rem;letter-spacing:.06em;color:var(--sub-ink)
 }
 
 .cy-root[data-skin="neon"] .cy-today-is .text-orange {
@@ -2430,7 +2433,7 @@ body.lt-skin-neon {
 
 .cy-root[data-skin="neon"] .cy-left-dropdown>summary {
   list-style:none;cursor:pointer;padding:12px 16px;
-  font-family:var(--display);font-size: 1.18rem;color:#E9DEFF;
+  font-family:var(--display);font-size: 1.04rem;color:#E9DEFF;
   display:flex;justify-content:space-between;align-items:center;
 }
 
@@ -2455,7 +2458,7 @@ body.lt-skin-neon {
 }
 
 .cy-root[data-skin="neon"] .cy-left-dropdown a {
-  display:block;padding:10px 0;font-size: 1.09rem;text-decoration:none;color:var(--ink)
+  display:block;padding:10px 0;font-size: 0.96rem;text-decoration:none;color:var(--ink)
 }
 
 .cy-root[data-skin="neon"] .cy-left-dropdown a::before {
@@ -2472,7 +2475,7 @@ body.lt-skin-neon {
 }
 
 .cy-root[data-skin="neon"] .cy-bgm-heading {
-  font-family:'Orbitron',var(--display);font-weight:700;font-size: 0.88rem;letter-spacing:.14em;color:var(--accent);text-shadow:0 0 8px rgba(43,240,255,.6);margin-bottom:10px
+  font-family:'Orbitron',var(--display);font-weight:700;font-size: 0.77rem;letter-spacing:.14em;color:var(--accent);text-shadow:0 0 8px rgba(43,240,255,.6);margin-bottom:10px
 }
 
 .cy-root[data-skin="neon"] .cy-bgm-list {
@@ -2482,7 +2485,7 @@ body.lt-skin-neon {
 .cy-root[data-skin="neon"] .cy-bgm-track {
   width:100%;display:flex;align-items:center;gap:10px;
   background:none;border:0;cursor:pointer;text-align:left;
-  padding:7px 8px;font-size: 1.09rem;color:var(--sub-ink);
+  padding:7px 8px;font-size: 0.96rem;color:var(--sub-ink);
   border-left:2px solid transparent;transition:background .2s,color .2s;
 }
 
@@ -2530,7 +2533,7 @@ body.lt-skin-neon {
 .cy-root[data-skin="neon"] .cy-bgm-controls button {
   min-width:46px;height:40px;padding:0 10px;cursor:pointer;
   background:rgba(43,240,255,.06);border:1px solid rgba(43,240,255,.45);
-  color:var(--accent);font-size: 0.88rem;
+  color:var(--accent);font-size: 0.77rem;
   clip-path:polygon(0 6px,6px 0,100% 0,100% calc(100% - 6px),calc(100% - 6px) 100%,0 100%);
   transition:background .2s,box-shadow .2s;
 }
@@ -2544,11 +2547,11 @@ body.lt-skin-neon {
 }
 
 .cy-root[data-skin="neon"] .cy-bgm-credit {
-  margin-top:10px;font-size: 0.84rem;color:rgba(124,141,192,.8)
+  margin-top:10px;font-size: 0.74rem;color:rgba(124,141,192,.8)
 }
 
 .cy-root[data-skin="neon"] .cy-bgm-note {
-  margin-top:8px;font-size: 0.92rem;color:var(--point-soft)
+  margin-top:8px;font-size: 0.81rem;color:var(--point-soft)
 }
 
 .cy-root[data-skin="neon"] .cy-bgm-stage {
@@ -2639,7 +2642,7 @@ body.lt-skin-neon {
 .cy-root[data-skin="neon"] .cy-panel-label span {
   position:absolute;left:-40px;right:-40px;top:-34px;height:var(--ph);
   display:flex;align-items:center;justify-content:center;
-  font-family:var(--display);font-size: 4.2rem;letter-spacing:.06em;color:#F2FDFF;
+  font-family:var(--display);font-size: 3.7rem;letter-spacing:.06em;color:#F2FDFF;
   text-shadow:0 0 12px rgba(255,43,214,.9),0 0 40px rgba(255,43,214,.5);
   background:radial-gradient(ellipse at center, rgba(3,4,13,.72), rgba(3,4,13,.35));
   opacity:0;transition:opacity .4s;
@@ -2665,7 +2668,7 @@ body.lt-skin-neon {
 .cy-root[data-skin="neon"] .cy-section-title {
   display:flex;align-items:baseline;flex-wrap:wrap;gap:0;
   margin:0 0 20px;padding-bottom:12px;
-  font-family:var(--display);font-size: 1.68rem;line-height:1.2;color:#F2FDFF;
+  font-family:var(--display);font-size: 1.48rem;line-height:1.2;color:#F2FDFF;
   text-shadow:0 0 8px rgba(43,240,255,.85),0 0 26px rgba(43,240,255,.35);
   border-bottom:1px solid rgba(43,240,255,.3);
   position:relative;
@@ -2676,7 +2679,7 @@ body.lt-skin-neon {
 }
 
 .cy-root[data-skin="neon"] .cy-sub-text {
-  font-family:var(--body);font-size: 1.09rem;letter-spacing:.02em;color:var(--leaf);
+  font-family:var(--body);font-size: 0.96rem;letter-spacing:.02em;color:var(--leaf);
   text-shadow:0 0 8px rgba(138,91,255,.6);
 }
 
@@ -2705,11 +2708,11 @@ body.lt-skin-neon {
 
 .cy-root[data-skin="neon"] .cy-gb-loading,
 .cy-root[data-skin="neon"] .cy-empty-box {
-  font-size: 1.22rem;color:var(--sub-ink);padding:10px 0
+  font-size: 1.07rem;color:var(--sub-ink);padding:10px 0
 }
 
 .cy-root[data-skin="neon"] .cy-guestbook-list {
-  font-size: 1.26rem;line-height:1.6
+  font-size: 1.11rem;line-height:1.6
 }
 
 .cy-root[data-skin="neon"] .cy-guestbook-item {
@@ -2733,18 +2736,18 @@ body.lt-skin-neon {
 }
 
 .cy-root[data-skin="neon"] .cg-date {
-  margin-left:10px;font-size: 0.97rem;color:var(--sub-ink);white-space:nowrap
+  margin-left:10px;font-size: 0.85rem;color:var(--sub-ink);white-space:nowrap
 }
 
 .cy-root[data-skin="neon"] .cy-gb-signin {
-  margin-top:18px;display:flex;flex-wrap:wrap;align-items:center;gap:12px;font-size: 1.09rem;color:var(--sub-ink)
+  margin-top:18px;display:flex;flex-wrap:wrap;align-items:center;gap:12px;font-size: 0.96rem;color:var(--sub-ink)
 }
 
 .cy-root[data-skin="neon"] .cy-gb-google,
 .cy-root[data-skin="neon"] .cy-oe-btn,
 .cy-root[data-skin="neon"] .cy-back-btn {
   display:inline-flex;align-items:center;gap:8px;cursor:pointer;text-decoration:none;
-  padding:10px 18px;font-family:var(--body);font-size: 1.09rem;
+  padding:10px 18px;font-family:var(--body);font-size: 0.96rem;
   color:#F2FDFF;background:rgba(255,43,214,.12);border:1px solid var(--point);
   clip-path:polygon(0 8px,8px 0,100% 0,100% calc(100% - 8px),calc(100% - 8px) 100%,0 100%);
   transition:background .2s, box-shadow .2s;
@@ -2758,7 +2761,7 @@ body.lt-skin-neon {
 
 /* profile */
 .cy-root[data-skin="neon"] .cy-text-block {
-  font-size: 1.34rem;line-height:1.75;color:var(--ink)
+  font-size: 1.18rem;line-height:1.75;color:var(--ink)
 }
 
 .cy-root[data-skin="neon"] .cy-text-block p {
@@ -2778,7 +2781,7 @@ body.lt-skin-neon {
 }
 
 .cy-root[data-skin="neon"] .cy-contact-list {
-  list-style:none;margin:20px 0 0;padding:0;font-size: 1.26rem
+  list-style:none;margin:20px 0 0;padding:0;font-size: 1.11rem
 }
 
 .cy-root[data-skin="neon"] .cy-contact-list li {
@@ -2826,12 +2829,12 @@ body.lt-skin-neon {
 }
 
 .cy-root[data-skin="neon"] .cy-board-category {
-  align-self:flex-start;font-size: 0.92rem;padding:2px 10px;color:var(--point-soft);
+  align-self:flex-start;font-size: 0.81rem;padding:2px 10px;color:var(--point-soft);
   border:1px solid rgba(255,43,214,.6);background:rgba(255,43,214,.08)
 }
 
 .cy-root[data-skin="neon"] .cy-board-title {
-  font-family:var(--display);font-size: 1.39rem;line-height:1.3;color:#F2FDFF
+  font-family:var(--display);font-size: 1.22rem;line-height:1.3;color:#F2FDFF
 }
 
 .cy-root[data-skin="neon"] .cy-board-link:hover .cy-board-title {
@@ -2839,22 +2842,22 @@ body.lt-skin-neon {
 }
 
 .cy-root[data-skin="neon"] .cy-board-summary {
-  font-size: 1.09rem;line-height:1.55;color:var(--sub-ink);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;word-break:break-all
+  font-size: 0.96rem;line-height:1.55;color:var(--sub-ink);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;word-break:break-all
 }
 
 .cy-root[data-skin="neon"] .cy-board-date {
-  font-size: 0.97rem;color:var(--accent);opacity:.8
+  font-size: 0.85rem;color:var(--accent);opacity:.8
 }
 
 /* photo / oekaki */
 .cy-root[data-skin="neon"] .cy-oe-help-btn {
   margin-left:auto;align-self:center;width:36px;height:36px;cursor:pointer;
-  font-family:'Orbitron',sans-serif;font-size: 0.92rem;color:var(--accent);
+  font-family:'Orbitron',sans-serif;font-size: 0.81rem;color:var(--accent);
   background:rgba(43,240,255,.08);border:1px solid var(--accent);border-radius:50%;
 }
 
 .cy-root[data-skin="neon"] .cy-oe-help {
-  font-size: 1.13rem;line-height:1.7;color:var(--ink);padding:16px 18px;margin-bottom:18px;border:1px dashed rgba(138,91,255,.5);background:rgba(138,91,255,.06)
+  font-size: 0.99rem;line-height:1.7;color:var(--ink);padding:16px 18px;margin-bottom:18px;border:1px dashed rgba(138,91,255,.5);background:rgba(138,91,255,.06)
 }
 
 .cy-root[data-skin="neon"] .cy-oe-help p {
@@ -2902,7 +2905,7 @@ body.lt-skin-neon {
 }
 
 .cy-root[data-skin="neon"] .cy-oe-title {
-  background:none;border:0;padding:0;text-align:left;cursor:pointer;font-family:var(--display);font-size: 1.34rem;line-height:1.35;color:#F2FDFF
+  background:none;border:0;padding:0;text-align:left;cursor:pointer;font-family:var(--display);font-size: 1.18rem;line-height:1.35;color:#F2FDFF
 }
 
 .cy-root[data-skin="neon"] .cy-oe-title:hover {
@@ -2914,11 +2917,11 @@ body.lt-skin-neon {
 }
 
 .cy-root[data-skin="neon"] .cy-oe-author {
-  font-size: 1.09rem;color:var(--point-soft)
+  font-size: 0.96rem;color:var(--point-soft)
 }
 
 .cy-root[data-skin="neon"] .cy-oe-date {
-  font-size: 0.92rem;color:var(--sub-ink)
+  font-size: 0.81rem;color:var(--sub-ink)
 }
 
 .cy-root[data-skin="neon"] .cy-gb-pagination {
@@ -2926,7 +2929,7 @@ body.lt-skin-neon {
 }
 
 .cy-root[data-skin="neon"] .cy-gb-page {
-  min-width:44px;height:44px;cursor:pointer;font-family:'Orbitron',sans-serif;font-size: 0.88rem;
+  min-width:44px;height:44px;cursor:pointer;font-family:'Orbitron',sans-serif;font-size: 0.77rem;
   background:transparent;border:1px solid rgba(43,240,255,.4);color:var(--sub-ink)
 }
 
@@ -2943,7 +2946,7 @@ body.lt-skin-neon {
 }
 
 .cy-root[data-skin="neon"] .cy-oe-title-text {
-  font-family:var(--display);font-size: 1.6rem;color:#F2FDFF;text-shadow:0 0 10px rgba(43,240,255,.6)
+  font-family:var(--display);font-size: 1.41rem;color:#F2FDFF;text-shadow:0 0 10px rgba(43,240,255,.6)
 }
 
 .cy-root[data-skin="neon"] .cy-oe-big {
@@ -2951,7 +2954,7 @@ body.lt-skin-neon {
 }
 
 .cy-root[data-skin="neon"] .cy-oe-detail-meta {
-  font-size: 1.09rem;color:var(--sub-ink)
+  font-size: 0.96rem;color:var(--sub-ink)
 }
 
 .cy-root[data-skin="neon"] .cy-oe-detail-meta b {
@@ -2959,7 +2962,7 @@ body.lt-skin-neon {
 }
 
 .cy-root[data-skin="neon"] .cy-oe-replies {
-  list-style:none;margin:0;padding:0;font-size: 1.18rem;line-height:1.6
+  list-style:none;margin:0;padding:0;font-size: 1.04rem;line-height:1.6
 }
 
 .cy-root[data-skin="neon"] .cy-oe-reply {
@@ -2973,7 +2976,7 @@ body.lt-skin-neon {
 /* console hint under carousel */
 .cy-root[data-skin="neon"] .cy-console-hint {
   position:fixed;z-index:2;bottom:18px;left:var(--hud-w);right:0;text-align:center;pointer-events:none;
-  font-size: 0.88rem;letter-spacing:.12em;color:rgba(124,141,192,.85);
+  font-size: 0.77rem;letter-spacing:.12em;color:rgba(124,141,192,.85);
 }
 
 .cy-root[data-skin="neon"] .cy-console-hint kbd {
@@ -3024,12 +3027,12 @@ body.lt-skin-neon {
 }
 
 .cy-root[data-skin="neon"] .lt-intro-copy {
-  margin:0;max-width:24em;font-size: 1.26rem;line-height:1.6;color:var(--ink)
+  margin:0;max-width:24em;font-size: 1.11rem;line-height:1.6;color:var(--ink)
 }
 
 .cy-root[data-skin="neon"] .lt-intro-cta {
   margin-top:10px;display:inline-flex;align-items:center;gap:12px;cursor:pointer;
-  padding:16px 34px;font-family:var(--display);font-size: 1.26rem;letter-spacing:.06em;color:#F2FDFF;
+  padding:16px 34px;font-family:var(--display);font-size: 1.11rem;letter-spacing:.06em;color:#F2FDFF;
   background:rgba(43,240,255,.08);border:1px solid var(--accent);
   box-shadow:0 0 24px rgba(43,240,255,.35), inset 0 0 18px rgba(43,240,255,.15);
   clip-path:polygon(0 12px,12px 0,100% 0,100% calc(100% - 12px),calc(100% - 12px) 100%,0 100%);
@@ -3074,7 +3077,7 @@ body.lt-skin-neon {
     width:100%;height:64px;border-right:0;flex-direction:row;align-items:center;justify-content:space-between;padding:0 16px
   }
   .cy-root[data-skin="neon"] .cy-title {
-    font-size: 1.34rem
+    font-size: 1.18rem
   }
   .cy-root[data-skin="neon"] .cy-url {
     display:none
@@ -3083,7 +3086,7 @@ body.lt-skin-neon {
     top:64px;left:0;height:68px;justify-content:space-around;padding:0 6px;gap:0
   }
   .cy-root[data-skin="neon"] .cy-tab-btn {
-    font-size: 1.09rem;padding:12px 6px 14px
+    font-size: 0.96rem;padding:12px 6px 14px
   }
   .cy-root[data-skin="neon"] .cy-left-panel {
     width:min(88vw,380px);transform:translateX(-102%);transition:transform .45s var(--ease-out);z-index:6
@@ -3093,14 +3096,14 @@ body.lt-skin-neon {
   }
   .cy-root[data-skin="neon"] .cy-hud-toggle {
     display:inline-flex;align-items:center;gap:6px;cursor:pointer;
-    padding:8px 12px;font-family:'Orbitron',sans-serif;font-size: 0.8rem;letter-spacing:.1em;
+    padding:8px 12px;font-family:'Orbitron',sans-serif;font-size: 0.72rem;letter-spacing:.1em;
     color:var(--accent);background:rgba(43,240,255,.08);border:1px solid var(--accent)
   }
   .cy-root[data-skin="neon"] .cy-right-content {
     padding:24px 20px 32px
   }
   .cy-root[data-skin="neon"] .cy-section-title {
-    font-size: 1.22rem
+    font-size: 1.07rem
   }
   .cy-root[data-skin="neon"] .cy-board-link {
     grid-template-columns:1fr
@@ -3146,7 +3149,7 @@ body.lt-skin-neon {
   margin: 0 0 8px;
   padding: 0;
   font-family: var(--display);
-  font-size: 0.92rem;
+  font-size: 0.81rem;
   letter-spacing: 0.08em;
   color: var(--accent);
   text-shadow: 0 0 10px rgba(43, 240, 255, 0.45);
@@ -3161,7 +3164,7 @@ body.lt-skin-neon {
   margin-bottom: 6px;
   border: 1px solid rgba(43, 240, 255, 0.22);
   background: rgba(10, 16, 52, 0.55);
-  font-size: 0.97rem;
+  font-size: 0.85rem;
   line-height: 1.5;
   color: var(--ink);
   cursor: pointer;
@@ -3181,7 +3184,7 @@ body.lt-skin-neon {
 
 .cy-root[data-skin="neon"] .cy-settings-choice-label {
   font-family: var(--display);
-  font-size: 0.84rem;
+  font-size: 0.74rem;
   letter-spacing: 0.04em;
   color: var(--heading);
 }
@@ -3190,13 +3193,13 @@ body.lt-skin-neon {
    이름과 설명이 뭉칩니다. */
 .cy-root[data-skin="neon"] .cy-settings-hint {
   flex-basis: 100%;
-  font-size: 0.84rem;
+  font-size: 0.74rem;
   color: var(--sub-ink);
 }
 
 .cy-root[data-skin="neon"] .cy-settings-note {
   margin: 6px 0 0;
-  font-size: 0.84rem;
+  font-size: 0.74rem;
   color: var(--point);
 }
 
@@ -3237,7 +3240,7 @@ body.lt-skin-neon {
 /* 저장 결과 한 줄입니다. 클래식 규칙이 되돌려지므로 여기서 정합니다. */
 .cy-root[data-skin="neon"] .cy-gb-message {
   display: block;
-  font-size: 0.84rem;
+  font-size: 0.74rem;
   color: var(--sub-ink);
 }
 .cy-root[data-skin="neon"] .cy-gb-message.is-error {
@@ -3249,4 +3252,219 @@ body.lt-skin-neon {
   .cy-root[data-skin="neon"] .cy-switch-knob {
     transition: none;
   }
+}
+
+
+/* ------------------------------------- */
+/* NEON: 데모에 없던 화면들                */
+/* ------------------------------------- */
+/* 네온은 원래 정적 데모라 한줄평 폼, 낙서장 편집기, 연재물 목록 같은
+   실제 기능 화면의 스타일이 없습니다. 위의 all: revert 가 클래식
+   스타일을 되돌리므로 그대로 두면 브라우저 기본 모습, 즉 밝은 회색
+   단추와 흰 입력칸이 어두운 화면에 그대로 뜹니다.
+
+   두 겹으로 채웁니다.
+
+   1) 배치: 클래식 규칙에서 색을 뺀 배치 속성만 옮겨 왔습니다.
+      (아래 "배치 복구" 묶음. 도구로 뽑아 낸 것이라 손으로 고칠 때는
+       클래식 쪽과 함께 보세요.)
+   2) 색: :where() 로 감싼 공통 규칙. :where() 는 특정도를 0으로
+      만들어 주므로 이 규칙들은 (0,2,0) 이 됩니다. 앞의 리셋보다
+      뒤에 있어 리셋은 이기고, 클래스로 적힌 네온 규칙에는 집니다.
+      그래서 이미 손본 단추(.cy-oe-btn 같은)는 건드리지 않습니다. */
+
+/* --- 색과 테두리 (공통) --- */
+.cy-root[data-skin="neon"] :where(button) {
+  background: rgba(43, 240, 255, 0.07);
+  border: 1px solid rgba(43, 240, 255, 0.4);
+  color: var(--accent);
+  padding: 5px 10px;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s, color 0.15s;
+}
+.cy-root[data-skin="neon"] :where(button:hover:not(:disabled)) {
+  background: rgba(255, 43, 214, 0.14);
+  border-color: var(--point);
+  color: var(--point-soft);
+}
+.cy-root[data-skin="neon"] :where(button:disabled) {
+  opacity: 0.45;
+  cursor: default;
+}
+
+/* type 을 안 적은 input 이 많습니다. 안 적으면 text 로 동작하지만
+   input[type="text"] 선택자에는 걸리지 않습니다. 그래서 고르는 칸만
+   빼고 나머지를 전부 잡습니다. 이걸 놓쳐서 한줄평 입력칸이 흰색으로
+   남아 있었습니다. */
+.cy-root[data-skin="neon"] :where(
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]):not([type="color"]),
+  textarea,
+  select
+) {
+  background: rgba(3, 4, 13, 0.6);
+  border: 1px solid rgba(43, 240, 255, 0.38);
+  color: var(--ink);
+  padding: 6px 9px;
+}
+.cy-root[data-skin="neon"] :where(input, textarea, select):focus-visible {
+  border-color: var(--accent);
+  outline: none;
+  box-shadow: 0 0 12px rgba(43, 240, 255, 0.35);
+}
+.cy-root[data-skin="neon"] :where(input, textarea)::placeholder {
+  color: rgba(124, 141, 192, 0.75);
+}
+.cy-root[data-skin="neon"] :where(input[type="checkbox"], input[type="radio"]) {
+  accent-color: var(--point);
+  width: 14px;
+  height: 14px;
+}
+.cy-root[data-skin="neon"] :where(input[type="range"]) {
+  accent-color: var(--accent);
+  background: transparent;
+  border: 0;
+  padding: 0;
+}
+
+/* 글이 올라앉는 옅은 바탕들입니다. 클래식에서는 흰색 계열이라
+   그대로 두면 어두운 화면에 흰 판이 뜹니다. */
+.cy-root[data-skin="neon"] :where(.cy-guestbook-form, .cy-edit, .cy-oe-pad, .cy-oe-tools, .cy-oe-layers, .cy-oe-player, .cy-profile-list-box, .cy-oe-hidden-note, .cy-oe-reply-preview) {
+  background: rgba(10, 16, 52, 0.55);
+  border: 1px solid rgba(43, 240, 255, 0.22);
+}
+
+/* 목록의 작은 표식과 구분선입니다. */
+.cy-root[data-skin="neon"] :where(.cy-profile-list li::before) {
+  background: var(--accent);
+}
+.cy-root[data-skin="neon"] :where(.cy-gb-secret, .cy-gb-who, .cy-gb-signin-text, .cy-edit-hint, .cy-oe-hidden-note) {
+  color: var(--sub-ink);
+}
+.cy-root[data-skin="neon"] :where(.cy-oe-canvas) {
+  background: #fff;
+  border: 1px solid rgba(43, 240, 255, 0.5);
+}
+
+/* --- 배치 복구 (클래식에서 색을 뺀 배치 속성) --- */
+.cy-root[data-skin="neon"] .cy-ring { width: 30px; height: 10px; border-radius: 5px; margin-left: -15px; }
+.cy-root[data-skin="neon"] .cy-bgm-time { margin-left: auto; padding-left: 4px; flex: none; }
+.cy-root[data-skin="neon"] .cy-bgm-artist { margin-top: 4px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.cy-root[data-skin="neon"] .cy-bgm-hint { margin-top: 4px; }
+.cy-root[data-skin="neon"] .cy-profile-list-box { margin-top: 12px; }
+.cy-root[data-skin="neon"] .cy-profile-list-box + .cy-text-block { margin-top: 12px; }
+.cy-root[data-skin="neon"] .cy-profile-list-heading { font-weight: bold; margin-bottom: 6px; }
+.cy-root[data-skin="neon"] .cy-profile-list { list-style: none; padding: 0; margin: 0; line-height: 1.6; }
+.cy-root[data-skin="neon"] .cy-profile-list li { position: relative; padding-left: 12px; }
+.cy-root[data-skin="neon"] .cy-profile-list li::before { content: ""; position: absolute; left: 2px; top: 9px; width: 4px; height: 4px; border-radius: 50%; }
+.cy-root[data-skin="neon"] .cy-episode-grid { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+.cy-root[data-skin="neon"] .cy-episode-card { width: 100%; padding: 0; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 5px; }
+.cy-root[data-skin="neon"] .cy-episode-thumb { width: 100%; aspect-ratio: 1 / 1; border-radius: 4px; overflow: hidden; display: block; }
+.cy-root[data-skin="neon"] .cy-episode-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.cy-root[data-skin="neon"] .cy-episode-label { font-weight: bold; }
+.cy-root[data-skin="neon"] .cy-episode-title { text-align: center; line-height: 1.3; }
+.cy-root[data-skin="neon"] .cy-cut-list { display: flex; flex-direction: column; gap: 10px; align-items: center; }
+.cy-root[data-skin="neon"] .cy-cut-list img { max-width: 100%; height: auto; border-radius: 4px; display: block; }
+.cy-root[data-skin="neon"] .cy-board-item { padding: 8px 0; }
+.cy-root[data-skin="neon"] .cy-photo-grid { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+.cy-root[data-skin="neon"] .cy-photo-item { display: flex; flex-direction: column; align-items: center; gap: 5px; }
+.cy-root[data-skin="neon"] .cy-photo-frame { width: 100%; aspect-ratio: 1 / 1; border-radius: 4px; display: flex; align-items: center; justify-content: center; overflow: hidden; padding: 4px; }
+.cy-root[data-skin="neon"] .cy-photo-frame img { max-width: 100%; max-height: 100%; object-fit: contain; }
+.cy-root[data-skin="neon"] .cy-guestbook-form { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; padding-top: 10px; }
+.cy-root[data-skin="neon"] .cy-gb-text { padding: 5px 7px; border-radius: 3px; flex: 1; min-width: 120px; }
+.cy-root[data-skin="neon"] .cy-gb-submit { flex-shrink: 0; font-weight: bold; padding: 5px 12px; border-radius: 3px; cursor: pointer; }
+.cy-root[data-skin="neon"] .cy-gb-submit:disabled { cursor: default; }
+.cy-root[data-skin="neon"] .cg-act { margin-left: 5px; padding: 0 3px; cursor: pointer; }
+.cy-root[data-skin="neon"] .cg-act:disabled { cursor: default; }
+.cy-root[data-skin="neon"] .cg-edit { display: inline-flex; align-items: center; gap: 3px; width: 100%; margin-top: 3px; }
+.cy-root[data-skin="neon"] .cg-edit-input { flex: 1; min-width: 80px; padding: 3px 6px; border-radius: 3px; }
+.cy-root[data-skin="neon"] .cy-gb-secret { display: inline-flex; align-items: center; gap: 3px; flex-shrink: 0; cursor: pointer; }
+.cy-root[data-skin="neon"] .cy-gb-secret input { margin: 0; cursor: pointer; }
+.cy-root[data-skin="neon"] .cg-lock { margin-right: 2px; }
+.cy-root[data-skin="neon"] .cy-gb-who { flex-basis: 100%; margin-top: 4px; }
+.cy-root[data-skin="neon"] .cy-gb-signout { margin-left: 6px; padding: 0; cursor: pointer; }
+@media (max-width: 900px) { .cy-root[data-skin="neon"] .cy-episode-grid { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 900px) { .cy-root[data-skin="neon"] .cy-photo-grid { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 480px) { .cy-root[data-skin="neon"] .cy-episode-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 480px) { .cy-root[data-skin="neon"] .cy-photo-grid { grid-template-columns: repeat(2, 1fr); } }
+.cy-root[data-skin="neon"] .cy-oe-start { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: 8px 0 12px; }
+.cy-root[data-skin="neon"] .cy-oe-pad { margin: 8px 0 12px; }
+.cy-root[data-skin="neon"] .cy-oe-canvas { display: block; width: 100%; max-width: 360px; aspect-ratio: 1 / 1; border-radius: 4px; touch-action: none; cursor: crosshair; }
+.cy-root[data-skin="neon"] .cy-oe-tools { max-width: 360px; margin-top: 6px; }
+.cy-root[data-skin="neon"] .cy-oe-colors { display: grid; grid-template-columns: repeat(12, 1fr); gap: 3px; margin-bottom: 6px; }
+.cy-root[data-skin="neon"] .cy-oe-color { aspect-ratio: 1 / 1; padding: 0; border-radius: 3px; cursor: pointer; }
+.cy-root[data-skin="neon"] .cy-oe-color.is-on { position: relative; z-index: 1; }
+.cy-root[data-skin="neon"] .cy-oe-row { display: flex; align-items: center; flex-wrap: wrap; gap: 4px; margin-bottom: 6px; }
+.cy-root[data-skin="neon"] .cy-oe-width { display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; padding: 0; border-radius: 4px; cursor: pointer; }
+.cy-root[data-skin="neon"] .cy-oe-width span { display: block; border-radius: 50%; }
+.cy-root[data-skin="neon"] .cy-oe-icon { display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; padding: 0; border-radius: 4px; cursor: pointer; }
+.cy-root[data-skin="neon"] .cy-oe-icon:disabled { cursor: default; }
+.cy-root[data-skin="neon"] .cy-oe-layers { display: inline-flex; align-items: center; gap: 4px; margin-left: auto; }
+.cy-root[data-skin="neon"] .cy-oe-layer { display: inline-flex; align-items: center; border-radius: 4px; overflow: hidden; }
+.cy-root[data-skin="neon"] .cy-oe-layer-pick { padding: 0 4px; height: 24px; cursor: pointer; }
+.cy-root[data-skin="neon"] .cy-oe-layer-eye { padding: 0 4px; height: 24px; cursor: pointer; }
+.cy-root[data-skin="neon"] .cy-oe-layer-del { padding: 0 4px; height: 24px; cursor: pointer; }
+.cy-root[data-skin="neon"] .cy-oe-layer-pick.is-on { font-weight: bold; }
+.cy-root[data-skin="neon"] .cy-oe-comment { flex: 1; min-width: 110px; padding: 5px 7px; border-radius: 3px; }
+.cy-root[data-skin="neon"] .cy-oe-badge { position: absolute; top: 3px; left: 3px; padding: 1px 5px; border-radius: 3px; }
+.cy-root[data-skin="neon"] .cy-oe-reply-preview { list-style: none; margin: 0 0 4px; padding: 4px 0 0; }
+.cy-root[data-skin="neon"] .cy-oe-reply-preview li { line-height: 1.5; word-break: break-word; }
+.cy-root[data-skin="neon"] .cy-oe-more { padding: 0; cursor: pointer; }
+.cy-root[data-skin="neon"] .cy-oe-hidden-note { margin: 0 0 6px; }
+.cy-root[data-skin="neon"] .cy-oe-reply-text { word-break: break-word; }
+@media (max-width: 900px) { .cy-root[data-skin="neon"] .cy-oe-canvas { max-width: 100%; } }
+@media (max-width: 900px) { .cy-root[data-skin="neon"] .cy-oe-tools { max-width: 100%; } }
+@media (max-width: 480px) { .cy-root[data-skin="neon"] .cy-oe-colors { grid-template-columns: repeat(8, 1fr); gap: 4px; } }
+@media (max-width: 480px) { .cy-root[data-skin="neon"] .cy-oe-width { width: 32px; height: 32px; } }
+@media (max-width: 480px) { .cy-root[data-skin="neon"] .cy-oe-icon { width: 32px; height: 32px; } }
+@media (max-width: 480px) { .cy-root[data-skin="neon"] .cy-oe-layers { margin-left: 0; } }
+.cy-root[data-skin="neon"] .cy-oe-opacity { display: inline-flex; align-items: center; gap: 4px; }
+.cy-root[data-skin="neon"] .cy-oe-opacity input { width: 62px; }
+@media (max-width: 480px) { .cy-root[data-skin="neon"] .cy-oe-opacity input { width: 78px; } }
+.cy-root[data-skin="neon"] .cy-oe-player { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; }
+.cy-root[data-skin="neon"] .cy-oe-player canvas { cursor: default; }
+.cy-root[data-skin="neon"] .cy-oe-new { margin-left: 6px; padding: 1px 5px; border-radius: 999px; font-weight: bold; }
+.cy-root[data-skin="neon"] .cy-edit-btn { margin-left: 6px; padding: 1px 7px; border-radius: 3px; cursor: pointer; vertical-align: middle; }
+.cy-root[data-skin="neon"] .cy-edit { margin: 8px 0 10px; padding: 10px; border-radius: 4px; }
+.cy-root[data-skin="neon"] .cy-edit-row { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; }
+.cy-root[data-skin="neon"] .cy-edit-row > span { flex: 0 0 84px; }
+.cy-root[data-skin="neon"] .cy-edit-row input { flex: 1; min-width: 0; padding: 4px 6px; border-radius: 3px; }
+.cy-root[data-skin="neon"] .cy-edit-row textarea { flex: 1; min-width: 0; padding: 4px 6px; border-radius: 3px; resize: vertical; line-height: 1.5; }
+.cy-root[data-skin="neon"] .cy-edit-tall { align-items: flex-start; }
+.cy-root[data-skin="neon"] .cy-edit-tall > span { padding-top: 5px; }
+.cy-root[data-skin="neon"] .cy-edit-hint { margin: 0 0 8px; line-height: 1.5; }
+.cy-root[data-skin="neon"] .cy-edit-buttons { display: flex; gap: 5px; }
+@media (max-width: 480px) { .cy-root[data-skin="neon"] .cy-edit-row { flex-direction: column; align-items: stretch; gap: 3px; } }
+@media (max-width: 480px) { .cy-root[data-skin="neon"] .cy-edit-row > span { flex: none; } }
+
+/* 로그아웃은 눌러야 할 것이 아니라 알려 주는 쪽에 가깝습니다.
+   네모를 씌우면 "남기기" 와 비슷한 무게가 되어 헷갈립니다. */
+.cy-root[data-skin="neon"] .cy-gb-signout {
+  background: none;
+  border: 0;
+  padding: 0 2px;
+  color: var(--sub-ink);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.cy-root[data-skin="neon"] .cy-gb-signout:hover {
+  background: none;
+  border: 0;
+  color: var(--point);
+}
+
+.cy-root[data-skin="neon"] .cy-gb-secret {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  cursor: pointer;
+}
+
+/* 낙서장 편집기의 도구 단추들입니다. 수가 많아 촘촘해야 합니다. */
+.cy-root[data-skin="neon"] :where(.cy-oe-icon, .cy-oe-layer-eye, .cy-oe-layer-del, .cy-oe-layer-pick) {
+  padding: 3px 6px;
+  line-height: 1.2;
+}
+.cy-root[data-skin="neon"] :where(.cy-oe-color) {
+  padding: 0;
+  border: 1px solid rgba(43, 240, 255, 0.5);
 }
