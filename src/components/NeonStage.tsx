@@ -22,7 +22,7 @@ import { createPortal } from "react-dom";
 
 /* 화각입니다. 좁으면 망원처럼 눌려 보여 원을 돌아도 옆으로 미끄러지는
    것처럼 느껴집니다. 넓힐수록 카메라가 가까워져 깊이가 살아납니다. */
-const FOV = 44;
+const FOV = 50;
 /* 옆으로 밀린 창이 보는 사람 쪽으로 얼마나 돌아설지입니다. 0 이면 원의
    접선을 향하고(진짜 원통), 1 이면 어디 있든 정면을 봅니다.
 
@@ -30,7 +30,7 @@ const FOV = 44;
    0 에 가까우면 옆 창이 칼날처럼 서서 안 보입니다. 창이 넷이라 옆 창은
    90도에 서는데, 이 값이면 65도쯤 돌아서서 두께가 보이면서도 무엇인지는
    읽힙니다. */
-const K_YAW = 0.5;
+const K_YAW = 0.6;
 
 type Stage = {
   hosts: HTMLDivElement[];
@@ -271,15 +271,15 @@ function buildStage({
        밀려나 앞 창 하나만 보이고, 그러면 도는 것이 아니라 넘기는 것처럼
        보입니다. */
     const pw = Math.round(
-      mobile ? Math.min(W * 0.86, 560) : Math.max(360, Math.min(regionW * 0.44, 620))
+      mobile ? Math.min(W * 0.84, 540) : Math.max(340, Math.min(regionW * 0.42, 580))
     );
     const ph = Math.round(Math.max(380, Math.min(regionH * (mobile ? 0.84 : 0.8), 1000)));
     /* 원의 반지름입니다. 좌우(R)보다 깊이(Rz)를 훨씬 크게 잡아 앞뒤로
        길쭉한 타원으로 돕니다. 둘이 비슷하면 옆 창이 같은 거리에서 좌우로
        오갈 뿐이라 평면으로 미끄러지는 것처럼 보입니다. 깊이를 늘리면
        옆 창이 뒤로 물러나 작아지고, 돌 때 뒤에서 앞으로 걸어 나옵니다. */
-    const R = mobile ? pw * 1.02 : pw * 0.88;
-    const Rz = mobile ? pw * 1.0 : pw * 1.05;
+    const R = mobile ? pw * 1.0 : pw * 0.95;
+    const Rz = mobile ? pw * 1.25 : pw * 1.3;
     const cx = hudW / 2;
     const cy = -(navH / 2) + (mobile ? 0 : -6);
     const floorY = cy - ph / 2 - 70;
@@ -749,6 +749,30 @@ function buildStage({
     select((getActive() + (dx < 0 ? 1 : -1) + N) % N);
   };
 
+  /* 빈 배경을 눌러도 넘어갑니다. 옆 창은 비스듬히 서 있어 눌러야 할
+     면적이 얇습니다. 화면 왼쪽을 누르면 왼쪽 창이, 오른쪽을 누르면
+     오른쪽 창이 앞으로 옵니다. 방향키와 같은 방향입니다.
+
+     글자, 링크, 단추, 정보판, 탭, 그리고 지금 보고 있는 창 위에서는
+     받지 않습니다. 글을 읽다가 누른 것까지 넘김으로 치면 곤란합니다. */
+  const onBackgroundClick = (e: MouseEvent) => {
+    if (isLocked()) return;
+    const t = e.target;
+    if (!(t instanceof Element)) return;
+    if (
+      t.closest(
+        ".cy-right-content.is-active, .cy-left-panel, .cy-tabs, .cy-right-header, a, button, input, textarea, select, label, summary, details"
+      )
+    ) {
+      return;
+    }
+    const i = getActive();
+    /* 창 i+1 은 오른쪽에 섭니다(tick 의 sin(phi) 부호). */
+    const forward = e.clientX >= window.innerWidth / 2;
+    select(((i + (forward ? 1 : -1)) % N + N) % N);
+  };
+
+  window.addEventListener("click", onBackgroundClick);
   window.addEventListener("resize", onResize);
   mq.addEventListener("change", onResize);
   window.addEventListener("pointermove", onPointerMove, { passive: true });
@@ -760,6 +784,7 @@ function buildStage({
 
   function dispose() {
     cancelAnimationFrame(frame);
+    window.removeEventListener("click", onBackgroundClick);
     window.removeEventListener("resize", onResize);
     mq.removeEventListener("change", onResize);
     window.removeEventListener("pointermove", onPointerMove);
