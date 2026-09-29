@@ -4068,6 +4068,34 @@ body.lt-skin-lumen {
   color: #f0d7a2;
 }
 
+/* 밤이 아니면 하늘이 밝습니다. 제목과 안내를 어두운 잉크로 바꿉니다. */
+body.lt-skin-lumen[data-lumen-sky="day"] .cy-title,
+body.lt-skin-lumen[data-lumen-sky="dawn"] .cy-title,
+body.lt-skin-lumen[data-lumen-sky="dusk"] .cy-title {
+  color: #1c2433;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.45);
+}
+
+body.lt-skin-lumen[data-lumen-sky="day"] .cy-url,
+body.lt-skin-lumen[data-lumen-sky="dawn"] .cy-url,
+body.lt-skin-lumen[data-lumen-sky="dusk"] .cy-url {
+  color: rgba(28, 36, 51, 0.82);
+  text-shadow: none;
+}
+
+body.lt-skin-lumen[data-lumen-sky="day"] .cy-lumen-hint,
+body.lt-skin-lumen[data-lumen-sky="dawn"] .cy-lumen-hint,
+body.lt-skin-lumen[data-lumen-sky="dusk"] .cy-lumen-hint {
+  color: rgba(28, 36, 48, 0.78);
+}
+
+body.lt-skin-lumen[data-lumen-sky="day"] .cy-lumen-hint kbd,
+body.lt-skin-lumen[data-lumen-sky="dawn"] .cy-lumen-hint kbd,
+body.lt-skin-lumen[data-lumen-sky="dusk"] .cy-lumen-hint kbd {
+  color: #243044;
+  border-color: rgba(36, 48, 68, 0.45);
+}
+
 .cy-root[data-skin="lumen"] .lt-intro {
   background: radial-gradient(ellipse at 50% 42%, rgba(8, 10, 22, 0.18), rgba(8, 10, 22, 0.58) 58%, rgba(5, 6, 14, 0.74) 100%);
 }
@@ -4130,15 +4158,26 @@ body.lt-skin-lumen {
   display: none;
 }
 
-.cy-root[data-skin="lumen"] .cy-bgm-stage:not(.is-shown) {
-  /* 왼쪽 칸의 스크롤에 끼지 않게 칸 밖으로 보냅니다. */
+/* 루멘은 좁은 화면에서도 영상 칸을 열지 않습니다. 소리만 쓰고,
+   칸 안으로 들어오면 가로 스크롤이 생깁니다. */
+.cy-root[data-skin="lumen"] .cy-bgm-stage {
   position: fixed;
   left: 0;
   top: 0;
   width: 160px;
   height: 90px;
+  max-width: none;
+  margin: 0;
+  aspect-ratio: auto;
+  border: 0;
+  overflow: hidden;
   opacity: 0;
+  clip-path: inset(100%);
   pointer-events: none;
+}
+
+.cy-root[data-skin="lumen"] .cy-bgm-hint {
+  display: none;
 }
 
 @media (max-width: 900px) {

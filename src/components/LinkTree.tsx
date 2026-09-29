@@ -1013,8 +1013,34 @@ export default function LinkTree() {
   useEffect(() => {
     if (skin !== "lumen") return;
     document.body.classList.add("lt-skin-lumen");
-    return () => document.body.classList.remove("lt-skin-lumen");
+    return () => {
+      document.body.classList.remove("lt-skin-lumen");
+      delete document.body.dataset.lumenSky;
+    };
   }, [skin]);
+
+  /* 좁은 화면에서 달빛으로 연 왼쪽 칸입니다. 칸 밖을 누르거나 Esc 로 닫습니다. */
+  useEffect(() => {
+    if (!lumen || !hudOpen) return;
+    const onPointerDown = (event: PointerEvent) => {
+      const target = event.target;
+      if (!(target instanceof Element)) return;
+      if (target.closest("#cy-hud, .cy-hud-toggle")) return;
+      setHudOpen(false);
+    };
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      const el = document.activeElement;
+      if (el instanceof HTMLElement && /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName)) return;
+      setHudOpen(false);
+    };
+    document.addEventListener("pointerdown", onPointerDown);
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("pointerdown", onPointerDown);
+      document.removeEventListener("keydown", onKeyDown);
+    };
+  }, [lumen, hudOpen]);
 
   /* 인트로가 떠 있는 동안에는 뒤쪽이 스크롤되지 않게 막습니다. */
   useEffect(() => {

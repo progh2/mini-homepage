@@ -7,7 +7,8 @@ import { createPortal } from "react-dom";
 
    두 겹입니다.
 
-     WebGL : 밤하늘, 달, 오로라, 호수, 반딧불이 (cy-background-pattern 안)
+     WebGL : 하늘, 해와 달, 오로라, 호수, 반딧불이 (cy-background-pattern 안).
+             색은 이 기기의 시각을 따라 새벽, 낮, 저녁, 밤으로 바뀝니다.
      CSS3D : 탭 내용이 담긴 종이. 고르지 않은 장은 아래 뭉치에 있고,
              고른 장만 뭉치에서 빼서 위로 올려 읽습니다.
 
@@ -53,6 +54,13 @@ const SKY_FRAG = `
   /* 0 이면 가로 화면의 달, 1 이면 세로 화면의 달입니다. 세로에서는
      같은 상수가 화면을 하얗게 덮어서, 달의 크기와 빛만 줄입니다. */
   uniform float uPhone;
+  /* 시각입니다. uNight 이 1 이면 지금의 달밤이고, uDay 가 1 이면 한낮입니다.
+     uGlow 는 해가 지평선 근처에 있을 때, uMorning 은 그때가 아침인지입니다. */
+  uniform float uHour;
+  uniform float uDay;
+  uniform float uNight;
+  uniform float uGlow;
+  uniform float uMorning;
 
   float hash(vec2 p) {
     return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
@@ -88,6 +96,17 @@ const SKY_FRAG = `
     vec3 zenith = vec3(0.025, 0.02, 0.07);
     vec3 midSky = vec3(0.09, 0.05, 0.18);
     vec3 horizon = vec3(0.55, 0.32, 0.38);
+    /* 종이 위로 보이는 띠가 천정입니다. 한낮과 노을은 여기서 바로 달라져야 합니다. */
+    vec3 zenithD = vec3(0.40, 0.70, 0.96);
+    vec3 midD = vec3(0.62, 0.84, 0.98);
+    vec3 horD = vec3(0.90, 0.95, 0.99);
+    vec3 zenithG = mix(vec3(0.90, 0.46, 0.40), vec3(0.84, 0.66, 0.76), uMorning);
+    vec3 midG = mix(vec3(0.96, 0.42, 0.30), vec3(0.98, 0.74, 0.62), uMorning);
+    vec3 horG = mix(vec3(0.99, 0.55, 0.28), vec3(1.0, 0.82, 0.55), uMorning);
+    float g = clamp(uGlow * (1.0 - uDay * 0.85), 0.0, 1.0);
+    zenith = mix(mix(zenith, zenithD, uDay), zenithG, g);
+    midSky = mix(mix(midSky, midD, uDay), midG, g);
+    horizon = mix(mix(horizon, horD, uDay), horG, g);
     vec3 col = mix(horizon, midSky, smoothstep(0.22, 0.58, uv.y));
     col = mix(col, zenith, smoothstep(0.5, 1.0, uv.y));
 
@@ -100,11 +119,11 @@ const SKY_FRAG = `
     float tw = 0.55 + 0.45 * sin(t * 1.7 + nstar * 40.0);
     float star = step(0.988, nstar) * smoothstep(0.22, 0.0, length(gv));
     star *= tw * smoothstep(uWater + 0.02, uWater + 0.22, uv.y);
-    col += vec3(0.92, 0.94, 1.0) * star;
+    col += vec3(0.92, 0.94, 1.0) * star * uNight;
 
     float band = exp(-pow((uv.y - (0.78 + drift.y)) * 3.2, 2.0));
     float milk = fbm(vec2(uv.x * 2.0 + t * 0.01, uv.y * 3.0));
-    col += vec3(0.45, 0.4, 0.7) * band * milk * 0.18;
+    col += vec3(0.45, 0.4, 0.7) * band * milk * 0.18 * uNight;
 
     vec2 moon = uMoon + drift;
     vec2 aspect = vec2(uRes.x / max(uRes.y, 1.0), 1.0);
@@ -117,12 +136,28 @@ const SKY_FRAG = `
     vec3 moonCol = vec3(1.0, 0.96, 0.88) * (0.9 + 0.1 * cr) * (1.0 - limb * 0.22);
     float halo = exp(-md * mix(8.5, 20.0, uPhone)) * mix(0.38, 0.14, uPhone);
     float glow = exp(-md * mix(2.6, 9.0, uPhone)) * mix(0.14, 0.04, uPhone);
-    col += moonCol * disc + vec3(1.0, 0.94, 0.82) * (halo + glow) * (1.0 + uTurn * 0.25);
+    col += (moonCol * disc + vec3(1.0, 0.94, 0.82) * (halo + glow) * (1.0 + uTurn * 0.25)) * uNight;
     /* 달에서 호수까지 이어지는 빛기둥. 세로 화면은 가로 비율이 1보다
        작아서, 그대로 두면 기둥이 화면 너비로 퍼집니다. */
     float span = max(aspect.x, 1.0);
     float ray = exp(-pow((uv.x - moon.x) * span * 2.6, 2.0));
-    col += vec3(1.0, 0.9, 0.72) * ray * smoothstep(0.0, 0.9, moon.y - uv.y) * mix(0.2, 0.08, uPhone);
+    col += vec3(1.0, 0.9, 0.72) * ray * smoothstep(0.0, 0.9, moon.y - uv.y) * mix(0.2, 0.08, uPhone) * uNight;
+
+    /* 해는 종이 위 하늘에 둡니다. uv 위쪽이 화면 위라서, 물 높이에서 올리면
+       한낮의 해가 화면 밖으로 나갑니다. JS 의 skyClock 과 같은 elev 입니다. */
+    float elev = sin((uHour - 6.0) * 0.2617994);
+    float sunVis = smoothstep(-0.04, 0.16, elev);
+    float sunT = clamp((uHour - 6.0) / 12.0, 0.0, 1.0);
+    float arc = sin(sunT * 3.14159265);
+    float sunX = mix(0.66, 0.78, sunT);
+    float sunY = mix(mix(0.932, 0.962, arc), mix(0.955, 0.976, arc), uPhone);
+    vec2 sun = vec2(sunX, sunY) + drift;
+    float sdist = length((uv - sun) * aspect);
+    float srad = mix(0.042, 0.022, uPhone);
+    float sdisc = smoothstep(srad, srad * 0.62, sdist);
+    float sunglow = exp(-sdist * mix(3.4, 8.0, uPhone));
+    col += vec3(1.0, 0.98, 0.90) * sdisc * sunVis;
+    col += vec3(1.0, 0.78, 0.42) * sunglow * sunVis * max(uDay * 0.38, uGlow * 0.72);
 
     float ax = uv.x + drift.x + t * 0.02;
     float n = fbm(vec2(ax * 2.4, uv.y * 1.6 - t * 0.03));
@@ -134,28 +169,41 @@ const SKY_FRAG = `
     float b2 = exp(-pow((uv.y - y2) * 13.0, 2.0));
     float b3 = exp(-pow((uv.y - y3) * 7.0, 2.0));
     float above = smoothstep(uWater + 0.02, uWater + 0.2, uv.y);
-    col += vec3(0.35, 0.85, 0.78) * b1 * (0.28 + n * 0.45) * above;
-    col += vec3(0.55, 0.4, 0.95) * b2 * 0.32 * above;
-    col += vec3(0.95, 0.55, 0.7) * b3 * 0.16 * above;
-    col += vec3(0.5, 0.85, 0.8) * uTurn * b1 * 0.25;
+    float aurora = mix(uGlow * 0.4, 1.0, uNight);
+    col += vec3(0.35, 0.85, 0.78) * b1 * (0.28 + n * 0.45) * above * aurora;
+    col += vec3(0.55, 0.4, 0.95) * b2 * 0.32 * above * aurora;
+    col += vec3(0.95, 0.55, 0.7) * b3 * 0.16 * above * aurora;
+    col += vec3(0.5, 0.85, 0.8) * uTurn * b1 * 0.25 * uNight;
+
+    float cloudN = fbm(vec2(uv.x * 2.6 + t * 0.015, uv.y * 1.8 + 3.0));
+    float clouds = smoothstep(0.52, 0.8, cloudN) * smoothstep(uWater + 0.08, 0.55, uv.y);
+    col = mix(col, vec3(0.97, 0.98, 0.99), clouds * uDay * 0.5);
+    col = mix(col, mix(vec3(0.98, 0.58, 0.40), vec3(0.99, 0.78, 0.58), uMorning), clouds * uGlow * 0.4);
 
     if (uv.y < uWater + 0.06) {
       float rip = sin(uv.x * 38.0 + t * 1.15 + fbm(uv * 5.0 + t * 0.08) * 2.4) * 0.004;
       rip += sin(uv.x * 14.0 - t * 0.7) * 0.003;
       float wet = smoothstep(uWater + 0.045, uWater - 0.02, uv.y);
-      vec3 water = mix(vec3(0.2, 0.17, 0.3), vec3(0.06, 0.08, 0.14), smoothstep(uWater, 0.0, uv.y));
-      float mx = uv.x - moon.x + rip * 1.6;
-      float column = exp(-pow(mx * span * 2.4, 2.0));
+      float depth = smoothstep(uWater, 0.0, uv.y);
+      vec3 waterN = mix(vec3(0.2, 0.17, 0.3), vec3(0.06, 0.08, 0.14), depth);
+      vec3 waterD = mix(vec3(0.62, 0.84, 0.96), vec3(0.22, 0.50, 0.74), depth);
+      vec3 waterGm = mix(vec3(0.90, 0.66, 0.60), vec3(0.40, 0.26, 0.34), depth);
+      vec3 waterGe = mix(vec3(0.82, 0.40, 0.32), vec3(0.32, 0.16, 0.22), depth);
+      vec3 waterG = mix(waterGe, waterGm, uMorning);
+      vec3 water = mix(mix(waterN, waterD, uDay), waterG, g);
       float shimmer = 0.55 + 0.45 * sin(uv.y * 22.0 - t * 1.4 + uv.x * 6.0);
-      water += vec3(1.0, 0.94, 0.8) * column * shimmer * mix(1.15, 0.42, uPhone) * wet;
+      float moonPath = exp(-pow((uv.x - moon.x + rip * 1.6) * span * 2.4, 2.0));
+      float sunPath = exp(-pow((uv.x - sun.x + rip * 1.6) * span * 2.2, 2.0));
+      water += vec3(1.0, 0.94, 0.8) * moonPath * shimmer * mix(1.15, 0.42, uPhone) * wet * uNight;
+      water += vec3(1.0, 0.86, 0.55) * sunPath * shimmer * mix(1.05, 0.4, uPhone) * wet * sunVis;
       float cau = fbm(vec2(uv.x * 7.0 + t * 0.12, uv.y * 12.0 - t * 0.25));
-      water += vec3(0.45, 0.75, 0.72) * pow(cau, 3.0) * 0.22 * wet;
-      water += vec3(0.35, 0.22, 0.4) * exp(-pow((uv.y - uWater) * 10.0, 2.0)) * 0.35;
+      water += vec3(0.45, 0.75, 0.72) * pow(cau, 3.0) * 0.22 * wet * mix(0.35, 1.0, max(uNight, g));
+      water += vec3(0.35, 0.22, 0.4) * exp(-pow((uv.y - uWater) * 10.0, 2.0)) * 0.35 * max(uNight, g * 0.65);
       col = mix(col, water, wet);
     }
 
     float mist = exp(-pow((uv.y - uWater) * 16.0, 2.0));
-    col += vec3(0.9, 0.82, 0.95) * mist * 0.28;
+    col += vec3(0.9, 0.82, 0.95) * mist * mix(0.1, 0.28, max(uNight, g));
 
     float fly = fract(t * 0.055 + 0.2);
     vec2 s0 = vec2(-0.08 + fly * 0.95, 0.9 - fly * 0.22);
@@ -166,11 +214,11 @@ const SKY_FRAG = `
     float head = smoothstep(0.0, 0.02, along) * smoothstep(0.2, 0.0, along);
     float shoot = head * exp(-side * side * 9000.0);
     shoot *= smoothstep(0.02, 0.12, fly) * smoothstep(0.92, 0.55, fly);
-    shoot *= step(uWater + 0.08, uv.y) * uMotion;
+    shoot *= step(uWater + 0.08, uv.y) * uMotion * uNight;
     col += vec3(1.0, 0.96, 0.88) * shoot;
 
     vec2 vg = uv - 0.5;
-    col *= 1.0 - dot(vg, vg) * 0.34;
+    col *= 1.0 - dot(vg, vg) * mix(0.34, 0.08, max(uDay, g * 0.55));
     col += (hash(gl_FragCoord.xy) - 0.5) * 0.012;
     gl_FragColor = vec4(col, 1.0);
   }
@@ -315,6 +363,24 @@ export default function LumenStage({
       )}
     </div>
   );
+}
+
+function smooth01(edge0: number, edge1: number, x: number) {
+  const t = Math.min(1, Math.max(0, (x - edge0) / (edge1 - edge0)));
+  return t * t * (3 - 2 * t);
+}
+
+/* 해 높이는 6시와 18시에 지평선, 한낮에 가장 높습니다.
+   셰이더의 elev 와 같은 식입니다. */
+function skyClock(now = new Date()) {
+  const hour = now.getHours() + now.getMinutes() / 60 + now.getSeconds() / 3600;
+  const elev = Math.sin(((hour - 6) * Math.PI) / 12);
+  const day = smooth01(-0.02, 0.55, elev);
+  const night = smooth01(0.08, -0.45, elev);
+  const glow = Math.exp(-elev * elev * 10);
+  const morning = hour < 12 ? 1 : 0;
+  const phase = day > 0.62 ? "day" : night > 0.62 ? "night" : morning ? "dawn" : "dusk";
+  return { hour, day, night, glow, morning, phase };
 }
 
 function readPx(el: Element, name: string, fallback: number) {
@@ -503,7 +569,12 @@ function buildStage({
         uRes: { value: new THREE.Vector2(layout.W, layout.H) },
         uMouse: { value: new THREE.Vector2() },
         uMoon: { value: new THREE.Vector2(layout.mobile ? 0.5 : 0.58, layout.mobile ? 0.968 : 0.945) },
-        uPhone: { value: layout.mobile ? 1 : 0 }
+        uPhone: { value: layout.mobile ? 1 : 0 },
+        uHour: { value: 0 },
+        uDay: { value: 0 },
+        uNight: { value: 1 },
+        uGlow: { value: 0 },
+        uMorning: { value: 0 }
       },
       vertexShader: SKY_VERT,
       fragmentShader: SKY_FRAG
@@ -574,7 +645,8 @@ function buildStage({
       uniforms: {
         uTime: { value: 0 },
         uScale: { value: layout.H },
-        uMotion: { value: reduced ? 0 : 1 }
+        uMotion: { value: reduced ? 0 : 1 },
+        uNight: { value: 1 }
       },
       vertexShader: `
         attribute vec3 pcolor;
@@ -583,6 +655,7 @@ function buildStage({
         uniform float uTime;
         uniform float uScale;
         uniform float uMotion;
+        uniform float uNight;
         varying vec3 vC;
         varying float vA;
         void main() {
@@ -594,7 +667,7 @@ function buildStage({
           gl_PointSize = psize * (uScale * 0.42 / max(80.0, -mv.z));
           gl_Position = projectionMatrix * mv;
           vC = pcolor;
-          vA = 0.35 + 0.65 * (0.5 + 0.5 * sin(t * 1.5 + pphase * 5.0));
+          vA = (0.35 + 0.65 * (0.5 + 0.5 * sin(t * 1.5 + pphase * 5.0))) * uNight;
         }
       `,
       fragmentShader: `
@@ -723,11 +796,25 @@ function buildStage({
     }
 
     if (glRenderer && skyMat) {
+      const clock = skyClock();
       skyMat.uniforms.uTime.value = elapsed;
       skyMat.uniforms.uTurn.value = turning;
       skyMat.uniforms.uMouse.value.set(mouseX, -mouseY);
-      if (particleMat) particleMat.uniforms.uTime.value = elapsed;
+      skyMat.uniforms.uHour.value = clock.hour;
+      skyMat.uniforms.uDay.value = clock.day;
+      skyMat.uniforms.uNight.value = clock.night;
+      skyMat.uniforms.uGlow.value = clock.glow;
+      skyMat.uniforms.uMorning.value = clock.morning;
+      if (document.body.dataset.lumenSky !== clock.phase) {
+        document.body.dataset.lumenSky = clock.phase;
+      }
+      if (particleMat) {
+        particleMat.uniforms.uTime.value = elapsed;
+        particleMat.uniforms.uNight.value = clock.night;
+      }
       orbs.forEach(orb => {
+        const mat = orb.sprite.material as import("three").SpriteMaterial;
+        mat.opacity = 0.55 * clock.night;
         const a = (reduced ? 0 : elapsed * orb.speed) + orb.phase + mouseX * 0.25;
         orb.sprite.position.set(
           Math.cos(a) * orb.radius * 0.55 + mouseX * 90,
@@ -800,6 +887,7 @@ function buildStage({
 
   function dispose() {
     cancelAnimationFrame(frame);
+    delete document.body.dataset.lumenSky;
     window.removeEventListener("click", onBackgroundClick);
     window.removeEventListener("resize", onResize);
     mq.removeEventListener("change", onResize);
