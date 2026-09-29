@@ -361,6 +361,16 @@ function buildStage({
   let settledOn = getActive();
 
   let layout = computeLayout();
+  /* 페이지가 멈춘 뒤에는 CSS3D 를 다시 그리지 않습니다. 매 프레임 고치면
+     글이 많은 칸이 계속 다시 칠해져 버벅입니다. */
+  let pagesDirty = true;
+
+  function pixelRatio() {
+    const dpr = window.devicePixelRatio || 1;
+    const longest = Math.max(layout.W, layout.H);
+    const cap = layout.mobile ? 1.1 : longest > 1600 ? 1 : 1.2;
+    return Math.min(dpr, cap);
+  }
 
   function computeLayout() {
     const W = window.innerWidth;
@@ -374,19 +384,26 @@ function buildStage({
     const regionH = H - navH - dockH - 16;
     /* 페이지를 하늘 한가운데보다 조금 위에 둡니다. 달빛이 페이지 위로
        걸치고, 아래쪽은 호수가 드러나게 높이를 남깁니다. */
+    /* 가로는 왼쪽 록커와 화면 가장자리 사이를 페이지가 거의 채웁니다.
+       옆 장은 그 바깥으로 한 뼘만 나와 본문이 보이게 합니다. */
+    const panelRight = 22 + 312;
+    const freeLeft = panelRight + 20;
+    const freeRight = W - 20;
+    const freeW = Math.max(420, freeRight - freeLeft);
+    const ear = mobile ? 0 : Math.round(Math.min(280, Math.max(140, freeW * 0.16)));
     const pw = Math.round(
       mobile
-        ? Math.min(Math.max(240, W * 0.74), 400)
-        : Math.max(340, Math.min(regionW * 0.48, 500))
+        ? Math.min(Math.max(240, W * 0.78), 420)
+        : Math.min(Math.max(480, freeW - ear * 2), 1040)
     );
-    const ph = Math.round(Math.max(280, Math.min(regionH * (mobile ? 0.8 : 0.7), 560)));
-    /* 세로에서는 앞 페이지 양옆이 좁습니다. 옆 페이지 제목이 화면 안에
-       남도록 간격을 줄입니다. 가로는 이전과 같습니다. */
-    const spreadX = mobile ? pw * 0.3 : Math.min(regionW * 0.56, 760);
-    const spreadZ = mobile ? 220 : 280;
-    const sink = mobile ? 10 : 36;
-    const cx = Math.round(mobile ? 0 : hudW * 0.36);
-    const cy = Math.round((dockH - navH) / 2 + (mobile ? 20 : 28));
+    const ph = Math.round(
+      Math.max(300, Math.min(regionH * (mobile ? 0.86 : 0.96), mobile ? 680 : 1080))
+    );
+    const spreadX = mobile ? pw * 0.28 : ear / Math.sin(STEP);
+    const spreadZ = mobile ? 160 : 110;
+    const sink = mobile ? 8 : 8;
+    const cx = Math.round(mobile ? 0 : (freeLeft + freeRight) / 2 - W / 2);
+    const cy = Math.round((dockH - navH) / 2 + (mobile ? 12 : 0));
     hosts.forEach(p => {
       p.style.width = pw + "px";
       p.style.height = ph + "px";
@@ -447,7 +464,7 @@ function buildStage({
         powerPreference: "high-performance"
       });
       glRenderer.setClearColor(0x000000, 0);
-      glRenderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, layout.mobile ? 1.25 : 1.5));
+      glRenderer.setPixelRatio(pixelRatio());
       glRenderer.setSize(layout.W, layout.H);
       background.appendChild(glRenderer.domElement);
       buildSky();
@@ -521,7 +538,7 @@ function buildStage({
     });
     syncSky();
 
-    const COUNT = layout.mobile ? 140 : 360;
+    const COUNT = layout.mobile ? 48 : 110;
     const pos = new Float32Array(COUNT * 3);
     const col = new Float32Array(COUNT * 3);
     const phase = new Float32Array(COUNT);
@@ -607,9 +624,10 @@ function buildStage({
   function onResize() {
     layout = computeLayout();
     placeCamera();
-    glRenderer?.setPixelRatio(Math.min(window.devicePixelRatio || 1, layout.mobile ? 1.25 : 1.5));
+    glRenderer?.setPixelRatio(pixelRatio());
     glRenderer?.setSize(layout.W, layout.H);
     cssRenderer.setSize(layout.W, layout.H);
+    pagesDirty = true;
     if (particleMat) particleMat.uniforms.uScale.value = layout.H;
     syncSky();
   }
@@ -644,33 +662,41 @@ function buildStage({
     const settled = rot === rotTarget;
     const turning = Math.min(1, Math.abs(rotTarget - rot) * 3.2);
 
-    const { spreadX, spreadZ, sink, cx, cy } = layout;
-    objects.forEach((o, i) => {
-      const phi = i * STEP + rot;
-      const ad = Math.abs(phi);
-      const influence = Math.exp(-phi * phi * 0.72);
-      const front = i === target && settled;
-      const amp = front ? 0 : Math.min(1, ad * 1.4);
-      const bob = reduced ? 0 : Math.sin(elapsed * 0.65 + i * 1.4) * 8 * amp;
-      const sway = reduced ? 0 : Math.sin(elapsed * 0.37 + i) * 7 * amp;
-      /* 멀어지는 페이지는 아래로 내려 호수 쪽에 앉힙니다. +y 가 위입니다. */
-      o.position.set(cx + Math.sin(phi) * spreadX + sway, cy - ad * sink + bob, -ad * spreadZ);
-      o.rotation.set(-ad * 0.045, phi * 0.58, phi * 0.045);
-      o.scale.setScalar(1);
-      if (front) {
-        o.position.set(Math.round(cx), Math.round(cy), 0);
-        o.rotation.set(0, 0, 0);
-      }
-      const shown = influence > 0.1;
-      o.visible = shown;
-      o.element.style.opacity = shown ? Math.min(1, 0.9 + influence * 0.1).toFixed(3) : "0";
-      /* 페이지 겹침은 8 안입니다. 서랍과 탭은 그보다 위(z-index 30)에 있습니다. */
-      o.element.style.zIndex = String(Math.round(influence * 8));
-      const side = i === target ? "mid" : phi > 0.08 ? "right" : "left";
-      if (o.element.dataset.side !== side) o.element.dataset.side = side;
-      const edge = ad > 0.95 ? "far" : "near";
-      if (o.element.dataset.edge !== edge) o.element.dataset.edge = edge;
-    });
+    if (!settled) pagesDirty = true;
+    if (pagesDirty) {
+      const { spreadX, spreadZ, sink, cx, cy, pw } = layout;
+      /* 카메라는 +z 에서 원점을 봅니다. rotation.y 가 양수면 오른쪽 끝이
+         카메라에서 멀어집니다. 옆 장의 안쪽 끝이 앞 장(z=0)보다 앞으로
+         나오면 본문을 가리므로, 가로 절반의 전진이 뒤로 민 거리보다 작게
+         각도를 묶습니다. */
+      const yaw = Math.min(0.2, (spreadZ * 0.72) / Math.max(pw / 2, 1));
+      objects.forEach((o, i) => {
+        const phi = i * STEP + rot;
+        const ad = Math.abs(phi);
+        const influence = Math.exp(-phi * phi * 0.72);
+        const front = i === target && settled;
+        /* +y 가 위입니다. 옆 장은 거의 정면으로 두어 밖으로 나온 본문이 읽히게 합니다. */
+        o.position.set(cx + Math.sin(phi) * spreadX, cy - ad * sink, -ad * spreadZ);
+        o.rotation.set(-ad * 0.012, phi * yaw, 0);
+        o.scale.setScalar(1);
+        if (front) {
+          o.position.set(Math.round(cx), Math.round(cy), 0);
+          o.rotation.set(0, 0, 0);
+        }
+        const fade = ad < 0.9 ? 1 : Math.max(0, 1 - (ad - 0.9) / 0.38);
+        const shown = fade > 0.05;
+        o.visible = shown;
+        o.element.style.opacity = shown ? fade.toFixed(2) : "0";
+        /* 페이지 겹침은 8 안입니다. 서랍과 탭은 그보다 위(z-index 30)에 있습니다. */
+        o.element.style.zIndex = String(Math.round(influence * 8));
+        const side = i === target ? "mid" : phi > 0.08 ? "right" : "left";
+        if (o.element.dataset.side !== side) o.element.dataset.side = side;
+        const edge = ad > 1.05 ? "far" : "near";
+        if (o.element.dataset.edge !== edge) o.element.dataset.edge = edge;
+      });
+      cssRenderer.render(cssScene, camera);
+      if (settled) pagesDirty = false;
+    }
 
     if (glRenderer && skyMat) {
       skyMat.uniforms.uTime.value = elapsed;
@@ -687,7 +713,6 @@ function buildStage({
       });
       glRenderer.render(glScene, camera);
     }
-    cssRenderer.render(cssScene, camera);
   }
   frame = requestAnimationFrame(tick);
 
