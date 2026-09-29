@@ -27,7 +27,7 @@ export const DEFAULT_SETTINGS: SiteSettings = { skin: "classic", skipIntro: fals
 const CACHE_KEY = "mini-homepage:site-settings";
 
 export function isSkinName(value: unknown): value is SkinName {
-  return value === "classic" || value === "neon";
+  return value === "classic" || value === "neon" || value === "lumen";
 }
 
 /* 저장된 값이 무엇이든 쓸 수 있는 모양으로 바꿉니다. 예전 버전이 남긴
@@ -45,7 +45,7 @@ function sameSettings(a: SiteSettings, b: SiteSettings) {
 
 /* ---------------- 미리보기 주소 ---------------- */
 
-/* ?skin=neon 또는 ?skin=classic. 그 밖의 값은 없는 것으로 봅니다. */
+/* ?skin=classic, neon, lumen. 그 밖의 값은 없는 것으로 봅니다. */
 function readPreview(): SkinName | null {
   if (typeof window === "undefined") return null;
   const value = new URLSearchParams(window.location.search).get("skin");

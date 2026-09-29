@@ -10,6 +10,7 @@ import type { FirebaseApp } from "firebase/app";
 import type { Auth, User } from "firebase/auth";
 import type { Firestore, QueryConstraint, Timestamp } from "firebase/firestore";
 import type { SkinName } from "@/config/theme";
+import { DEFAULT_SETTINGS, isSkinName } from "@/lib/skin";
 import { ownerUid, siteTimezone } from "@/config/linktree";
 
 type Sdk = {
@@ -789,8 +790,9 @@ export async function saveProfile(patch: ProfileOverride, current: ProfileOverri
   }
 
   /* 기본값이면 칸을 만들지 않습니다. 기본값이 무엇인지는 skin.ts 한 곳에만
-     두고, 문서에는 기본과 다른 것만 남깁니다. */
-  if (value.skin === "neon") clean.skin = "neon";
+     두고, 문서에는 기본과 다른 것만 남깁니다. classic 으로 되돌리면
+     칸이 빠져서 다음 읽기 때 다시 기본값이 됩니다. */
+  if (isSkinName(value.skin) && value.skin !== DEFAULT_SETTINGS.skin) clean.skin = value.skin;
   if (value.skipIntro === true) clean.skipIntro = true;
 
   await setDoc(doc(store, "site", "profile"), clean);

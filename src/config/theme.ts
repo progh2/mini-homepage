@@ -7,9 +7,9 @@
    globals.css 가 var(--이름) 으로 받아 씁니다. 새 색을 추가하려면 아래 타입,
    각 스킨 값, LinkTree 의 rootStyle, globals.css 네 곳을 함께 고쳐야 합니다.
 
-   스킨이 둘입니다. 아래 theme(= classic) 은 기본 하늘색 다이어리이고,
-   neonTheme 은 주인장이 화면에서 고를 수 있는 사이버 콘솔입니다. 색을
-   바꾸고 싶으면 theme 을 고치세요. neonTheme 은 별도 디자인이라 함께
+   스킨이 셋입니다. 아래 theme(= classic) 은 기본 하늘색 다이어리이고,
+   neonTheme 은 사이버 콘솔, lumenTheme 은 달빛 호수입니다. 색을
+   바꾸고 싶으면 theme 을 고치세요. 나머지 둘은 별도 디자인이라 함께
    손보지 않아도 됩니다.
 
    회색 계열(#333, #888, #ddd 같은 것)은 여기 없습니다. 팔레트가 바뀌어도
@@ -133,17 +133,55 @@ export const neonTheme: LinkTreeTheme = {
   }
 };
 
-/* 스킨 이름입니다. 저장된 값이 이 둘 중 하나가 아니면 classic 으로 봅니다.
+/* 달빛 호수 스킨입니다. 주인장이 프로필 탭의 "홈피 설정" 에서 고릅니다.
+   색과 글꼴만 여기서 오고, 호수와 떠 있는 페이지는 globals.css 의
+   .cy-root[data-skin="lumen"] 규칙과 LumenStage 가 맡습니다.
+
+   페이지 자체는 따뜻한 종이색입니다. 글자는 클래식과 같이 어두운 색이
+   남아도 읽혀야 해서, frame 은 흰 글자가 올라가는 단추 배경으로도
+   견딜 만큼 진하게 잡았습니다. */
+export const lumenTheme: LinkTreeTheme = {
+  colors: {
+    paper: "#F6F0E4",
+    ink: "#241C16",
+    accent: "#C6A15A",
+    spiralFront: "#E7D3A1",
+
+    pageTop: "#140C28",
+    pageMid: "#24143C",
+    pageBottom: "#070814",
+
+    frame: "#7A5A32",
+    frameStrong: "#5C4324",
+    frameHover: "#9A7444",
+
+    heading: "#2A241C",
+    subInk: "#6E6256",
+    leaf: "#6E5688",
+
+    point: "#B86A1A",
+    pointSoft: "#E2B56A",
+
+    mint: "#F3EADC",
+    mintTint: "#EFE4D2",
+    blueTint: "#E7EEF6",
+
+    danger: "#A32040"
+  }
+};
+
+/* 스킨 이름입니다. 저장된 값이 이 셋 중 하나가 아니면 classic 으로 봅니다.
    src/lib/skin.ts 가 그 판정을 합니다. */
-export type SkinName = "classic" | "neon";
+export type SkinName = "classic" | "neon" | "lumen";
 
 export const themes: Record<SkinName, LinkTreeTheme> = {
   classic: theme,
-  neon: neonTheme
+  neon: neonTheme,
+  lumen: lumenTheme
 };
 
 /* 스킨별 글꼴입니다. classic 은 이미 불러와 둔 본문 글꼴을 쓰고,
-   neon 은 NeonStage 가 구글 폰트를 붙인 뒤에야 제 모습이 납니다.
+   neon 과 lumen 은 LinkTree 가 구글 폰트를 붙인 뒤에야 제 모습이 납니다.
    폰트가 아직 없으면 뒤의 대체 글꼴로 그려지고, 도착하면 바뀝니다. */
 export const skinFonts: Record<SkinName, { display: string; body: string }> = {
   classic: {
@@ -153,5 +191,9 @@ export const skinFonts: Record<SkinName, { display: string; body: string }> = {
   neon: {
     display: "'Orbitron', 'Do Hyeon', system-ui, sans-serif",
     body: "'Share Tech Mono', 'Nanum Gothic Coding', ui-monospace, monospace"
+  },
+  lumen: {
+    display: "'Song Myung', 'Cormorant Garamond', serif",
+    body: "'Gowun Batang', 'Pretendard', serif"
   }
 };

@@ -249,7 +249,7 @@ service cloud.firestore {
           || (request.resource.data.aboutLines is list
             && request.resource.data.aboutLines.size() <= 6))
         && (!('skin' in request.resource.data)
-          || request.resource.data.skin in ['classic', 'neon'])
+          || request.resource.data.skin in ['classic', 'neon', 'lumen'])
         && (!('skipIntro' in request.resource.data)
           || request.resource.data.skipIntro is bool);
     }

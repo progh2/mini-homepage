@@ -11,12 +11,13 @@ import { previewSkinName, toSettings } from "@/lib/skin";
    페이지 소스에 남아 "여기 설정이 있구나" 가 보입니다. 어차피 쓰기는
    firestore.rules 가 막지만, 없는 편이 깔끔합니다.
 
-   저장은 누르는 즉시 합니다. 고르는 칸이 둘뿐이라 저장 버튼을 따로 두면
-   누르는 수만 늘어납니다. */
+   저장은 누르는 즉시 합니다. 고르는 칸이 얼마 되지 않아 저장 버튼을
+   따로 두면 누르는 수만 늘어납니다. */
 
 const SKIN_CHOICES: { value: SkinName; label: string; hint: string }[] = [
   { value: "classic", label: "클래식", hint: "하늘색 다이어리. 처음 모습입니다." },
-  { value: "neon", label: "네온", hint: "사이버 콘솔. 탭이 3D 로 돕니다." }
+  { value: "neon", label: "네온", hint: "사이버 콘솔. 탭이 3D 로 돕니다." },
+  { value: "lumen", label: "루멘", hint: "달빛 호수. 유리 페이지가 물 위에 떠오릅니다." }
 ];
 
 export default function SiteSettings({
