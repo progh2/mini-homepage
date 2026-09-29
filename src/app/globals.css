@@ -3779,7 +3779,8 @@ body.lt-skin-lumen {
 .cy-root[data-skin="lumen"] .cy-profile-pic {
   width: 132px;
   height: 132px;
-  margin: 6px 0 14px;
+  align-self: center;
+  margin: 6px auto 14px;
   padding: 4px;
   border-radius: 50%;
   background: radial-gradient(circle at 35% 30%, #fff 0, #f3e2bc 30%, #d7b57a 72%, #8e7348 100%);
@@ -3969,15 +3970,18 @@ body.lt-skin-lumen {
   opacity: 0;
 }
 
-/* 옆 장도 본문을 보여 줍니다. 앞 장이 겹친 부분만 가리고, 밖으로 나온
-   면은 글을 읽을 수 있습니다. 누름은 페이지가 받아 앞으로 부릅니다.
-   많이 돌아간 장은 글이 세로로 남으므로 숨깁니다. */
-.cy-root[data-skin="lumen"] .cy-right-content:not(.is-active) .cy-panel-body > * {
-  pointer-events: none;
+/* 글은 읽는 높이로 올라온 장에서만 보입니다. 3D 가 --ink 를 매 프레임 넣습니다.
+   누르기는 종이 면이 받아, 뭉치에 있는 장을 빼 올립니다. */
+.cy-root[data-skin="lumen"]:not(.no-3d) .cy-panel-body > * {
+  opacity: var(--ink, 0);
 }
 
-.cy-root[data-skin="lumen"] .cy-right-content[data-edge="far"]:not(.is-active) .cy-panel-body > * {
-  opacity: 0;
+.cy-root[data-skin="lumen"]:not(.no-3d) .cy-right-content.is-active .cy-panel-body > * {
+  opacity: var(--ink, 1);
+}
+
+.cy-root[data-skin="lumen"] .cy-right-content:not(.is-active) .cy-panel-body > * {
+  pointer-events: none;
 }
 
 .cy-root[data-skin="lumen"] .cy-section-title {
@@ -4173,14 +4177,8 @@ body.lt-skin-lumen {
     background: rgba(10, 12, 28, 0.88);
   }
 
-  /* 세로에서는 옆 페이지가 손가락 너비만큼만 보입니다.
-     본문 한두 글자가 잘리므로 종이 가장자리만 남기고, 이름은 탭이 맡습니다. */
   .cy-root[data-skin="lumen"] .cy-panel-label {
     display: none;
-  }
-
-  .cy-root[data-skin="lumen"] .cy-right-content:not(.is-active) .cy-panel-body > * {
-    opacity: 0;
   }
 
   .cy-root[data-skin="lumen"] .cy-left-panel {
