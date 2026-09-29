@@ -8,11 +8,11 @@ import { createPortal } from "react-dom";
    두 겹입니다.
 
      WebGL : 밤하늘, 달, 오로라, 호수, 반딧불이 (cy-background-pattern 안)
-     CSS3D : 탭 내용이 담긴 유리 페이지. 고른 페이지가 앞으로 내려오고
-             나머지는 양옆으로 떠 있습니다.
+     CSS3D : 탭 내용이 담긴 종이. 고르지 않은 장은 아래 뭉치에 있고,
+             고른 장만 뭉치에서 빼서 위로 올려 읽습니다.
 
-   네온이 창을 한 바퀴 돌리는 것과 다릅니다. 여기는 펼쳐 둔 페이지라서
-   각도가 원을 돌지 않고, 고른 페이지만 정면으로 내려앉습니다.
+   네온이 창을 한 바퀴 돌리는 것과 다릅니다. 각도로 펼치지 않고,
+   읽는 장만 정면으로 올려 둡니다.
 
    CSS3DRenderer 는 넘겨받은 DOM 의 transform 을 직접 씁니다. React 가
    만든 노드를 넘기면 둘이 같은 노드를 두고 다툽니다. 빈 div 를 만들어
@@ -345,9 +345,9 @@ function buildStage({
   select: (i: number) => void;
 }): Stage {
   const N = hosts.length;
-  /* 페이지 사이 각도입니다. 한 바퀴를 나누지 않습니다. 옆 페이지가
-     화면 안으로 살짝 드러나는 간격입니다. */
-  const STEP = 0.68;
+  /* 장 사이 간격입니다. 화면 위 각도가 아니라, 뭉치에서 몇 번째인지
+     세는 값입니다. */
+  const STEP = 1;
   const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const mq = window.matchMedia("(max-width: 900px)");
 
@@ -359,6 +359,8 @@ function buildStage({
   let rot = 0;
   let rotTarget = 0;
   let settledOn = getActive();
+  /* 방금 읽던 장입니다. 이 장과 고른 장만 뭉치 밖으로 움직입니다. */
+  let fromIndex = getActive();
 
   let layout = computeLayout();
   /* 페이지가 멈춘 뒤에는 CSS3D 를 다시 그리지 않습니다. 매 프레임 고치면
@@ -380,37 +382,36 @@ function buildStage({
     const navH = probe ? readPx(probe, "--nav-h", 76) : 76;
     const dockH = probe ? readPx(probe, "--dock-h", 84) : 84;
     const hudW = mobile ? 0 : probe ? readPx(probe, "--hud-w", 360) : 360;
-    const regionW = W - hudW - (mobile ? 16 : 72);
-    const regionH = H - navH - dockH - 16;
-    /* 페이지를 하늘 한가운데보다 조금 위에 둡니다. 달빛이 페이지 위로
-       걸치고, 아래쪽은 호수가 드러나게 높이를 남깁니다. */
-    /* 가로는 왼쪽 록커와 화면 가장자리 사이를 페이지가 거의 채웁니다.
-       옆 장은 그 바깥으로 한 뼘만 나와 본문이 보이게 합니다. */
+    /* 읽는 장 아래에 종이 가장자리가 겹쳐 보일 선반입니다. */
+    const shelf = mobile ? 36 : 78;
     const panelRight = 22 + 312;
     const freeLeft = panelRight + 20;
     const freeRight = W - 20;
     const freeW = Math.max(420, freeRight - freeLeft);
-    const ear = mobile ? 0 : Math.round(Math.min(280, Math.max(140, freeW * 0.16)));
+    const side = mobile ? 14 : 40;
     const pw = Math.round(
       mobile
-        ? Math.min(Math.max(240, W * 0.78), 420)
-        : Math.min(Math.max(480, freeW - ear * 2), 1040)
+        ? Math.min(Math.max(240, W * 0.84), 400)
+        : Math.min(Math.max(480, freeW - side * 2), 1040)
     );
+    const topLimit = navH + (mobile ? 8 : 18);
+    const bottomLimit = H - dockH - shelf;
     const ph = Math.round(
-      Math.max(300, Math.min(regionH * (mobile ? 0.86 : 0.96), mobile ? 680 : 1080))
+      Math.max(280, Math.min(bottomLimit - topLimit, mobile ? 640 : 1040))
     );
-    const spreadX = mobile ? pw * 0.28 : ear / Math.sin(STEP);
-    const spreadZ = mobile ? 160 : 110;
-    const sink = mobile ? 8 : 8;
+    const readScreenY = topLimit + (bottomLimit - topLimit - ph) / 2 + ph / 2;
     const cx = Math.round(mobile ? 0 : (freeLeft + freeRight) / 2 - W / 2);
-    const cy = Math.round((dockH - navH) / 2 + (mobile ? 12 : 0));
+    const cy = Math.round(H / 2 - readScreenY);
+    const peekX = mobile ? 14 : 54;
+    const peekY = mobile ? 9 : 13;
+    const baseDrop = mobile ? 18 : 28;
     hosts.forEach(p => {
       p.style.width = pw + "px";
       p.style.height = ph + "px";
       p.style.setProperty("--pw", pw + "px");
       p.style.setProperty("--ph", ph + "px");
     });
-    return { W, H, mobile, pw, ph, spreadX, spreadZ, sink, cx, cy, navH, dockH, hudW };
+    return { W, H, mobile, pw, ph, cx, cy, peekX, peekY, baseDrop, navH, dockH, hudW };
   }
 
   const camera = new THREE.PerspectiveCamera(FOV, layout.W / layout.H, 1, 20000);
@@ -632,8 +633,7 @@ function buildStage({
     syncSky();
   }
 
-  /* 고른 칸이 각 0 에 오게 합니다. 원으로 접지 않으므로 가까운 방향이라는
-     개념이 없고, 사이에 있는 페이지를 스치며 내려옵니다. */
+  /* 고른 칸이 읽는 자리(0)에 오게 합니다. 나머지는 아래 뭉치로 내려갑니다. */
   function aimAt(i: number, instant = false) {
     rotTarget = -i * STEP;
     if (instant) rot = rotTarget;
@@ -652,46 +652,70 @@ function buildStage({
 
     const target = getActive();
     if (target !== settledOn) {
+      fromIndex = settledOn;
       settledOn = target;
       aimAt(target);
     }
 
-    const ease = 1 - Math.pow(reduced ? 1e-8 : 0.0022, dt);
+    const ease = 1 - Math.pow(reduced ? 1e-8 : 0.006, dt);
     rot += (rotTarget - rot) * ease;
     if (Math.abs(rotTarget - rot) < 0.02) rot = rotTarget;
     const settled = rot === rotTarget;
-    const turning = Math.min(1, Math.abs(rotTarget - rot) * 3.2);
+    const turning = Math.min(1, Math.abs(rotTarget - rot) * 2.2);
 
     if (!settled) pagesDirty = true;
     if (pagesDirty) {
-      const { spreadX, spreadZ, sink, cx, cy, pw } = layout;
-      /* 카메라는 +z 에서 원점을 봅니다. rotation.y 가 양수면 오른쪽 끝이
-         카메라에서 멀어집니다. 옆 장의 안쪽 끝이 앞 장(z=0)보다 앞으로
-         나오면 본문을 가리므로, 가로 절반의 전진이 뒤로 민 거리보다 작게
-         각도를 묶습니다. */
-      const yaw = Math.min(0.2, (spreadZ * 0.72) / Math.max(pw / 2, 1));
+      const { cx, cy, peekX, peekY, baseDrop, pw, mobile } = layout;
+      /* +y 가 위, 카메라는 +z 입니다. 고른 장은 뭉치에서 옆으로 빠진 뒤
+         위로 올라옵니다. 내려놓는 장은 그 반대입니다.
+         돌리지 않습니다. 돌리면 뭉치 모서리가 읽는 글 앞으로 나옵니다. */
+      const smooth = (edge0: number, edge1: number, x: number) => {
+        const t = Math.min(1, Math.max(0, (x - edge0) / (edge1 - edge0)));
+        return t * t * (3 - 2 * t);
+      };
+      const reach = Math.min(pw * 0.56, mobile ? pw * 0.46 : 360);
       objects.forEach((o, i) => {
         const phi = i * STEP + rot;
-        const ad = Math.abs(phi);
-        const influence = Math.exp(-phi * phi * 0.72);
+        const slot = phi / STEP;
+        const ax = Math.abs(slot);
+        const dir = slot < 0 ? -1 : 1;
+        const traveling = i === target || i === fromIndex;
+        const u = traveling ? Math.min(1, ax) : 1;
+        /* u=0 은 읽는 자리, u=1 은 뭉치. 빠지는 폭은 중간에서만 큽니다. */
+        const out = traveling ? smooth(0.02, 0.28, u) * (1 - smooth(0.42, 0.92, u)) : 0;
+        const into = traveling ? smooth(0.55, 1, u) : 1;
+        const drop = traveling ? smooth(0.02, 0.3, u) : 1;
+        const depth = Math.min(Math.max(ax, traveling ? 0 : 0.85), 3);
+        const pileOffX = dir * peekX * Math.min(depth, 2.4);
+        const pileOffY = -(baseDrop + peekY * depth);
+        const pileZ = -(26 + 18 * depth);
+        /* 손에 들린 동안은 뭉치보다 더 내려가, 다시 올릴 때 높이 차이가 보입니다. */
+        const handDrop = mobile ? 70 : 150;
+        let x = cx + dir * reach * out + pileOffX * into;
+        let y = cy - handDrop * out + pileOffY * into;
+        let z = pileZ * Math.max(drop, into);
+        if (i === target) z += 56 * smooth(0.2, 0.55, out);
         const front = i === target && settled;
-        /* +y 가 위입니다. 옆 장은 거의 정면으로 두어 밖으로 나온 본문이 읽히게 합니다. */
-        o.position.set(cx + Math.sin(phi) * spreadX, cy - ad * sink, -ad * spreadZ);
-        o.rotation.set(-ad * 0.012, phi * yaw, 0);
-        o.scale.setScalar(1);
         if (front) {
-          o.position.set(Math.round(cx), Math.round(cy), 0);
-          o.rotation.set(0, 0, 0);
+          x = Math.round(cx);
+          y = Math.round(cy);
+          z = 0;
         }
-        const fade = ad < 0.9 ? 1 : Math.max(0, 1 - (ad - 0.9) / 0.38);
-        const shown = fade > 0.05;
+        o.position.set(x, y, z);
+        o.rotation.set(0, 0, 0);
+        o.scale.setScalar(1);
+        const fade = depth < 3.2 ? 1 : Math.max(0, 1 - (depth - 3.2) / 0.45);
+        const shown = fade > 0.04;
         o.visible = shown;
-        o.element.style.opacity = shown ? fade.toFixed(2) : "0";
+        o.element.style.opacity = shown ? (fade === 1 ? "1" : fade.toFixed(2)) : "0";
+        const ink = 1 - smooth(0.06, 0.32, u);
+        o.element.style.setProperty("--ink", ink < 0.02 ? "0" : ink > 0.98 ? "1" : ink.toFixed(2));
         /* 페이지 겹침은 8 안입니다. 서랍과 탭은 그보다 위(z-index 30)에 있습니다. */
-        o.element.style.zIndex = String(Math.round(influence * 8));
+        const zi = front || (i === target && out > 0.12) ? 8 : Math.max(1, 5 - Math.round(depth));
+        o.element.style.zIndex = String(zi);
         const side = i === target ? "mid" : phi > 0.08 ? "right" : "left";
         if (o.element.dataset.side !== side) o.element.dataset.side = side;
-        const edge = ad > 1.05 ? "far" : "near";
+        const edge = ax > 1.15 ? "far" : "near";
         if (o.element.dataset.edge !== edge) o.element.dataset.edge = edge;
       });
       cssRenderer.render(cssScene, camera);
