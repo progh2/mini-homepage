@@ -54,6 +54,10 @@ import { UNKNOWN_WEATHER, fetchWeather, formatTodayWeather } from "@/lib/weather
    3D 는 브라우저에서만 뜻이 있습니다. */
 const NeonStage = dynamic(() => import("@/components/NeonStage"), { ssr: false });
 
+/* 루멘도 고른 사람만 받습니다. 밤하늘 셰이더가 클래식 첫 화면에
+   섞이면 안 되고, 필요 없는 사람에게 three 를 실을 이유도 없습니다. */
+const LumenStage = dynamic(() => import("@/components/LumenStage"), { ssr: false });
+
 /* 네온 무대를 못 불러와도 미니홈피가 통째로 사라지지 않게 막습니다.
 
    next/dynamic 은 청크를 못 받으면 렌더 도중에 예외를 던집니다. 안
@@ -78,6 +82,27 @@ class NeonBoundary extends Component<
     /* 실패한 뒤에도 자식을 계속 그리면 같은 예외가 다시 나고, React 는
        반복을 끊으려고 트리 전체를 버립니다. 결국 흰 화면입니다.
        한 번 실패하면 그리지 않습니다. 부모가 곧 2D 쪽으로 갈아탑니다. */
+    return this.state.failed ? null : this.props.children;
+  }
+}
+
+/* 루멘 무대를 못 불러와도 같은 이유로 미니홈피 전체를 죽이지 않습니다. */
+class LumenBoundary extends Component<
+  { onError: () => void; children: ReactNode },
+  { failed: boolean }
+> {
+  state = { failed: false };
+
+  static getDerivedStateFromError() {
+    return { failed: true };
+  }
+
+  componentDidCatch(error: unknown) {
+    console.warn("[lumen] 3D 무대를 불러오지 못해 2D 로 보여 줍니다.", error);
+    this.props.onError();
+  }
+
+  render() {
     return this.state.failed ? null : this.props.children;
   }
 }
@@ -131,7 +156,8 @@ const spiralProps = {
    style 이 늘 달라 보여 React 가 18개 변수를 계속 다시 심습니다. */
 const ROOT_STYLES: Record<SkinName, React.CSSProperties> = {
   classic: skinStyle("classic"),
-  neon: skinStyle("neon")
+  neon: skinStyle("neon"),
+  lumen: skinStyle("lumen")
 };
 
 function skinStyle(skin: SkinName): React.CSSProperties {
@@ -178,13 +204,13 @@ function IntroOverlay({ skin, onBrowse }: { skin: SkinName; onBrowse: () => void
 
   return (
     <div className="lt-intro">
-      {/* classic 의 소용돌이는 셰이더로 그립니다. neon 은 같은 자리를
-          CSS 원판으로 채우므로 셰이더를 띄우지 않습니다. 어두운 화면에
-          하늘색 셰이더가 겹치면 어울리지도 않고, 그만큼 덜 그립니다. */}
-      {skin === "neon" ? (
-        <div className="lt-intro-spiral" aria-hidden="true" />
-      ) : (
+      {/* classic 의 소용돌이만 셰이더로 그립니다. 다른 스킨은 같은 자리를
+          자기 CSS 로 채웁니다. 어두운 화면에 하늘색 셰이더가 겹치면
+          어울리지도 않고, 그만큼 덜 그립니다. */}
+      {skin === "classic" ? (
         <Spiral className="lt-intro-spiral" {...spiralProps} />
+      ) : (
+        <div className="lt-intro-spiral" aria-hidden="true" />
       )}
       <div className="lt-intro-card">
         <span className="lt-intro-title">{profile.introTitle}</span>
@@ -883,12 +909,16 @@ export default function LinkTree() {
   const [introSkipped, setIntroSkipped] = useState(false);
   const { skin, skipIntro } = useSiteSettings();
   const bgmRef = useRef<BgmHandle>(null);
-  /* 아래 셋은 네온에서만 씁니다. 클래식에서는 늘 기본값이라
-     화면에 아무 영향이 없습니다. */
+  /* 아래는 3D 스킨에서만 씁니다. 클래식에서는 기본값이라 화면에
+     아무 영향이 없습니다. 실패한 스킨만 기억해서, 네온이 죽어도
+     루멘은 다시 시도하고 그 반대도 같습니다. */
   const backgroundRef = useRef<HTMLDivElement>(null);
-  const [neon3dFailed, setNeon3dFailed] = useState(false);
+  const [failedSkin, setFailedSkin] = useState<SkinName | null>(null);
   const [hudOpen, setHudOpen] = useState(false);
   const neon = skin === "neon";
+  const lumen = skin === "lumen";
+  const immersive = neon || lumen;
+  const stageFailed = failedSkin === skin;
 
   /* 주인장이 인트로를 꺼 두었으면 아무에게도 안 보입니다. introSkipped 는
      이번 방문에서 "구경하기" 를 눌렀거나 탭 딥링크로 들어온 경우입니다. */
@@ -945,13 +975,45 @@ export default function LinkTree() {
     return () => links.forEach(el => el.remove());
   }, [neon]);
 
-  /* 네온은 화면 전체를 채우는 고정 레이아웃이라 body 가 스크롤되면
+  /* 루멘 글꼴입니다. 네온과 따로 붙였다 떼서, 스킨을 바꿔도 서로
+     글꼴이 남지 않습니다. */
+  useEffect(() => {
+    if (!lumen) return;
+    const links = [
+      { rel: "preconnect", href: "https://fonts.googleapis.com", crossOrigin: "" },
+      { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
+      {
+        rel: "stylesheet",
+        href:
+          "https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500" +
+          "&family=Gowun+Batang:wght@400;700&family=Song+Myung&display=swap",
+        crossOrigin: ""
+      }
+    ].map(spec => {
+      const el = document.createElement("link");
+      el.rel = spec.rel;
+      el.href = spec.href;
+      if (spec.crossOrigin) el.crossOrigin = spec.crossOrigin;
+      el.dataset.lumenFont = "1";
+      document.head.appendChild(el);
+      return el;
+    });
+    return () => links.forEach(el => el.remove());
+  }, [lumen]);
+
+  /* 네온과 루멘은 화면 전체를 채우는 고정 레이아웃이라 body 가 스크롤되면
      안 됩니다. html, body 는 cy-root 바깥이라 스킨 선택자로 닿지
      못하므로 여기서 클래스를 붙였다 뗍니다. */
   useEffect(() => {
     if (skin !== "neon") return;
     document.body.classList.add("lt-skin-neon");
     return () => document.body.classList.remove("lt-skin-neon");
+  }, [skin]);
+
+  useEffect(() => {
+    if (skin !== "lumen") return;
+    document.body.classList.add("lt-skin-lumen");
+    return () => document.body.classList.remove("lt-skin-lumen");
   }, [skin]);
 
   /* 인트로가 떠 있는 동안에는 뒤쪽이 스크롤되지 않게 막습니다. */
@@ -976,7 +1038,7 @@ export default function LinkTree() {
      BGM 플레이어가 미리 준비되어 있어야 인트로 클릭 한 번으로 재생이 시작됩니다. */
   return (
     <div
-      className={"cy-root" + (neon && neon3dFailed ? " no-3d" : "")}
+      className={"cy-root" + (immersive && stageFailed ? " no-3d" : "")}
       data-skin={skin}
       style={ROOT_STYLES[skin]}
     >
@@ -997,11 +1059,11 @@ export default function LinkTree() {
 
           <div className="cy-book-inner">
             {/* 좌측 패널 */}
-            {/* id 는 네온에서만 답니다. 서랍 단추가 가리킬 곳이 필요한
-                쪽은 네온뿐이고, 클래식 마크업은 그대로 두려는 것입니다. */}
+            {/* id 는 3D 스킨에서만 답니다. 서랍 단추가 가리킬 곳이
+                필요한 쪽은 그 스킨뿐이고, 클래식 마크업은 그대로 둡니다. */}
             <div
-              id={neon ? "cy-hud" : undefined}
-              className={"cy-left-panel" + (neon && hudOpen ? " is-open" : "")}
+              id={immersive ? "cy-hud" : undefined}
+              className={"cy-left-panel" + (immersive && hudOpen ? " is-open" : "")}
             >
               <div className="cy-left-header">
                 <VisitCounter />
@@ -1051,24 +1113,25 @@ export default function LinkTree() {
                 <span className="cy-url">{profile.displayUrl}</span>
                 {/* 좁은 화면에서 왼쪽 정보판을 서랍처럼 여는 단추입니다.
                     넓은 화면에서는 CSS 가 감춥니다. */}
-                {neon ? (
+                {immersive ? (
                   <button
                     type="button"
                     className="cy-hud-toggle"
                     aria-expanded={hudOpen}
                     aria-controls="cy-hud"
+                    aria-label={lumen ? "프로필과 음악" : undefined}
                     onClick={() => setHudOpen(open => !open)}
                   >
-                    STATUS
+                    {lumen ? "달빛" : "STATUS"}
                   </button>
                 ) : null}
               </div>
 
-              {/* 네온은 탭 넷을 모두 만들어 3D 로 돌립니다. 클래식은
+              {/* 3D 스킨은 탭을 모두 만들어 공간에 놓습니다. 클래식은
                   보고 있는 하나만 만듭니다. 스킨을 바꿔도 왼쪽의 BGM 과
                   방문 수는 이 갈림길 바깥에 있어 끊기지 않습니다. */}
-              {neon && !neon3dFailed ? (
-                <NeonBoundary onError={() => setNeon3dFailed(true)}>
+              {neon && !stageFailed ? (
+                <NeonBoundary onError={() => setFailedSkin("neon")}>
                   <NeonStage
                     tabs={TABS}
                     labels={NAV_LABELS}
@@ -1077,16 +1140,28 @@ export default function LinkTree() {
                     renderPanel={panelFor}
                     backgroundRef={backgroundRef}
                     locked={showIntro}
-                    onFallback={() => setNeon3dFailed(true)}
+                    onFallback={() => setFailedSkin("neon")}
                   />
                 </NeonBoundary>
+              ) : lumen && !stageFailed ? (
+                <LumenBoundary onError={() => setFailedSkin("lumen")}>
+                  <LumenStage
+                    tabs={TABS}
+                    labels={NAV_LABELS}
+                    active={activeTab}
+                    onSelect={tab => setActiveTab(tab as TabName)}
+                    renderPanel={panelFor}
+                    backgroundRef={backgroundRef}
+                    locked={showIntro}
+                    onFallback={() => setFailedSkin("lumen")}
+                  />
+                </LumenBoundary>
               ) : (
-                /* 클래식이거나, 네온인데 3D 를 못 쓰는 경우입니다.
-                   네온의 2D 폴백 CSS 는 is-active 인 창만 보여 주므로
-                   보고 있는 탭에 그 표시를 답니다. 클래식 마크업은
-                   예전 그대로입니다. */
+                /* 클래식이거나, 3D 스킨인데 무대를 못 쓰는 경우입니다.
+                   2D 폴백 CSS 는 is-active 인 창만 보여 주므로 보고 있는
+                   탭에 그 표시를 답니다. 클래식 마크업은 예전 그대로입니다. */
                 <div
-                  className={"cy-right-content" + (neon ? " is-active" : "")}
+                  className={"cy-right-content" + (immersive ? " is-active" : "")}
                   role="tabpanel"
                   id={`cy-panel-${activeTab}`}
                   aria-labelledby={`cy-tab-${activeTab}`}
@@ -1126,9 +1201,15 @@ export default function LinkTree() {
         </div>
       </div>
 
-      {neon && !neon3dFailed ? (
+      {neon && !stageFailed ? (
         <div className="cy-console-hint" aria-hidden="true">
           <kbd>◀</kbd> <kbd>▶</kbd> 방향키나 옆 창을 눌러 메뉴를 옮깁니다
+        </div>
+      ) : null}
+
+      {lumen && !stageFailed ? (
+        <div className="cy-lumen-hint" aria-hidden="true">
+          <kbd>◀</kbd> <kbd>▶</kbd> 방향키나 옆 페이지를 눌러 넘깁니다
         </div>
       ) : null}
 

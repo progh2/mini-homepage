@@ -3468,3 +3468,767 @@ body.lt-skin-neon {
   padding: 0;
   border: 1px solid rgba(43, 240, 255, 0.5);
 }
+
+/* ------------------------------------- */
+/* LUMEN SKIN                            */
+/* ------------------------------------- */
+/* 달빛 호수 스킨입니다. 주인장이 홈피 설정에서 고르면 cy-root 에
+   data-skin="lumen" 이 붙고 아래 규칙이 켜집니다.
+
+   네온과 달리 all: revert 를 쓰지 않습니다. 방명록, 낙서장, 설정 칸은
+   클래식 규칙을 그대로 쓰고, 여기서는 밤하늘 위에 뜨는 틀만 다시 잡습니다.
+   그래서 선택자는 반드시 .cy-root[data-skin="lumen"] 로 시작해야 합니다.
+   하나라도 밖으로 나가면 클래식과 네온이 함께 바뀝니다.
+
+   3D 페이지 자체에는 filter 와 backdrop-filter 를 주지 않습니다.
+   주면 브라우저가 원근을 버리고 페이지를 평평하게 붙입니다.
+
+   @keyframes 는 범위를 가릴 수 없어 이름 앞에 lumen- 을 붙였습니다.
+   html, body 는 이 안에 넣을 수 없습니다. LinkTree 가 lumen 일 때
+   body 에 lt-skin-lumen 을 붙입니다. */
+
+body.lt-skin-lumen {
+  overflow: hidden;
+  background: #070814;
+}
+
+.cy-root[data-skin="lumen"] {
+  --nav-h: 76px;
+  --dock-h: 84px;
+  --hud-w: 360px;
+  --ease-out: cubic-bezier(.16, 1, .3, 1);
+  position: fixed;
+  inset: 0;
+  min-height: 0;
+  padding: 0;
+  display: block;
+  overflow: hidden;
+  color-scheme: light;
+  font-family: var(--body);
+  color: var(--ink);
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+  background:
+    radial-gradient(13% 18% at 66% 12%, rgba(255, 246, 226, 0.95), rgba(255, 214, 160, 0.28) 36%, transparent 68%),
+    radial-gradient(40% 28% at 18% 16%, rgba(120, 210, 196, 0.18), transparent 70%),
+    radial-gradient(70% 24% at 62% 92%, rgba(255, 220, 170, 0.2), transparent 70%),
+    linear-gradient(180deg, #140c28 0%, #2a1648 34%, #243044 58%, #0c1220 78%, #070814 100%);
+}
+
+.cy-root[data-skin="lumen"]::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: radial-gradient(ellipse at center, transparent 58%, rgba(5, 6, 16, 0.28) 100%);
+}
+
+.cy-root[data-skin="lumen"]::after {
+  content: "";
+  position: fixed;
+  inset: -8%;
+  z-index: 1;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 18% 28%, rgba(255, 236, 196, 0.95) 0 1.2px, transparent 2px),
+    radial-gradient(circle at 82% 20%, rgba(190, 255, 236, 0.9) 0 1.3px, transparent 2.2px),
+    radial-gradient(circle at 70% 78%, rgba(255, 210, 226, 0.85) 0 1.4px, transparent 2.4px),
+    radial-gradient(circle at 30% 70%, rgba(255, 244, 220, 0.8) 0 1px, transparent 1.8px),
+    radial-gradient(circle at 88% 46%, rgba(255, 236, 196, 0.75) 0 1px, transparent 1.8px),
+    radial-gradient(circle at 12% 58%, rgba(186, 230, 255, 0.7) 0 1.1px, transparent 2px);
+  animation: lumen-drift 16s ease-in-out infinite alternate;
+}
+
+@keyframes lumen-drift {
+  to { transform: translate3d(18px, -22px, 0); }
+}
+
+.cy-root[data-skin="lumen"] .cy-background-pattern {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  background: none;
+  background-image: none;
+  pointer-events: none;
+}
+
+.cy-root[data-skin="lumen"] .cy-background-pattern canvas {
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
+  animation: lumen-fade 1.1s ease both;
+}
+
+@keyframes lumen-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.cy-root[data-skin="lumen"] .cy-book-wrapper {
+  position: fixed;
+  inset: 0;
+  width: auto;
+  max-width: none;
+  height: auto;
+  z-index: 2;
+}
+
+.cy-root[data-skin="lumen"] .cy-book-outer,
+.cy-root[data-skin="lumen"] .cy-book-inner {
+  display: block;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.cy-root[data-skin="lumen"] .cy-bindings {
+  display: none;
+}
+
+.cy-root[data-skin="lumen"] .cy-right-panel {
+  position: static;
+  display: block;
+  height: auto;
+  padding: 0;
+  border-radius: 0;
+}
+
+.cy-root[data-skin="lumen"] .cy-right-header {
+  position: fixed;
+  z-index: 30;
+  top: 18px;
+  left: calc(var(--hud-w) + 8px);
+  right: 28px;
+  height: auto;
+  margin: 0;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  pointer-events: none;
+}
+
+.cy-root[data-skin="lumen"] .cy-title {
+  font-family: var(--display);
+  font-size: clamp(1.7rem, 3vw, 2.6rem);
+  font-weight: 500;
+  line-height: 1.15;
+  letter-spacing: 0.04em;
+  color: #f7f1e4;
+  text-shadow: 0 0 24px rgba(255, 214, 160, 0.45), 0 2px 12px rgba(0, 0, 0, 0.35);
+}
+
+.cy-root[data-skin="lumen"] .cy-url {
+  font-family: var(--body);
+  font-size: 0.72rem;
+  letter-spacing: 0.16em;
+  color: rgba(247, 241, 228, 0.88);
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.7);
+}
+
+.cy-root[data-skin="lumen"] .cy-tabs {
+  position: fixed;
+  z-index: 31;
+  left: 0;
+  right: 0;
+  top: auto;
+  bottom: 16px;
+  height: auto;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 0 20px;
+}
+
+.cy-root[data-skin="lumen"] .cy-tabs::before {
+  content: "";
+  position: absolute;
+  left: 16%;
+  right: 16%;
+  top: 50%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(240, 215, 162, 0.75), transparent);
+  pointer-events: none;
+}
+
+.cy-root[data-skin="lumen"] .cy-tab-btn,
+.cy-root[data-skin="lumen"] .cy-tab-btn:hover,
+.cy-root[data-skin="lumen"] .cy-tab-btn.active {
+  position: relative;
+  z-index: 1;
+  width: auto;
+  min-width: 0;
+  min-height: 0;
+  padding: 10px 16px;
+  border: 1px solid rgba(255, 244, 220, 0.38);
+  border-radius: 999px;
+  background: rgba(10, 12, 28, 0.62);
+  color: #f6efe2;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+  font-family: var(--display);
+  font-size: 0.98rem;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  line-height: 1.2;
+  transition: background 0.35s var(--ease-out), color 0.35s, box-shadow 0.35s, transform 0.35s var(--ease-out);
+}
+
+.cy-root[data-skin="lumen"] .cy-tab-btn:hover {
+  background: rgba(20, 18, 36, 0.78);
+  transform: translateY(-2px);
+}
+
+.cy-root[data-skin="lumen"] .cy-tab-btn.active {
+  background: rgba(255, 246, 228, 0.94);
+  color: #2a241c;
+  border-color: transparent;
+  font-weight: 600;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.28), 0 0 22px rgba(255, 214, 150, 0.45);
+  animation: lumen-pill 3.6s ease-in-out infinite;
+}
+
+@keyframes lumen-pill {
+  50% { box-shadow: 0 10px 28px rgba(0, 0, 0, 0.28), 0 0 34px rgba(255, 214, 150, 0.7); }
+}
+
+.cy-root[data-skin="lumen"] .cy-tab-line {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+
+.cy-root[data-skin="lumen"] .cy-tab-line::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #f0d7a2;
+  box-shadow: 0 0 8px #f0d7a2;
+}
+
+.cy-root[data-skin="lumen"] .cy-tab-btn.active .cy-tab-line::before {
+  background: #b86a1a;
+  box-shadow: 0 0 8px rgba(184, 106, 26, 0.8);
+}
+
+.cy-root[data-skin="lumen"] :focus-visible {
+  outline: 2px solid #e7c98a;
+  outline-offset: 3px;
+}
+
+.cy-root[data-skin="lumen"] .cy-left-panel {
+  position: fixed;
+  z-index: 30;
+  top: 22px;
+  left: 22px;
+  width: 312px;
+  height: auto;
+  max-height: calc(100svh - 44px);
+  overflow: auto;
+  padding: 18px 16px 16px;
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  border-radius: 28px;
+  background: linear-gradient(180deg, rgba(255, 252, 246, 0.9), rgba(244, 236, 220, 0.84));
+  box-shadow: 0 24px 60px rgba(6, 8, 24, 0.32), inset 0 1px 0 rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(16px);
+}
+
+.cy-root[data-skin="lumen"] .cy-left-header {
+  margin-bottom: 8px;
+}
+
+.cy-root[data-skin="lumen"] .cy-today-count {
+  font-family: var(--body);
+  letter-spacing: 0.14em;
+  font-size: 0.72rem;
+  color: #8a7560;
+}
+
+.cy-root[data-skin="lumen"] .cy-left-content {
+  border: 0;
+  background: transparent;
+  padding: 4px 4px 0;
+}
+
+.cy-root[data-skin="lumen"] .cy-profile-pic {
+  width: 132px;
+  height: 132px;
+  margin: 6px 0 14px;
+  padding: 4px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #fff 0, #f3e2bc 30%, #d7b57a 72%, #8e7348 100%);
+  box-shadow: 0 0 0 6px rgba(255, 236, 200, 0.2), 0 12px 30px rgba(80, 50, 20, 0.16);
+  animation: lumen-halo 5.5s ease-in-out infinite;
+}
+
+@keyframes lumen-halo {
+  50% { box-shadow: 0 0 0 9px rgba(255, 230, 180, 0.28), 0 0 36px rgba(255, 214, 150, 0.45); }
+}
+
+.cy-root[data-skin="lumen"] .cy-profile-pic img {
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  object-fit: cover;
+  background: #1a1428;
+}
+
+.cy-root[data-skin="lumen"] .cy-intro-text {
+  font-size: 0.92rem;
+  line-height: 1.6;
+  color: #3a3228;
+}
+
+.cy-root[data-skin="lumen"] .cy-profile-name {
+  border-top-color: rgba(180, 150, 100, 0.35);
+}
+
+.cy-root[data-skin="lumen"] .name-bold {
+  font-family: var(--display);
+  font-size: 1.35rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  color: #2a241c;
+}
+
+.cy-root[data-skin="lumen"] .title-sub {
+  font-size: 0.78rem;
+  color: #6e6256;
+}
+
+.cy-root[data-skin="lumen"] .cy-today-is {
+  color: #6e6256;
+  border-bottom-color: rgba(180, 150, 100, 0.28);
+}
+
+.cy-root[data-skin="lumen"] .cy-bgm {
+  border-color: rgba(180, 150, 100, 0.35);
+  border-radius: 16px;
+  background: rgba(255, 252, 246, 0.55);
+}
+
+.cy-root[data-skin="lumen"] .cy-left-dropdown > summary,
+.cy-root[data-skin="lumen"] .cy-left-dropdown ul {
+  border-color: rgba(180, 150, 100, 0.4);
+  border-radius: 10px;
+  background: rgba(255, 252, 246, 0.8);
+}
+
+.cy-root[data-skin="lumen"] .cy-left-dropdown ul {
+  border-radius: 0 0 10px 10px;
+}
+
+.cy-root[data-skin="lumen"] .cy-hud-toggle {
+  display: none;
+  pointer-events: auto;
+}
+
+.cy-root[data-skin="lumen"] .cy-lumen-mount {
+  display: contents;
+}
+
+.cy-root[data-skin="lumen"] .cy-panel-body {
+  display: contents;
+}
+
+.cy-root[data-skin="lumen"] .cy-css3d {
+  position: fixed !important;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  overflow: visible !important;
+}
+
+.cy-root[data-skin="lumen"] .cy-right-content {
+  --pw: 560px;
+  --ph: 640px;
+  width: var(--pw);
+  height: var(--ph);
+  overflow: visible;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  color: #2c261e;
+  backface-visibility: hidden;
+}
+
+/* 보이는 종이입니다. 3D 칸 자체는 넘침을 자르지 못해, 면이 그 일을 합니다.
+   옆 페이지가 앞 글 위에 겹치므로 종이는 불투명해야 합니다. */
+.cy-root[data-skin="lumen"] .cy-page-face,
+.cy-root[data-skin="lumen"].no-3d .cy-right-content {
+  width: 100%;
+  height: 100%;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  box-sizing: border-box;
+  padding: 28px 32px 36px;
+  border-radius: 28px;
+  border: 1px solid rgba(255, 255, 255, 0.72);
+  background: linear-gradient(180deg, #fffdf8, #f4ead8);
+  /* 3D 변환 안의 box-shadow 는 번지지 않고 카드 아래에 네모로 남습니다.
+     깊이는 호수 빛이 맡고, 종이에는 안쪽 달빛만 둡니다. */
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.95),
+    inset 0 0 72px rgba(255, 232, 196, 0.35);
+  transform: translateZ(0);
+  /* 스크롤 끝의 여백 안에서만 사라지게 해서, 잘린 줄이 칼로 자른 것처럼 보이지 않습니다. */
+  mask-image: linear-gradient(to bottom, #000 0, #000 calc(100% - 20px), transparent 100%);
+  scrollbar-width: thin;
+  scrollbar-color: rgba(154, 116, 68, 0.7) transparent;
+}
+
+.cy-root[data-skin="lumen"] .cy-right-content.is-active,
+.cy-root[data-skin="lumen"] .cy-right-content.is-active .cy-page-face {
+  touch-action: pan-y;
+}
+
+.cy-root[data-skin="lumen"] .cy-page-face::-webkit-scrollbar,
+.cy-root[data-skin="lumen"].no-3d .cy-right-content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.cy-root[data-skin="lumen"] .cy-page-face::-webkit-scrollbar-thumb,
+.cy-root[data-skin="lumen"].no-3d .cy-right-content::-webkit-scrollbar-thumb {
+  background: rgba(154, 116, 68, 0.65);
+  border-radius: 999px;
+}
+
+.cy-root[data-skin="lumen"] .cy-right-content:not(.is-active) {
+  cursor: pointer;
+}
+
+.cy-root[data-skin="lumen"] .cy-right-content:not(.is-active) .cy-page-face {
+  overflow: hidden;
+}
+
+.cy-root[data-skin="lumen"] .cy-panel-label {
+  position: sticky;
+  top: 0;
+  height: 0;
+  z-index: 2;
+  pointer-events: none;
+  display: block;
+}
+
+.cy-root[data-skin="lumen"] .cy-panel-label span {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 22px;
+  text-align: center;
+  font-family: var(--display);
+  font-size: clamp(1.8rem, 4vw, 2.8rem);
+  letter-spacing: 0.14em;
+  color: #6a5430;
+  opacity: 0;
+}
+
+.cy-root[data-skin="lumen"] .cy-right-content:not(.is-active) .cy-panel-label span {
+  top: 36px;
+  width: max-content;
+  max-width: 46%;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(176, 140, 80, 0.45);
+  font-size: clamp(1.15rem, 2vw, 1.7rem);
+  letter-spacing: 0.14em;
+  opacity: 1;
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+.cy-root[data-skin="lumen"] .cy-right-content[data-side="right"] .cy-panel-label span {
+  left: auto;
+  right: 22px;
+  text-align: right;
+}
+
+.cy-root[data-skin="lumen"] .cy-right-content[data-side="left"] .cy-panel-label span {
+  left: 22px;
+  right: auto;
+  text-align: left;
+}
+
+/* 많이 돌아간 페이지는 제목이 세로 한 줄로 남습니다. 바로 옆 장만 보여 줍니다. */
+.cy-root[data-skin="lumen"] .cy-right-content[data-edge="far"] .cy-panel-label span {
+  opacity: 0;
+}
+
+/* 옆 페이지는 제목만 남깁니다. 내용까지 비치면 글이 겹쳐 읽히지 않습니다.
+   칸 자체는 불투명해서, 글자를 숨겨도 클릭은 그 페이지가 받습니다. */
+.cy-root[data-skin="lumen"] .cy-right-content:not(.is-active) .cy-panel-body > * {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.cy-root[data-skin="lumen"] .cy-section-title {
+  font-family: var(--display);
+  font-size: 1.45rem;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  color: #3a2e22;
+  border-bottom: 1px solid rgba(180, 140, 80, 0.4);
+  padding-bottom: 8px;
+}
+
+.cy-root[data-skin="lumen"] .cy-sub-text {
+  font-family: var(--body);
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  color: #8a7560;
+}
+
+.cy-root[data-skin="lumen"] .cy-miniroom-inner {
+  border: 0;
+  border-radius: 18px;
+  background: #efe4d2;
+  overflow: hidden;
+}
+
+.cy-root[data-skin="lumen"] .cy-miniroom-inner img {
+  border-radius: 18px;
+}
+
+.cy-root[data-skin="lumen"] .cy-text-block,
+.cy-root[data-skin="lumen"] .cy-profile-list {
+  font-size: 0.98rem;
+  line-height: 1.7;
+  color: #3a3228;
+}
+
+.cy-root[data-skin="lumen"] .cy-guestbook-item {
+  padding-bottom: 8px;
+  border-bottom: 1px dashed rgba(180, 140, 80, 0.35);
+}
+
+.cy-root[data-skin="lumen"] .cy-gb-submit {
+  border-radius: 999px;
+  background: #2a241c;
+  border-color: #2a241c;
+  color: #f6f0e4;
+  padding: 6px 14px;
+}
+
+.cy-root[data-skin="lumen"] .cy-gb-submit:hover:not(:disabled) {
+  background: #4a3b28;
+}
+
+.cy-root[data-skin="lumen"] .cy-photo-frame {
+  border-radius: 16px;
+  overflow: hidden;
+  border-color: rgba(180, 150, 100, 0.4);
+  background: #f3eadc;
+}
+
+.cy-root[data-skin="lumen"] .cy-lumen-hint {
+  position: fixed;
+  z-index: 5;
+  bottom: calc(var(--dock-h) - 6px);
+  left: var(--hud-w);
+  right: 0;
+  text-align: center;
+  pointer-events: none;
+  font-family: var(--body);
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  color: rgba(247, 241, 228, 0.74);
+}
+
+.cy-root[data-skin="lumen"] .cy-lumen-hint kbd {
+  font-family: var(--body);
+  padding: 0 6px;
+  margin: 0 2px;
+  border: 1px solid rgba(240, 215, 162, 0.55);
+  border-radius: 999px;
+  color: #f0d7a2;
+}
+
+.cy-root[data-skin="lumen"] .lt-intro {
+  background: radial-gradient(ellipse at 50% 42%, rgba(8, 10, 22, 0.18), rgba(8, 10, 22, 0.58) 58%, rgba(5, 6, 14, 0.74) 100%);
+}
+
+.cy-root[data-skin="lumen"] .lt-intro::before {
+  background: none;
+}
+
+.cy-root[data-skin="lumen"] .lt-intro-spiral {
+  display: none;
+}
+
+.cy-root[data-skin="lumen"] .lt-intro-title {
+  font-family: var(--display);
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  color: #f8f1e4;
+  text-shadow: 0 0 28px rgba(255, 214, 160, 0.55), 0 2px 16px rgba(0, 0, 0, 0.4);
+}
+
+.cy-root[data-skin="lumen"] .lt-intro-copy {
+  font-family: var(--body);
+  font-weight: 400;
+  color: rgba(248, 241, 228, 0.94);
+  text-shadow: 0 2px 16px rgba(0, 0, 0, 0.45);
+}
+
+.cy-root[data-skin="lumen"] .lt-intro-cta {
+  background: rgba(255, 246, 228, 0.94);
+  color: #2a241c;
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  border-radius: 999px;
+  font-family: var(--display);
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.28), 0 0 32px rgba(255, 214, 150, 0.38);
+}
+
+.cy-root[data-skin="lumen"] .lt-intro-cta:hover {
+  background: #fffaf0;
+}
+
+.cy-root[data-skin="lumen"].no-3d .cy-right-content {
+  position: fixed;
+  z-index: 3;
+  top: calc(var(--nav-h) + 8px);
+  left: calc(var(--hud-w) + 28px);
+  right: 28px;
+  bottom: calc(var(--dock-h) + 8px);
+  width: auto;
+  height: auto;
+  display: none;
+}
+
+.cy-root[data-skin="lumen"].no-3d .cy-right-content.is-active {
+  display: flex;
+}
+
+.cy-root[data-skin="lumen"].no-3d .cy-panel-label {
+  display: none;
+}
+
+.cy-root[data-skin="lumen"] .cy-bgm-stage:not(.is-shown) {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 200px;
+  height: 120px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+@media (max-width: 900px) {
+  .cy-root[data-skin="lumen"] {
+    --nav-h: 58px;
+    --dock-h: 118px;
+    --hud-w: 0px;
+  }
+
+  .cy-root[data-skin="lumen"] .cy-right-header {
+    left: 16px;
+    right: 16px;
+    top: 12px;
+    align-items: center;
+  }
+
+  .cy-root[data-skin="lumen"] .cy-title {
+    font-size: 1.35rem;
+  }
+
+  .cy-root[data-skin="lumen"] .cy-url {
+    display: none;
+  }
+
+  .cy-root[data-skin="lumen"] .cy-tabs {
+    bottom: 10px;
+    gap: 6px;
+    padding: 0 10px;
+  }
+
+  .cy-root[data-skin="lumen"] .cy-tab-btn,
+  .cy-root[data-skin="lumen"] .cy-tab-btn:hover,
+  .cy-root[data-skin="lumen"] .cy-tab-btn.active {
+    padding: 8px 11px;
+    font-size: 0.8rem;
+    background: rgba(10, 12, 28, 0.88);
+  }
+
+  /* 세로에서는 옆 페이지가 손가락 너비만큼만 보입니다.
+     제목을 넣으면 글자가 잘리므로 탭이 이름을 맡습니다. */
+  .cy-root[data-skin="lumen"] .cy-panel-label {
+    display: none;
+  }
+
+  .cy-root[data-skin="lumen"] .cy-left-panel {
+    top: 0;
+    left: 0;
+    width: min(88vw, 360px);
+    height: 100%;
+    max-height: none;
+    border-radius: 0 28px 28px 0;
+    transform: translateX(-105%);
+    transition: transform 0.5s var(--ease-out);
+  }
+
+  .cy-root[data-skin="lumen"] .cy-left-panel.is-open {
+    /* 퍼센트 이동은 전환이 끝나지 않고 서랍이 화면 밖에 남는 경우가 있습니다. */
+    transform: none !important;
+    transition: none;
+    z-index: 40;
+  }
+
+  .cy-root[data-skin="lumen"] .cy-hud-toggle {
+    display: inline-flex;
+    align-items: center;
+    padding: 7px 12px;
+    border-radius: 999px;
+    border: 1px solid rgba(240, 215, 162, 0.7);
+    background: rgba(10, 12, 28, 0.55);
+    color: #f6efe2;
+    font-family: var(--display);
+    font-size: 0.85rem;
+    letter-spacing: 0.08em;
+    cursor: pointer;
+  }
+
+  .cy-root[data-skin="lumen"] .cy-lumen-hint {
+    display: none;
+  }
+
+  .cy-root[data-skin="lumen"] .cy-page-face,
+  .cy-root[data-skin="lumen"].no-3d .cy-right-content {
+    padding: 22px 18px 28px;
+    border-radius: 22px;
+  }
+
+  .cy-root[data-skin="lumen"].no-3d .cy-right-content {
+    left: 12px;
+    right: 12px;
+    top: 64px;
+    bottom: 128px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cy-root[data-skin="lumen"]::after,
+  .cy-root[data-skin="lumen"] .cy-background-pattern canvas,
+  .cy-root[data-skin="lumen"] .cy-profile-pic,
+  .cy-root[data-skin="lumen"] .cy-tab-btn.active {
+    animation: none;
+  }
+
+  .cy-root[data-skin="lumen"] .cy-tab-btn,
+  .cy-root[data-skin="lumen"] .cy-left-panel {
+    transition: none;
+  }
+}
