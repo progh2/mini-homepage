@@ -2,10 +2,10 @@
 
 import { useState } from "react";
 import { isOwner, saveProfile, type ProfileOverride, type SignedInUser } from "@/lib/firebase";
-import { type SkinName } from "@/config/theme";
-import { previewSkinName, toSettings } from "@/lib/skin";
+import { SKIN_CHOICES, skinStore, toSettings } from "@/lib/skin";
 
 /* 주인장만 보는 홈피 설정입니다. 고른 결과는 모든 방문자에게 적용됩니다.
+   왼쪽 프로필 밑의 선택기는 이번 화면만 바꾸므로 여기와 다릅니다.
 
    주인장이 아니면 아무것도 그리지 않습니다. 화면에서 숨기는 것만으로는
    페이지 소스에 남아 "여기 설정이 있구나" 가 보입니다. 어차피 쓰기는
@@ -13,12 +13,6 @@ import { previewSkinName, toSettings } from "@/lib/skin";
 
    저장은 누르는 즉시 합니다. 고르는 칸이 얼마 되지 않아 저장 버튼을
    따로 두면 누르는 수만 늘어납니다. */
-
-const SKIN_CHOICES: { value: SkinName; label: string; hint: string }[] = [
-  { value: "classic", label: "클래식", hint: "하늘색 다이어리. 처음 모습입니다." },
-  { value: "neon", label: "네온", hint: "사이버 콘솔. 탭이 3D 로 돕니다." },
-  { value: "lumen", label: "루멘", hint: "달빛 호수. 유리 페이지가 물 위에 떠오릅니다." }
-];
 
 export default function SiteSettings({
   viewer,
@@ -32,10 +26,10 @@ export default function SiteSettings({
 
   if (!isOwner(viewer)) return null;
 
-  /* 화면에 보이는 값은 저장된 값입니다. 미리보기(?skin=)로 다르게 보고
+  /* 라디오는 저장된 값입니다. 주소 미리보기나 왼쪽 선택기로 다르게 보고
      있더라도 여기서는 진짜 저장된 것을 보여 줘야 헷갈리지 않습니다. */
   const saved = toSettings(over);
-  const preview = previewSkinName();
+  const viewing = skinStore.getSnapshot().skin;
 
   const apply = async (patch: ProfileOverride) => {
     if (busy) return;
@@ -74,9 +68,9 @@ export default function SiteSettings({
             <span className="cy-settings-hint">{choice.hint}</span>
           </label>
         ))}
-        {preview && preview !== saved.skin ? (
+        {viewing !== saved.skin ? (
           <p className="cy-settings-note">
-            지금 주소의 ?skin={preview} 으로 미리보는 중입니다. 저장된 값은 그대로예요.
+            지금은 {SKIN_CHOICES.find(choice => choice.value === viewing)?.label}으로 보고 있습니다. 저장된 값은 그대로예요.
           </p>
         ) : null}
       </fieldset>

@@ -5,7 +5,7 @@ import dynamic from "next/dynamic";
 import { Spiral, type SpiralProps } from "@paper-design/shaders-react";
 import { asset } from "@/lib/asset";
 import { setDraw } from "@/lib/drawParam";
-import { applyRemoteSettings, skinStore } from "@/lib/skin";
+import { applyRemoteSettings, setVisitorSkin, SKIN_CHOICES, skinStore } from "@/lib/skin";
 import { linkify } from "@/lib/linkify";
 import BgmPlayer, { type BgmHandle } from "@/components/BgmPlayer";
 import Oekaki from "@/components/Oekaki";
@@ -280,6 +280,32 @@ function useProfileOverride() {
 /* 지금 적용된 홈피 설정입니다. 자세한 규칙은 src/lib/skin.ts 에 있습니다. */
 function useSiteSettings() {
   return useSyncExternalStore(skinStore.subscribe, skinStore.getSnapshot, skinStore.getServerSnapshot);
+}
+
+/* 프로필 사진 밑의 선택기입니다. 이번 화면만 바꾸고, 주인장이 저장한
+   스킨은 건드리지 않습니다. 새로고침하면 저장된 스킨으로 돌아옵니다. */
+function SkinPicker() {
+  const labelId = useId();
+  const { skin } = useSiteSettings();
+  return (
+    <div className="cy-skin-picker">
+      <div className="cy-skin-picker-label" id={labelId}>스킨</div>
+      <div className="cy-skin-picker-options" role="group" aria-labelledby={labelId}>
+        {SKIN_CHOICES.map(choice => (
+          <button
+            key={choice.value}
+            type="button"
+            className={skin === choice.value ? "is-on" : undefined}
+            aria-pressed={skin === choice.value}
+            title={choice.hint}
+            onClick={() => setVisitorSkin(choice.value)}
+          >
+            {choice.label}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
 }
 
 function ProfileEditor({ over, onClose }: { over: ProfileOverride; onClose: () => void }) {
@@ -920,6 +946,11 @@ export default function LinkTree() {
   const immersive = neon || lumen;
   const stageFailed = failedSkin === skin;
 
+  /* 스킨을 바꾸면 이전 스킨의 서랍이 열린 채로 남지 않게 합니다. */
+  useEffect(() => {
+    setHudOpen(false);
+  }, [skin]);
+
   /* 주인장이 인트로를 꺼 두었으면 아무에게도 안 보입니다. introSkipped 는
      이번 방문에서 "구경하기" 를 눌렀거나 탭 딥링크로 들어온 경우입니다. */
   const showIntro = !skipIntro && !introSkipped;
@@ -1100,6 +1131,8 @@ export default function LinkTree() {
                 <div className="cy-profile-pic">
                   <img src={asset(profile.photo.src)} alt={profile.photo.alt} />
                 </div>
+
+                <SkinPicker />
 
                 <div className="cy-intro-text">
                   {over.introDescription ?? profile.introDescription}

@@ -275,6 +275,44 @@ body.lt-intro-open {
 .name-bold { font-weight: bold; font-size: 0.9rem; color: #222; }
 .title-sub { font-size: 0.7rem; color: #666; margin-top: 3px; }
 
+/* 프로필 사진 밑의 스킨 선택기입니다. 이번 화면만 바꿉니다. */
+.cy-skin-picker {
+  width: 100%;
+  margin-bottom: 12px;
+}
+.cy-skin-picker-label {
+  margin-bottom: 4px;
+  font-size: 0.68rem;
+  color: #888;
+}
+.cy-skin-picker-options {
+  display: flex;
+  gap: 4px;
+  width: 100%;
+}
+.cy-skin-picker-options button {
+  flex: 1 1 0;
+  min-width: 0;
+  padding: 4px 2px;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  background: #fff;
+  color: #555;
+  font-family: inherit;
+  font-size: 0.68rem;
+  line-height: 1.3;
+  cursor: pointer;
+}
+.cy-skin-picker-options button.is-on {
+  background: var(--point);
+  border-color: var(--point);
+  color: #fff;
+  font-weight: bold;
+}
+.cy-skin-picker-options button:hover {
+  border-color: var(--point);
+}
+
 /* 옛날 select 드롭다운 모양을 흉내 내지만 알맹이는 링크 목록입니다. */
 .cy-left-dropdown {
   width: 100%;
@@ -2353,24 +2391,68 @@ body.lt-skin-neon {
   order:1
 }
 
-.cy-root[data-skin="neon"] .cy-profile-name {
+.cy-root[data-skin="neon"] .cy-skin-picker {
   order:2
 }
 
-.cy-root[data-skin="neon"] .cy-intro-text {
+.cy-root[data-skin="neon"] .cy-profile-name {
   order:3
 }
 
-.cy-root[data-skin="neon"] .cy-today-is {
+.cy-root[data-skin="neon"] .cy-intro-text {
   order:4
 }
 
-.cy-root[data-skin="neon"] .cy-left-dropdown {
+.cy-root[data-skin="neon"] .cy-today-is {
   order:5
 }
 
-.cy-root[data-skin="neon"] .cy-bgm {
+.cy-root[data-skin="neon"] .cy-left-dropdown {
   order:6
+}
+
+.cy-root[data-skin="neon"] .cy-bgm {
+  order:7
+}
+
+.cy-root[data-skin="neon"] .cy-skin-picker {
+  width: 100%;
+}
+
+.cy-root[data-skin="neon"] .cy-skin-picker-label {
+  display: block;
+  margin-bottom: 6px;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  color: var(--accent);
+}
+
+.cy-root[data-skin="neon"] .cy-skin-picker-options {
+  display: flex;
+  gap: 4px;
+  width: 100%;
+}
+
+.cy-root[data-skin="neon"] .cy-skin-picker-options button {
+  flex: 1 1 0;
+  min-width: 0;
+  padding: 6px 2px;
+  border: 1px solid rgba(43, 240, 255, 0.4);
+  border-radius: 0;
+  background: rgba(43, 240, 255, 0.06);
+  color: var(--ink);
+  font-family: var(--body);
+  font-size: 0.72rem;
+  line-height: 1.3;
+  cursor: pointer;
+}
+
+.cy-root[data-skin="neon"] .cy-skin-picker-options button.is-on {
+  background: rgba(255, 43, 214, 0.18);
+  border-color: var(--point);
+  color: #f2fdff;
+  font-weight: 700;
 }
 
 .cy-root[data-skin="neon"] .cy-profile-pic {
@@ -3769,6 +3851,7 @@ body.lt-skin-lumen {
 .cy-root[data-skin="lumen"] .cy-bgm,
 .cy-root[data-skin="lumen"] .cy-intro-text,
 .cy-root[data-skin="lumen"] .cy-profile-name,
+.cy-root[data-skin="lumen"] .cy-skin-picker,
 .cy-root[data-skin="lumen"] .cy-left-dropdown,
 .cy-root[data-skin="lumen"] .cy-today-is {
   width: 100%;
@@ -3790,6 +3873,26 @@ body.lt-skin-lumen {
 
 @keyframes lumen-halo {
   50% { box-shadow: 0 0 0 9px rgba(255, 230, 180, 0.28), 0 0 36px rgba(255, 214, 150, 0.45); }
+}
+
+.cy-root[data-skin="lumen"] .cy-skin-picker-label {
+  font-family: var(--body);
+  letter-spacing: 0.12em;
+  color: #8a7560;
+}
+
+.cy-root[data-skin="lumen"] .cy-skin-picker-options button {
+  border-color: rgba(180, 150, 100, 0.45);
+  border-radius: 999px;
+  background: rgba(255, 252, 246, 0.8);
+  color: #3a3228;
+  font-family: var(--body);
+}
+
+.cy-root[data-skin="lumen"] .cy-skin-picker-options button.is-on {
+  background: #2a241c;
+  border-color: #2a241c;
+  color: #f6f0e4;
 }
 
 .cy-root[data-skin="lumen"] .cy-profile-pic img {
