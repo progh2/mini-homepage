@@ -284,7 +284,7 @@ function useSiteSettings() {
 
 /* 프로필 사진 밑의 선택기입니다. 이번 화면만 바꾸고, 주인장이 저장한
    스킨은 건드리지 않습니다. 새로고침하면 저장된 스킨으로 돌아옵니다. */
-function SkinPicker() {
+function SkinPicker({ onChange }: { onChange: (skin: SkinName) => void }) {
   const labelId = useId();
   const { skin } = useSiteSettings();
   return (
@@ -298,7 +298,11 @@ function SkinPicker() {
             className={skin === choice.value ? "is-on" : undefined}
             aria-pressed={skin === choice.value}
             title={choice.hint}
-            onClick={() => setVisitorSkin(choice.value)}
+            onClick={() => {
+              if (choice.value === skin) return;
+              setVisitorSkin(choice.value);
+              onChange(choice.value);
+            }}
           >
             {choice.label}
           </button>
@@ -946,11 +950,6 @@ export default function LinkTree() {
   const immersive = neon || lumen;
   const stageFailed = failedSkin === skin;
 
-  /* 스킨을 바꾸면 이전 스킨의 서랍이 열린 채로 남지 않게 합니다. */
-  useEffect(() => {
-    setHudOpen(false);
-  }, [skin]);
-
   /* 주인장이 인트로를 꺼 두었으면 아무에게도 안 보입니다. introSkipped 는
      이번 방문에서 "구경하기" 를 눌렀거나 탭 딥링크로 들어온 경우입니다. */
   const showIntro = !skipIntro && !introSkipped;
@@ -1132,7 +1131,7 @@ export default function LinkTree() {
                   <img src={asset(profile.photo.src)} alt={profile.photo.alt} />
                 </div>
 
-                <SkinPicker />
+                <SkinPicker onChange={() => setHudOpen(false)} />
 
                 <div className="cy-intro-text">
                   {over.introDescription ?? profile.introDescription}
