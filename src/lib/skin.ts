@@ -32,7 +32,7 @@ export const SKIN_CHOICES: { value: SkinName; label: string; hint: string }[] = 
   { value: "classic", label: "클래식", hint: "하늘색 다이어리. 처음 모습입니다." },
   { value: "neon", label: "네온", hint: "사이버 콘솔. 탭이 3D 로 돕니다." },
   { value: "lumen", label: "루멘", hint: "달빛 호수. 유리 페이지가 물 위에 떠오릅니다." },
-  { value: "regal", label: "왕실", hint: "석회암 홀과 고딕 창, 진홍 커튼. 영국 성의 접견실입니다." }
+  { value: "regal", label: "왕실", hint: "석조 복도를 걸어 메뉴를 봅니다. 영국 궁전의 방들입니다." }
 ];
 
 const CACHE_KEY = "mini-homepage:site-settings";

@@ -4934,3 +4934,306 @@ body.lt-skin-lumen[data-lumen-sky="dusk"] .cy-lumen-hint kbd {
     box-shadow: none;
   }
 }
+
+/* ------------------------------------- */
+/* REGAL 3D: 석조 복도                    */
+/* ------------------------------------- */
+/* WebGL 이 되면 접견실 그림 대신 복도를 걷습니다.
+   .no-3d 이면 위 2D 홀이 그대로입니다.
+   탭 너비는 이 스킨 안에서만 풀고, 클래식 칸 너비는 건드리지 않습니다. */
+
+body.lt-skin-regal {
+  overflow: hidden;
+  background: #1a120e;
+}
+
+.cy-root[data-skin="regal"]:not(.no-3d) {
+  position: fixed;
+  inset: 0;
+  padding: 0;
+  overflow: hidden;
+  display: block;
+  background: #1a120e;
+}
+
+.cy-root[data-skin="regal"]:not(.no-3d)::before,
+.cy-root[data-skin="regal"]:not(.no-3d)::after {
+  display: none;
+}
+
+.cy-root[data-skin="regal"]:not(.no-3d) .cy-background-pattern {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  background: none;
+  pointer-events: none;
+}
+
+.cy-root[data-skin="regal"]:not(.no-3d) .cy-background-pattern canvas {
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.cy-root[data-skin="regal"]:not(.no-3d) .cy-book-wrapper {
+  position: fixed;
+  inset: 0;
+  width: auto;
+  max-width: none;
+  height: auto;
+  z-index: 2;
+}
+
+.cy-root[data-skin="regal"]:not(.no-3d) .cy-book-outer,
+.cy-root[data-skin="regal"]:not(.no-3d) .cy-book-inner {
+  display: block;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.cy-root[data-skin="regal"]:not(.no-3d) .cy-book-outer::before,
+.cy-root[data-skin="regal"]:not(.no-3d) .cy-book-outer::after {
+  display: none;
+}
+
+.cy-root[data-skin="regal"]:not(.no-3d) .cy-right-panel {
+  position: static;
+  display: block;
+  height: auto;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+.cy-root[data-skin="regal"]:not(.no-3d) .cy-right-header {
+  position: fixed;
+  z-index: 30;
+  top: 16px;
+  left: 280px;
+  right: 28px;
+  margin: 0;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  pointer-events: none;
+}
+
+.cy-root[data-skin="regal"]:not(.no-3d) .cy-title {
+  font-family: var(--display);
+  color: #f8e7b4;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.65);
+}
+
+.cy-root[data-skin="regal"]:not(.no-3d) .cy-url {
+  color: rgba(248, 231, 180, 0.82);
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.7);
+}
+
+.cy-root[data-skin="regal"]:not(.no-3d) .cy-left-panel {
+  position: fixed;
+  z-index: 30;
+  top: 16px;
+  left: 16px;
+  width: 248px;
+  height: auto;
+  max-height: calc(100svh - 32px);
+  overflow-x: hidden;
+  overflow-y: auto;
+  border: 1px solid #e6c878;
+  border-radius: 2px;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.45), inset 0 0 0 1px #8a6230;
+}
+
+.cy-root[data-skin="regal"]:not(.no-3d) .cy-tabs {
+  position: fixed;
+  z-index: 31;
+  left: 0;
+  right: 0;
+  top: auto;
+  bottom: 14px;
+  width: auto;
+  height: auto;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 0 16px;
+}
+
+.cy-root[data-skin="regal"]:not(.no-3d) .cy-tab-btn,
+.cy-root[data-skin="regal"]:not(.no-3d) .cy-tab-btn:hover,
+.cy-root[data-skin="regal"]:not(.no-3d) .cy-tab-btn.active {
+  width: auto;
+  min-width: 0;
+  min-height: 0;
+  padding: 8px 14px;
+  border: 1px solid #e6c878;
+  border-radius: 2px;
+  background: rgba(42, 16, 14, 0.84);
+  color: #f6edd8;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35);
+  font-family: var(--display);
+  font-size: 0.92rem;
+  letter-spacing: 0.08em;
+}
+
+.cy-root[data-skin="regal"]:not(.no-3d) .cy-tab-btn.active {
+  background: linear-gradient(180deg, #f8e7b4, #c6a15a);
+  color: #3a160e;
+  border-color: #f0d78a;
+}
+
+.cy-root[data-skin="regal"] .cy-hud-toggle {
+  display: none;
+  pointer-events: auto;
+}
+
+.cy-root[data-skin="regal"]:not(.no-3d) .cy-regal-mount {
+  display: contents;
+}
+
+.cy-root[data-skin="regal"]:not(.no-3d) .cy-css3d {
+  position: fixed !important;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  overflow: visible !important;
+}
+
+.cy-root[data-skin="regal"]:not(.no-3d) .cy-right-content {
+  display: block;
+  padding: 0;
+  gap: 0;
+  overflow: hidden;
+  border: 1px solid #c6a15a;
+  border-radius: 2px;
+  background: #fbf6ea;
+  box-shadow: inset 0 0 0 5px rgba(198, 161, 90, 0.22);
+  color: #3a2418;
+  pointer-events: none;
+  box-sizing: border-box;
+}
+
+.cy-root[data-skin="regal"]:not(.no-3d) .cy-right-content.is-active {
+  pointer-events: auto;
+}
+
+.cy-root[data-skin="regal"]:not(.no-3d) .cy-regal-face {
+  height: 100%;
+  overflow: auto;
+  overscroll-behavior: contain;
+  box-sizing: border-box;
+  padding: 16px 18px 22px;
+  touch-action: pan-y;
+  scrollbar-width: thin;
+  scrollbar-color: #c6a15a transparent;
+}
+
+.cy-root[data-skin="regal"]:not(.no-3d) .cy-panel-label {
+  margin: 0 0 8px;
+  text-align: center;
+  font-family: var(--display);
+  font-size: 0.78rem;
+  letter-spacing: 0.16em;
+  color: #6e1a2c;
+}
+
+.cy-root[data-skin="regal"] .cy-regal-hint {
+  position: fixed;
+  z-index: 5;
+  bottom: 72px;
+  left: 0;
+  right: 0;
+  text-align: center;
+  pointer-events: none;
+  font-family: var(--body);
+  font-size: 0.78rem;
+  letter-spacing: 0.04em;
+  color: rgba(248, 231, 180, 0.84);
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.75);
+}
+
+.cy-root[data-skin="regal"] .cy-regal-hint kbd {
+  font-family: var(--display);
+  padding: 0 6px;
+  margin: 0 2px;
+  border: 1px solid rgba(240, 215, 150, 0.7);
+  border-radius: 2px;
+  color: #f8e7b4;
+}
+
+@media (max-width: 900px) {
+  .cy-root[data-skin="regal"]:not(.no-3d) .cy-right-header {
+    left: 14px;
+    right: 14px;
+    top: 10px;
+    align-items: center;
+  }
+
+  .cy-root[data-skin="regal"]:not(.no-3d) .cy-url {
+    display: none;
+  }
+
+  .cy-root[data-skin="regal"]:not(.no-3d) .cy-left-panel {
+    top: 0;
+    left: 0;
+    width: min(88vw, 360px);
+    height: 100%;
+    max-height: none;
+    border-radius: 0 16px 16px 0;
+    transform: translateX(-105%);
+    transition: transform 0.5s cubic-bezier(.16, 1, .3, 1);
+  }
+
+  .cy-root[data-skin="regal"]:not(.no-3d) .cy-left-panel.is-open {
+    transform: none !important;
+    transition: none;
+    z-index: 40;
+  }
+
+  .cy-root[data-skin="regal"]:not(.no-3d) .cy-hud-toggle {
+    display: inline-flex;
+    align-items: center;
+    padding: 7px 12px;
+    border-radius: 2px;
+    border: 1px solid #e6c878;
+    background: rgba(42, 16, 14, 0.82);
+    color: #f8e7b4;
+    font-family: var(--display);
+    font-size: 0.85rem;
+    letter-spacing: 0.08em;
+    cursor: pointer;
+  }
+
+  .cy-root[data-skin="regal"] .cy-regal-hint {
+    display: none;
+  }
+
+  .cy-root[data-skin="regal"]:not(.no-3d) .cy-tabs {
+    bottom: 10px;
+    gap: 6px;
+    padding: 0 8px;
+  }
+
+  .cy-root[data-skin="regal"]:not(.no-3d) .cy-tab-btn,
+  .cy-root[data-skin="regal"]:not(.no-3d) .cy-tab-btn:hover,
+  .cy-root[data-skin="regal"]:not(.no-3d) .cy-tab-btn.active {
+    padding: 8px 10px;
+    font-size: 0.78rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cy-root[data-skin="regal"]:not(.no-3d) .cy-left-panel {
+    transition: none;
+  }
+}
