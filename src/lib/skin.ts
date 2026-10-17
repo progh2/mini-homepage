@@ -31,13 +31,14 @@ export const DEFAULT_SETTINGS: SiteSettings = { skin: "classic", skipIntro: fals
 export const SKIN_CHOICES: { value: SkinName; label: string; hint: string }[] = [
   { value: "classic", label: "클래식", hint: "하늘색 다이어리. 처음 모습입니다." },
   { value: "neon", label: "네온", hint: "사이버 콘솔. 탭이 3D 로 돕니다." },
-  { value: "lumen", label: "루멘", hint: "달빛 호수. 유리 페이지가 물 위에 떠오릅니다." }
+  { value: "lumen", label: "루멘", hint: "달빛 호수. 유리 페이지가 물 위에 떠오릅니다." },
+  { value: "regal", label: "왕실", hint: "금박 고가구와 성당의 빛. 영국 왕실의 응접실입니다." }
 ];
 
 const CACHE_KEY = "mini-homepage:site-settings";
 
 export function isSkinName(value: unknown): value is SkinName {
-  return value === "classic" || value === "neon" || value === "lumen";
+  return value === "classic" || value === "neon" || value === "lumen" || value === "regal";
 }
 
 /* 저장된 값이 무엇이든 쓸 수 있는 모양으로 바꿉니다. 예전 버전이 남긴
@@ -55,7 +56,7 @@ function sameSettings(a: SiteSettings, b: SiteSettings) {
 
 /* ---------------- 미리보기 주소 ---------------- */
 
-/* ?skin=classic, neon, lumen. 그 밖의 값은 없는 것으로 봅니다. */
+/* ?skin=classic, neon, lumen, regal. 그 밖의 값은 없는 것으로 봅니다. */
 function readPreview(): SkinName | null {
   if (typeof window === "undefined") return null;
   const value = new URLSearchParams(window.location.search).get("skin");
