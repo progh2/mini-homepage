@@ -157,7 +157,8 @@ const spiralProps = {
 const ROOT_STYLES: Record<SkinName, React.CSSProperties> = {
   classic: skinStyle("classic"),
   neon: skinStyle("neon"),
-  lumen: skinStyle("lumen")
+  lumen: skinStyle("lumen"),
+  regal: skinStyle("regal")
 };
 
 function skinStyle(skin: SkinName): React.CSSProperties {
@@ -1030,6 +1031,32 @@ export default function LinkTree() {
     });
     return () => links.forEach(el => el.remove());
   }, [lumen]);
+
+  /* 왕실 글꼴입니다. 라틴 제목은 Cinzel, 한글은 나눔명조로 떨어집니다.
+     스킨을 떠나면 링크를 떼서 다른 화면에 글꼴이 남지 않습니다. */
+  useEffect(() => {
+    if (skin !== "regal") return;
+    const links = [
+      { rel: "preconnect", href: "https://fonts.googleapis.com", crossOrigin: "" },
+      { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
+      {
+        rel: "stylesheet",
+        href:
+          "https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700" +
+          "&family=Nanum+Myeongjo:wght@400;700&display=swap",
+        crossOrigin: ""
+      }
+    ].map(spec => {
+      const el = document.createElement("link");
+      el.rel = spec.rel;
+      el.href = spec.href;
+      if (spec.crossOrigin) el.crossOrigin = spec.crossOrigin;
+      el.dataset.regalFont = "1";
+      document.head.appendChild(el);
+      return el;
+    });
+    return () => links.forEach(el => el.remove());
+  }, [skin]);
 
   /* 네온과 루멘은 화면 전체를 채우는 고정 레이아웃이라 body 가 스크롤되면
      안 됩니다. html, body 는 cy-root 바깥이라 스킨 선택자로 닿지

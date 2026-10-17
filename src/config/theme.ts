@@ -7,10 +7,10 @@
    globals.css 가 var(--이름) 으로 받아 씁니다. 새 색을 추가하려면 아래 타입,
    각 스킨 값, LinkTree 의 rootStyle, globals.css 네 곳을 함께 고쳐야 합니다.
 
-   스킨이 셋입니다. 아래 theme(= classic) 은 기본 하늘색 다이어리이고,
-   neonTheme 은 사이버 콘솔, lumenTheme 은 달빛 호수입니다. 색을
-   바꾸고 싶으면 theme 을 고치세요. 나머지 둘은 별도 디자인이라 함께
-   손보지 않아도 됩니다.
+   스킨이 넷입니다. 아래 theme(= classic) 은 기본 하늘색 다이어리이고,
+   neonTheme 은 사이버 콘솔, lumenTheme 은 달빛 호수, regalTheme 은
+   금박 고가구의 왕실 응접실입니다. 색을 바꾸고 싶으면 theme 을
+   고치세요. 나머지 셋은 별도 디자인이라 함께 손보지 않아도 됩니다.
 
    회색 계열(#333, #888, #ddd 같은 것)은 여기 없습니다. 팔레트가 바뀌어도
    그대로 두는 편이 자연스러운 구조색이라 globals.css 에 두었습니다. */
@@ -170,18 +170,56 @@ export const lumenTheme: LinkTreeTheme = {
   }
 };
 
-/* 스킨 이름입니다. 저장된 값이 이 셋 중 하나가 아니면 classic 으로 봅니다.
+/* 왕실 스킨입니다. 주인장이 프로필 탭의 "홈피 설정" 에서 고릅니다.
+   색과 글꼴만 여기서 오고, 금박 테두리와 성당 유리창은 globals.css 의
+   .cy-root[data-skin="regal"] 규칙이 맡습니다. 다이어리 배치와 동작은
+   클래식과 같습니다.
+
+   오른쪽 종이는 따뜻한 벨럼입니다. 왼쪽 가죽 위 글자는 CSS 에서
+   밝은 색으로 다시 잡습니다. point 는 종이 위의 진홍 인장입니다. */
+export const regalTheme: LinkTreeTheme = {
+  colors: {
+    paper: "#F4E8C8",
+    ink: "#2A1A12",
+    accent: "#C6A15A",
+    spiralFront: "#E6C878",
+
+    pageTop: "#1A0C12",
+    pageMid: "#140C10",
+    pageBottom: "#0C1210",
+
+    frame: "#C6A15A",
+    frameStrong: "#8A6230",
+    frameHover: "#E6C878",
+
+    heading: "#4A2C14",
+    subInk: "#6E5640",
+    leaf: "#6B1C2A",
+
+    point: "#8C1D2C",
+    pointSoft: "#E2B56A",
+
+    mint: "#F3E6C8",
+    mintTint: "#EFE0C0",
+    blueTint: "#F6EDD4",
+
+    danger: "#8E1B2C"
+  }
+};
+
+/* 스킨 이름입니다. 저장된 값이 이 넷 중 하나가 아니면 classic 으로 봅니다.
    src/lib/skin.ts 가 그 판정을 합니다. */
-export type SkinName = "classic" | "neon" | "lumen";
+export type SkinName = "classic" | "neon" | "lumen" | "regal";
 
 export const themes: Record<SkinName, LinkTreeTheme> = {
   classic: theme,
   neon: neonTheme,
-  lumen: lumenTheme
+  lumen: lumenTheme,
+  regal: regalTheme
 };
 
 /* 스킨별 글꼴입니다. classic 은 이미 불러와 둔 본문 글꼴을 쓰고,
-   neon 과 lumen 은 LinkTree 가 구글 폰트를 붙인 뒤에야 제 모습이 납니다.
+   neon, lumen, regal 은 LinkTree 가 구글 폰트를 붙인 뒤에야 제 모습이 납니다.
    폰트가 아직 없으면 뒤의 대체 글꼴로 그려지고, 도착하면 바뀝니다. */
 export const skinFonts: Record<SkinName, { display: string; body: string }> = {
   classic: {
@@ -195,5 +233,9 @@ export const skinFonts: Record<SkinName, { display: string; body: string }> = {
   lumen: {
     display: "'Song Myung', 'Cormorant Garamond', serif",
     body: "'Gowun Batang', 'Pretendard', serif"
+  },
+  regal: {
+    display: "'Cinzel', 'Nanum Myeongjo', serif",
+    body: "'Nanum Myeongjo', 'Pretendard', serif"
   }
 };
