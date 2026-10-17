@@ -58,6 +58,10 @@ const NeonStage = dynamic(() => import("@/components/NeonStage"), { ssr: false }
    섞이면 안 되고, 필요 없는 사람에게 three 를 실을 이유도 없습니다. */
 const LumenStage = dynamic(() => import("@/components/LumenStage"), { ssr: false });
 
+/* 왕실 복도도 고른 사람만 받습니다. 석재 재질과 3D 가 클래식 첫 화면에
+   섞이면 안 됩니다. */
+const RegalStage = dynamic(() => import("@/components/RegalStage"), { ssr: false });
+
 /* 네온 무대를 못 불러와도 미니홈피가 통째로 사라지지 않게 막습니다.
 
    next/dynamic 은 청크를 못 받으면 렌더 도중에 예외를 던집니다. 안
@@ -99,6 +103,27 @@ class LumenBoundary extends Component<
 
   componentDidCatch(error: unknown) {
     console.warn("[lumen] 3D 무대를 불러오지 못해 2D 로 보여 줍니다.", error);
+    this.props.onError();
+  }
+
+  render() {
+    return this.state.failed ? null : this.props.children;
+  }
+}
+
+/* 왕실 무대를 못 불러와도 같은 이유로 미니홈피 전체를 죽이지 않습니다. */
+class RegalBoundary extends Component<
+  { onError: () => void; children: ReactNode },
+  { failed: boolean }
+> {
+  state = { failed: false };
+
+  static getDerivedStateFromError() {
+    return { failed: true };
+  }
+
+  componentDidCatch(error: unknown) {
+    console.warn("[regal] 3D 무대를 불러오지 못해 2D 로 보여 줍니다.", error);
     this.props.onError();
   }
 
@@ -941,14 +966,15 @@ export default function LinkTree() {
   const { skin, skipIntro } = useSiteSettings();
   const bgmRef = useRef<BgmHandle>(null);
   /* 아래는 3D 스킨에서만 씁니다. 클래식에서는 기본값이라 화면에
-     아무 영향이 없습니다. 실패한 스킨만 기억해서, 네온이 죽어도
-     루멘은 다시 시도하고 그 반대도 같습니다. */
+     아무 영향이 없습니다. 실패한 스킨만 기억해서, 하나가 죽어도
+     다른 3D 스킨은 다시 시도합니다. */
   const backgroundRef = useRef<HTMLDivElement>(null);
   const [failedSkin, setFailedSkin] = useState<SkinName | null>(null);
   const [hudOpen, setHudOpen] = useState(false);
   const neon = skin === "neon";
   const lumen = skin === "lumen";
-  const immersive = neon || lumen;
+  const regal = skin === "regal";
+  const immersive = neon || lumen || regal;
   const stageFailed = failedSkin === skin;
 
   /* 주인장이 인트로를 꺼 두었으면 아무에게도 안 보입니다. introSkipped 는
@@ -1077,13 +1103,24 @@ export default function LinkTree() {
     };
   }, [skin]);
 
-  /* 좁은 화면에서 달빛으로 연 왼쪽 칸입니다. 칸 밖을 누르거나 Esc 로 닫습니다. */
+  /* 왕실 3D 가 살아 있을 때만 화면 스크롤을 막습니다. 무대를 못 쓰면
+     2D 접견실이 길게 스크롤되어야 합니다. */
   useEffect(() => {
-    if (!lumen || !hudOpen) return;
+    if (skin !== "regal" || failedSkin === "regal") return;
+    document.body.classList.add("lt-skin-regal");
+    return () => document.body.classList.remove("lt-skin-regal");
+  }, [skin, failedSkin]);
+
+  /* 좁은 화면에서 연 왼쪽 칸입니다. 칸 밖을 누르거나 Esc 로 닫습니다. */
+  useEffect(() => {
+    if (!(lumen || regal) || !hudOpen) return;
     const onPointerDown = (event: PointerEvent) => {
       const target = event.target;
       if (!(target instanceof Element)) return;
       if (target.closest("#cy-hud, .cy-hud-toggle")) return;
+      /* 왕실에서는 화면 옆을 누르면 다음 방으로 걷습니다.
+         서랍을 닫는 탭이 그 걸음이 되지 않게 클릭을 삼킵니다. */
+      if (regal) event.preventDefault();
       setHudOpen(false);
     };
     const onKeyDown = (event: KeyboardEvent) => {
@@ -1098,7 +1135,7 @@ export default function LinkTree() {
       document.removeEventListener("pointerdown", onPointerDown);
       document.removeEventListener("keydown", onKeyDown);
     };
-  }, [lumen, hudOpen]);
+  }, [lumen, regal, hudOpen]);
 
   /* 인트로가 떠 있는 동안에는 뒤쪽이 스크롤되지 않게 막습니다. */
   useEffect(() => {
@@ -1205,10 +1242,10 @@ export default function LinkTree() {
                     className="cy-hud-toggle"
                     aria-expanded={hudOpen}
                     aria-controls="cy-hud"
-                    aria-label={lumen ? "프로필과 음악" : undefined}
+                    aria-label={lumen || regal ? "프로필과 음악" : undefined}
                     onClick={() => setHudOpen(open => !open)}
                   >
-                    {lumen ? "달빛" : "STATUS"}
+                    {regal ? "접견" : lumen ? "달빛" : "STATUS"}
                   </button>
                 ) : null}
               </div>
@@ -1242,6 +1279,19 @@ export default function LinkTree() {
                     onFallback={() => setFailedSkin("lumen")}
                   />
                 </LumenBoundary>
+              ) : regal && !stageFailed ? (
+                <RegalBoundary onError={() => setFailedSkin("regal")}>
+                  <RegalStage
+                    tabs={TABS}
+                    labels={NAV_LABELS}
+                    active={activeTab}
+                    onSelect={tab => setActiveTab(tab as TabName)}
+                    renderPanel={panelFor}
+                    backgroundRef={backgroundRef}
+                    locked={showIntro}
+                    onFallback={() => setFailedSkin("regal")}
+                  />
+                </RegalBoundary>
               ) : (
                 /* 클래식이거나, 3D 스킨인데 무대를 못 쓰는 경우입니다.
                    2D 폴백 CSS 는 is-active 인 창만 보여 주므로 보고 있는
@@ -1296,6 +1346,12 @@ export default function LinkTree() {
       {lumen && !stageFailed ? (
         <div className="cy-lumen-hint" aria-hidden="true">
           <kbd>◀</kbd> <kbd>▶</kbd> 방향키나 옆 페이지를 눌러 넘깁니다
+        </div>
+      ) : null}
+
+      {regal && !stageFailed ? (
+        <div className="cy-regal-hint" aria-hidden="true">
+          <kbd>◀</kbd> <kbd>▶</kbd> 방향키나 아래 메뉴로 다음 방을 걸어갑니다
         </div>
       ) : null}
 
