@@ -236,6 +236,6 @@ export const skinFonts: Record<SkinName, { display: string; body: string }> = {
   },
   regal: {
     display: "'Cinzel', 'Nanum Myeongjo', serif",
-    body: "'Nanum Myeongjo', 'Pretendard', serif"
+    body: "'Cormorant Garamond', 'Nanum Myeongjo', serif"
   }
 };

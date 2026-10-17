@@ -4388,54 +4388,52 @@ body.lt-skin-lumen[data-lumen-sky="dusk"] .cy-lumen-hint kbd {
 }
 
 /* ------------------------------------- */
-/* REGAL: 금박 고가구, 성당 유리창        */
+/* REGAL: 영국 성의 접견실                */
 /* ------------------------------------- */
-/* 클래식 다이어리 배치를 그대로 두고 겉만 바꿉니다.
-   유리창은 원 밖으로 번지지 않게 마스크합니다.
-   탭 너비는 건드리지 않습니다. 좁은 화면의 width:auto 가 져야 합니다. */
+/* 다이어리 동작은 그대로 두고, 방의 겉만 바꿉니다.
+   영상 칸은 루멘과 같이 소리만 쓰고 화면에는 올리지 않습니다.
+   좁은 화면에서는 초상보다 본문이 먼저 보입니다.
+   탭 너비는 건드리지 않습니다. */
 
 .cy-root[data-skin="regal"] {
-  --rose-x: 50%;
-  --rose-y: 13%;
-  --rose-r: 280px;
-  color: #f4e8c8;
+  align-items: flex-start;
+  justify-content: center;
+  /* 위는 고딕 창, 아래는 양탄자. 책상은 그 사이에 앉습니다. */
+  padding: 286px 120px 46px 64px;
+  color: #f6edd8;
   font-family: var(--body);
-  background:
-    radial-gradient(ellipse at 50% 0%, #3a1824 0%, transparent 48%),
-    linear-gradient(180deg, #1a0c12 0%, #120c10 46%, #0c1412 100%);
+  background-color: #e4dccf;
+  background-image:
+    linear-gradient(#4e453c, #4e453c),
+    linear-gradient(#e6c878, #e6c878),
+    linear-gradient(#cfc6b8, #cfc6b8),
+    linear-gradient(180deg, transparent 0 calc(100% - 70px), #e6c878 calc(100% - 70px) calc(100% - 66px), #7a1e2e calc(100% - 66px) 100%),
+    linear-gradient(#b7ab9c 0 1px, transparent 1px),
+    linear-gradient(90deg, #b7ab9c 0 1px, transparent 1px),
+    linear-gradient(180deg, #efe7da 0 86px, #d9cebe 86px 88px, #e4d9c8 88px 172px);
+  background-size: 100% 12px, 100% 2px, 100% 10px, 100% 100%, 100% 172px, 220px 100%, 220px 172px;
+  background-position: 0 0, 0 12px, 0 14px, 0 0, 0 0, 0 0, 0 0;
+  background-repeat: no-repeat, no-repeat, no-repeat, no-repeat, repeat-y, repeat-x, repeat;
 }
 
 .cy-root[data-skin="regal"] .cy-background-pattern {
-  background-image: none;
+  background: none;
 }
 
+/* 책상 위, 벽에 난 세 칸 고딕 창입니다. 첨두 아치와 석재 창살이 영국 성당·성의 창입니다. */
 .cy-root[data-skin="regal"]::before {
   content: "";
   position: fixed;
-  inset: 0;
+  left: 50%;
+  top: 12px;
+  width: min(700px, 54vw);
+  height: 272px;
+  transform: translateX(-50%);
   z-index: 0;
   pointer-events: none;
-  background:
-    linear-gradient(#f3e2b0, #f3e2b0) calc(var(--rose-x) - 1.5px) calc(var(--rose-y) - 13px) / 3px 26px no-repeat,
-    linear-gradient(#f3e2b0, #f3e2b0) calc(var(--rose-x) - 8px) calc(var(--rose-y) - 1.5px) / 16px 3px no-repeat,
-    radial-gradient(circle 18px at var(--rose-x) var(--rose-y), #3a1020 0 7px, #e6c878 8px 11px, transparent 12px),
-    repeating-conic-gradient(from 6deg at var(--rose-x) var(--rose-y), transparent 0deg 12deg, rgba(18, 8, 8, 0.72) 12deg 13.4deg),
-    radial-gradient(circle var(--rose-r) at var(--rose-x) var(--rose-y), transparent 62%, #f3e2b0 64.5%, #6a4a18 68%, transparent 71%),
-    repeating-conic-gradient(
-      from 0deg at var(--rose-x) var(--rose-y),
-      #6a1830 0deg 16deg,
-      #c6a15a 16deg 18deg,
-      #16325c 18deg 34deg,
-      #c6a15a 34deg 36deg,
-      #0e3d30 36deg 52deg,
-      #c6a15a 52deg 54deg,
-      #3c2458 54deg 70deg,
-      #c6a15a 70deg 72deg,
-      #6a4018 72deg 88deg,
-      #c6a15a 88deg 90deg
-    );
-  -webkit-mask-image: radial-gradient(circle var(--rose-r) at var(--rose-x) var(--rose-y), #000 68%, transparent 76%);
-  mask-image: radial-gradient(circle var(--rose-r) at var(--rose-x) var(--rose-y), #000 68%, transparent 76%);
+  border-radius: 0;
+  background: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 660 250'> <defs> <linearGradient id='sky' x1='0' y1='0' x2='0' y2='1'> <stop offset='0' stop-color='rgb(148,172,186)'/> <stop offset='1' stop-color='rgb(204,212,202)'/> </linearGradient> <pattern id='lead' width='13' height='20' patternUnits='userSpaceOnUse'> <path d='M6.5 0 V20 M0 10 H13' fill='none' stroke='rgb(48,36,26)' stroke-width='0.85' opacity='0.6'/> </pattern> <clipPath id='a'><path d='M46 208 L46 124 C46 66, 96 34, 110 12 C124 34, 174 66, 174 124 L174 208 Z'/></clipPath> <clipPath id='b'><path d='M266 208 L266 112 C266 50, 316 22, 330 6 C344 22, 394 50, 394 112 L394 208 Z'/></clipPath> <clipPath id='c'><path d='M486 208 L486 124 C486 66, 536 34, 550 12 C564 34, 614 66, 614 124 L614 208 Z'/></clipPath> </defs> <g clip-path='url(%23a)'><rect width='660' height='250' fill='url(%23sky)'/><rect width='660' height='250' fill='url(%23lead)'/></g> <g clip-path='url(%23b)'><rect width='660' height='250' fill='url(%23sky)'/><rect width='660' height='250' fill='url(%23lead)'/></g> <g clip-path='url(%23c)'><rect width='660' height='250' fill='url(%23sky)'/><rect width='660' height='250' fill='url(%23lead)'/></g> <path d='M46 214 L46 124 C46 66, 96 34, 110 12 C124 34, 174 66, 174 124 L174 214' fill='none' stroke='rgb(54,40,30)' stroke-width='8' stroke-linejoin='miter'/> <path d='M266 214 L266 112 C266 50, 316 22, 330 6 C344 22, 394 50, 394 112 L394 214' fill='none' stroke='rgb(54,40,30)' stroke-width='8' stroke-linejoin='miter'/> <path d='M486 214 L486 124 C486 66, 536 34, 550 12 C564 34, 614 66, 614 124 L614 214' fill='none' stroke='rgb(54,40,30)' stroke-width='8' stroke-linejoin='miter'/> <path d='M32 222 L32 128 C32 52, 90 18, 110 2 C130 18, 188 52, 188 128 L188 222' fill='none' stroke='rgb(248,240,228)' stroke-width='20' stroke-linejoin='miter'/> <path d='M252 222 L252 116 C252 36, 308 8, 330 0 C352 8, 408 36, 408 116 L408 222' fill='none' stroke='rgb(248,240,228)' stroke-width='20' stroke-linejoin='miter'/> <path d='M472 222 L472 128 C472 52, 530 18, 550 2 C570 18, 628 52, 628 128 L628 222' fill='none' stroke='rgb(248,240,228)' stroke-width='20' stroke-linejoin='miter'/> <rect x='18' y='204' width='184' height='18' fill='rgb(236,226,210)' stroke='rgb(116,102,86)'/> <rect x='238' y='204' width='184' height='18' fill='rgb(236,226,210)' stroke='rgb(116,102,86)'/> <rect x='458' y='204' width='184' height='18' fill='rgb(236,226,210)' stroke='rgb(116,102,86)'/> </svg>") top center / 100% auto no-repeat;
+  box-shadow: none;
 }
 
 .cy-root[data-skin="regal"]::after {
@@ -4445,76 +4443,78 @@ body.lt-skin-lumen[data-lumen-sky="dusk"] .cy-lumen-hint kbd {
   z-index: 0;
   pointer-events: none;
   background:
-    radial-gradient(ellipse 16px 26px at 6.2% 78%, rgba(255, 236, 190, 0.95), rgba(255, 176, 64, 0.28) 46%, transparent 72%),
-    radial-gradient(ellipse 48px 100px at 6.2% 70%, rgba(255, 168, 64, 0.3), transparent 72%),
-    radial-gradient(ellipse 14px 24px at 93.8% 80%, rgba(255, 228, 176, 0.9), rgba(255, 160, 50, 0.26) 46%, transparent 72%),
-    radial-gradient(ellipse 44px 92px at 93.8% 72%, rgba(255, 150, 48, 0.24), transparent 72%);
+    linear-gradient(90deg, #2a0810 0 1.6%, #6e1830 3.4%, #4a1020 5%, #8e2438 7.4%, #d7a0a8 8%, #8e2438 8.7%, #e6c878 9.3%, transparent 10.4%),
+    linear-gradient(270deg, #2a0810 0 1.4%, #6e1830 3%, #4a1020 4.6%, #8e2438 6.6%, #e6c878 7.2%, transparent 8.2%),
+    linear-gradient(#c6a15a, #c6a15a) 5% 38% / 4.2% 6px no-repeat,
+    linear-gradient(#c6a15a, #c6a15a) 90.6% 38% / 4.2% 6px no-repeat;
+}
+
+.cy-root[data-skin="regal"] .cy-book-wrapper {
+  width: min(1020px, 100%);
+  height: calc(100svh - 332px);
+  margin-top: 0;
+}
+
+.cy-root[data-skin="regal"] .cy-bindings {
+  display: none;
 }
 
 .cy-root[data-skin="regal"] .cy-book-outer {
   background:
-    radial-gradient(ellipse at 18% 0%, rgba(230, 200, 120, 0.2), transparent 42%),
-    linear-gradient(165deg, #5c3622 0%, #3a1e12 40%, #24140e 100%);
-  border: 2px solid #e6c878;
-  border-radius: 4px;
+    linear-gradient(165deg, #6a4424 0%, #3a2214 42%, #24140e 100%);
+  border: 2px solid #f0d78a;
+  border-radius: 2px;
   box-shadow:
     inset 0 0 0 1px #8a6230,
-    inset 0 0 0 6px #2a160e,
-    inset 0 0 0 7px #c6a15a,
-    inset 0 0 0 11px #3a2014,
-    0 22px 50px rgba(0, 0, 0, 0.55);
+    inset 0 0 0 7px #2a160e,
+    inset 0 0 0 8px #c6a15a,
+    inset 0 0 0 14px #3a2014,
+    0 26px 40px rgba(0, 0, 0, 0.5);
 }
 
 .cy-root[data-skin="regal"] .cy-book-outer::before,
 .cy-root[data-skin="regal"] .cy-book-outer::after {
   content: "";
   position: absolute;
-  width: 22px;
-  height: 22px;
+  width: 18px;
+  height: 18px;
   pointer-events: none;
   z-index: 4;
+  border-color: #f8e7b4;
+  border-style: solid;
 }
 
 .cy-root[data-skin="regal"] .cy-book-outer::before {
-  top: 14px;
-  left: 14px;
-  border-top: 2px solid #f3e2b0;
-  border-left: 2px solid #f3e2b0;
+  top: 16px;
+  left: 16px;
+  border-width: 2px 0 0 2px;
 }
 
 .cy-root[data-skin="regal"] .cy-book-outer::after {
-  right: 14px;
-  bottom: 14px;
-  border-right: 2px solid #f3e2b0;
-  border-bottom: 2px solid #f3e2b0;
-}
-
-.cy-root[data-skin="regal"] .cy-ring {
-  height: 12px;
-  border-radius: 2px;
-  background: linear-gradient(to bottom, #f8e7b4, #a07830 48%, #f3e2b0);
-  border: 1px solid #6a4a18;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.65);
+  right: 16px;
+  bottom: 16px;
+  border-width: 0 2px 2px 0;
 }
 
 .cy-root[data-skin="regal"] .cy-book-inner {
-  background: #f4e8c8;
-  border: 1px solid #c6a15a;
-  border-radius: 2px;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
 }
 
 .cy-root[data-skin="regal"] .cy-left-panel {
+  width: 228px;
   background:
-    radial-gradient(ellipse at 50% 0%, rgba(232, 196, 120, 0.16), transparent 48%),
-    linear-gradient(180deg, #24563e 0%, #1a3e2e 52%, #10261c 100%);
-  border-right: 1px solid #c6a15a;
-  border-radius: 2px 0 0 2px;
-  color: #f4e8c8;
+    linear-gradient(180deg, rgba(240, 210, 140, 0.12), transparent 22%),
+    repeating-linear-gradient(90deg, #4a301c 0 16px, #5a3c24 16px 18px, #3c2616 18px 34px);
+  border-right: 1px solid #e6c878;
+  border-radius: 0;
+  color: #f6edd8;
 }
 
 .cy-root[data-skin="regal"] .cy-left-content {
   background: transparent;
-  border: 1px solid rgba(198, 161, 90, 0.45);
+  border: 1px solid rgba(240, 215, 150, 0.45);
   border-radius: 2px;
 }
 
@@ -4534,171 +4534,211 @@ body.lt-skin-lumen[data-lumen-sky="dusk"] .cy-lumen-hint kbd {
 .cy-root[data-skin="regal"] .cy-intro-text,
 .cy-root[data-skin="regal"] .title-sub,
 .cy-root[data-skin="regal"] .cy-skin-picker-label {
-  color: #f4e8c8;
+  color: #f6edd8;
+}
+
+.cy-root[data-skin="regal"] .cy-today-count {
+  font-family: var(--display);
+  letter-spacing: 0.08em;
+  font-size: 0.62rem;
 }
 
 .cy-root[data-skin="regal"] .text-black,
 .cy-root[data-skin="regal"] .text-orange,
 .cy-root[data-skin="regal"] .name-bold {
-  color: #f3e2b0;
+  color: #f8e7b4;
 }
 
 .cy-root[data-skin="regal"] .cy-today-is,
 .cy-root[data-skin="regal"] .cy-profile-name {
-  border-color: rgba(198, 161, 90, 0.4);
+  border-color: rgba(240, 215, 150, 0.35);
 }
 
 .cy-root[data-skin="regal"] .name-bold {
   font-family: var(--display);
-  letter-spacing: 0.04em;
+  letter-spacing: 0.06em;
+  text-align: center;
+}
+
+.cy-root[data-skin="regal"] .title-sub {
+  text-align: center;
+}
+
+.cy-root[data-skin="regal"] .cy-profile-pic {
+  width: 118px;
+  height: 118px;
+  margin-bottom: 10px;
 }
 
 .cy-root[data-skin="regal"] .cy-profile-pic img {
   padding: 5px;
   border: 0;
   border-radius: 50%;
-  background: linear-gradient(145deg, #f8e7b4, #c6a15a 42%, #8a6230 72%, #f3e2b0);
+  object-fit: cover;
+  background: linear-gradient(145deg, #f8e7b4, #c6a15a 40%, #8a6230 72%, #f3e2b0);
   box-shadow:
     0 0 0 2px #3a2014,
     0 0 0 4px #e6c878,
-    0 10px 18px rgba(0, 0, 0, 0.4);
+    0 10px 16px rgba(0, 0, 0, 0.35);
 }
 
 .cy-root[data-skin="regal"] .cy-skin-picker-options button {
-  background: rgba(8, 18, 14, 0.4);
-  color: #f4e8c8;
-  border: 1px solid rgba(198, 161, 90, 0.6);
+  background: rgba(40, 8, 14, 0.35);
+  color: #f6edd8;
+  border: 1px solid rgba(240, 215, 150, 0.55);
   border-radius: 999px;
-  font-size: 0.64rem;
+  font-size: 0.62rem;
   padding: 4px 0;
 }
 
 .cy-root[data-skin="regal"] .cy-skin-picker-options button.is-on {
   background: linear-gradient(180deg, #f8e7b4, #c6a15a);
-  border-color: #e6c878;
-  color: #2a160e;
+  border-color: #f0d78a;
+  color: #3a160e;
 }
 
 .cy-root[data-skin="regal"] .cy-skin-picker-options button:hover {
-  border-color: #e6c878;
+  border-color: #f0d78a;
 }
 
 .cy-root[data-skin="regal"] .cy-bgm {
-  background: rgba(8, 18, 14, 0.42);
-  border: 1px solid rgba(198, 161, 90, 0.5);
+  background: rgba(36, 8, 14, 0.38);
+  border: 1px solid rgba(240, 215, 150, 0.4);
+}
+
+.cy-root[data-skin="regal"] .cy-bgm-list {
+  max-height: 64px;
 }
 
 .cy-root[data-skin="regal"] .cy-bgm-heading {
   font-family: var(--display);
-  letter-spacing: 0.08em;
-  color: #e6c878;
-  border-bottom-color: rgba(198, 161, 90, 0.4);
+  letter-spacing: 0.12em;
+  color: #f0d78a;
+  border-bottom-color: rgba(240, 215, 150, 0.35);
 }
 
 .cy-root[data-skin="regal"] .cy-bgm-track,
 .cy-root[data-skin="regal"] .cy-bgm-time,
 .cy-root[data-skin="regal"] .cy-bgm-artist,
 .cy-root[data-skin="regal"] .cy-bgm-credit,
-.cy-root[data-skin="regal"] .cy-bgm-hint,
 .cy-root[data-skin="regal"] .cy-bgm-note {
-  color: #f4e8c8;
+  color: #f6edd8;
 }
 
 .cy-root[data-skin="regal"] .cy-bgm-track:hover,
 .cy-root[data-skin="regal"] .cy-bgm-track.is-current,
 .cy-root[data-skin="regal"] .cy-bgm-track.is-current .cy-bgm-time {
-  color: #f3e2b0;
+  color: #f8e7b4;
 }
 
 .cy-root[data-skin="regal"] .cy-bgm-controls {
-  border-top-color: rgba(198, 161, 90, 0.35);
+  border-top-color: rgba(240, 215, 150, 0.3);
 }
 
 .cy-root[data-skin="regal"] .cy-bgm-controls button {
   background: linear-gradient(180deg, #f8e7b4, #c6a15a);
-  color: #2a160e;
-  border-color: #e6c878;
+  color: #3a160e;
+  border-color: #f0d78a;
 }
 
 .cy-root[data-skin="regal"] .cy-bgm-controls button:hover {
-  color: #2a160e;
-  border-color: #f3e2b0;
+  color: #3a160e;
+  border-color: #fff1c4;
 }
 
 .cy-root[data-skin="regal"] .cy-bgm-controls input[type="range"] {
-  accent-color: #e6c878;
+  accent-color: #f0d78a;
 }
 
+/* 왕실에서는 유튜브 화면을 열지 않습니다. 소리만 남습니다. */
+.cy-root[data-skin="regal"] .cy-bgm-stage,
 .cy-root[data-skin="regal"] .cy-bgm-stage.is-shown {
-  border-color: #c6a15a;
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 160px;
+  height: 90px;
+  max-width: none;
+  margin: 0;
+  aspect-ratio: auto;
+  border: 0;
+  overflow: hidden;
+  opacity: 0;
+  clip-path: inset(100%);
+  pointer-events: none;
+}
+
+.cy-root[data-skin="regal"] .cy-bgm-hint {
+  display: none;
 }
 
 .cy-root[data-skin="regal"] .cy-left-dropdown > summary {
-  background: rgba(8, 18, 14, 0.45);
-  color: #f4e8c8;
-  border-color: rgba(198, 161, 90, 0.6);
+  background: rgba(36, 8, 14, 0.45);
+  color: #f6edd8;
+  border-color: rgba(240, 215, 150, 0.55);
 }
 
 .cy-root[data-skin="regal"] .cy-left-dropdown > summary::after {
-  border-top-color: #e6c878;
+  border-top-color: #f0d78a;
 }
 
 .cy-root[data-skin="regal"] .cy-left-dropdown ul {
-  background: #14281e;
-  border-color: rgba(198, 161, 90, 0.6);
+  background: #4a1422;
+  border-color: rgba(240, 215, 150, 0.55);
 }
 
 .cy-root[data-skin="regal"] .cy-left-dropdown li + li {
-  border-top-color: rgba(198, 161, 90, 0.25);
+  border-top-color: rgba(240, 215, 150, 0.22);
 }
 
 .cy-root[data-skin="regal"] .cy-left-dropdown a {
-  color: #f4e8c8;
+  color: #f6edd8;
 }
 
 .cy-root[data-skin="regal"] .cy-left-dropdown a:hover,
 .cy-root[data-skin="regal"] .cy-left-dropdown a:focus-visible {
-  background: rgba(198, 161, 90, 0.2);
-  color: #f8e7b4;
+  background: rgba(240, 215, 150, 0.16);
+  color: #fff4d4;
 }
 
 .cy-root[data-skin="regal"] .cy-right-panel {
-  color: #3a2a20;
-  border-radius: 0 2px 2px 0;
+  padding-left: 16px;
+  color: #3a2418;
+  border-radius: 0;
+  background:
+    linear-gradient(180deg, rgba(255, 248, 236, 0.55), transparent 42%),
+    #f4ead6;
 }
 
 .cy-root[data-skin="regal"] .cy-title {
   font-family: var(--display);
   font-weight: 700;
-  letter-spacing: 0.06em;
-  color: #6b1c2a;
+  letter-spacing: 0.08em;
+  color: #6e1a2c;
 }
 
 .cy-root[data-skin="regal"] .cy-url {
   font-family: var(--display);
-  letter-spacing: 0.04em;
+  letter-spacing: 0.06em;
   color: #8a6230;
 }
 
 .cy-root[data-skin="regal"] .cy-right-content {
-  background-color: #fbf6e8;
+  background-color: #fbf6ea;
   background-image:
-    linear-gradient(rgba(198, 161, 90, 0.22), rgba(198, 161, 90, 0.22)),
-    linear-gradient(rgba(198, 161, 90, 0.22), rgba(198, 161, 90, 0.22));
-  background-size: 7px 128px, 52px 7px;
-  background-position: center calc(50% + 8px), center calc(50% - 26px);
-  background-repeat: no-repeat;
+    linear-gradient(#c6a15a, #c6a15a) 0 0 / 100% 1px no-repeat,
+    linear-gradient(#c6a15a, #c6a15a) 0 100% / 100% 1px no-repeat;
   border: 1px solid #c6a15a;
   border-radius: 2px;
-  box-shadow: inset 0 0 0 5px rgba(198, 161, 90, 0.16);
-  color: #3a2a20;
-  scrollbar-color: #c6a15a #f4e8c8;
+  box-shadow: inset 0 0 0 6px rgba(198, 161, 90, 0.18);
+  color: #3a2418;
+  scrollbar-color: #c6a15a #f4ead6;
 }
 
 .cy-root[data-skin="regal"] .cy-section-title {
   font-family: var(--display);
-  letter-spacing: 0.05em;
-  color: #4a2c14;
+  letter-spacing: 0.08em;
+  color: #6e1a2c;
   border-bottom: 1px solid #c6a15a;
 }
 
@@ -4708,7 +4748,7 @@ body.lt-skin-lumen[data-lumen-sky="dusk"] .cy-lumen-hint kbd {
 .cy-root[data-skin="regal"] .cy-episode-title,
 .cy-root[data-skin="regal"] .cg-date,
 .cy-root[data-skin="regal"] .cg-colon {
-  color: #8a7050;
+  color: #8a6844;
 }
 
 .cy-root[data-skin="regal"] .cy-text-block,
@@ -4720,7 +4760,7 @@ body.lt-skin-lumen[data-lumen-sky="dusk"] .cy-lumen-hint kbd {
 .cy-root[data-skin="regal"] .cy-story-title a,
 .cy-root[data-skin="regal"] .cg-text,
 .cy-root[data-skin="regal"] .cy-contact-label {
-  color: #3a2a20;
+  color: #3a2418;
 }
 
 .cy-root[data-skin="regal"] .cy-story-summary {
@@ -4740,7 +4780,7 @@ body.lt-skin-lumen[data-lumen-sky="dusk"] .cy-lumen-hint kbd {
 .cy-root[data-skin="regal"] .cy-episode-thumb,
 .cy-root[data-skin="regal"] .cy-cut-list img {
   background: #f6edd8;
-  border-color: #c6a15a;
+  border: 1px solid #c6a15a;
 }
 
 .cy-root[data-skin="regal"] .cy-board-preview {
@@ -4764,7 +4804,7 @@ body.lt-skin-lumen[data-lumen-sky="dusk"] .cy-lumen-hint kbd {
 .cy-root[data-skin="regal"] .cy-oe-comment {
   background: #fffaf0;
   border-color: #c6a15a;
-  color: #3a2a20;
+  color: #3a2418;
 }
 
 .cy-root[data-skin="regal"] .cy-gb-signin,
@@ -4775,28 +4815,27 @@ body.lt-skin-lumen[data-lumen-sky="dusk"] .cy-lumen-hint kbd {
 }
 
 .cy-root[data-skin="regal"] .cy-tab-btn {
-  background: linear-gradient(180deg, #7a2232, #4a1220);
-  color: #f3e2b0;
-  border-color: #c6a15a;
-  border-radius: 0 4px 4px 0;
+  background: linear-gradient(180deg, #8c2436, #541422);
+  color: #f8e7b4;
+  border-color: #e6c878;
+  border-radius: 0 3px 3px 0;
   font-family: var(--display);
-  letter-spacing: 0.02em;
-  box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.28);
+  letter-spacing: 0.04em;
+  box-shadow: 3px 2px 0 #3a160e;
 }
 
 .cy-root[data-skin="regal"] .cy-tab-btn:hover {
-  background: linear-gradient(180deg, #8e2a3c, #5c1828);
+  background: linear-gradient(180deg, #a02c40, #6a1a2a);
 }
 
 .cy-root[data-skin="regal"] .cy-tab-btn.active {
-  background: #fbf6e8;
-  color: #6b1c2a;
-  border-color: #c6a15a;
+  background: #fbf6ea;
+  color: #6e1a2c;
+  border-color: #e6c878;
 }
 
 .cy-root[data-skin="regal"] .lt-intro {
-  background:
-    radial-gradient(ellipse at 50% 46%, rgba(16, 8, 10, 0.15), rgba(10, 6, 8, 0.78) 62%, #0c080a 100%);
+  background: linear-gradient(180deg, rgba(48, 10, 18, 0.28), rgba(24, 6, 10, 0.55));
 }
 
 .cy-root[data-skin="regal"] .lt-intro-spiral {
@@ -4804,55 +4843,35 @@ body.lt-skin-lumen[data-lumen-sky="dusk"] .cy-lumen-hint kbd {
 }
 
 .cy-root[data-skin="regal"] .lt-intro::before {
-  z-index: 0;
-  background:
-    radial-gradient(ellipse at 50% 48%, rgba(8, 4, 6, 0.78), rgba(8, 4, 6, 0.28) 34%, transparent 62%),
-    linear-gradient(#f3e2b0, #f3e2b0) calc(50% - 1.5px) calc(42% - 17px) / 3px 34px no-repeat,
-    linear-gradient(#f3e2b0, #f3e2b0) calc(50% - 11px) calc(42% - 1.5px) / 22px 3px no-repeat,
-    radial-gradient(circle at 50% 42%, #3a1020 0 12px, #e6c878 13px 17px, transparent 18px),
-    repeating-conic-gradient(from 6deg at 50% 42%, transparent 0deg 12deg, rgba(12, 6, 6, 0.7) 12deg 13.4deg),
-    radial-gradient(circle at 50% 42%, transparent 150px, #f3e2b0 158px, #6a4a18 170px, transparent 180px),
-    repeating-conic-gradient(
-      from 0deg at 50% 42%,
-      #6a1830 0deg 16deg,
-      #c6a15a 16deg 18deg,
-      #16325c 18deg 34deg,
-      #c6a15a 34deg 36deg,
-      #0e3d30 36deg 52deg,
-      #c6a15a 52deg 54deg,
-      #3c2458 54deg 70deg,
-      #c6a15a 70deg 72deg,
-      #6a4018 72deg 88deg,
-      #c6a15a 88deg 90deg
-    );
-  -webkit-mask-image: radial-gradient(circle at 50% 42%, #000 0 210px, transparent 248px);
-  mask-image: radial-gradient(circle at 50% 42%, #000 0 210px, transparent 248px);
+  background: none;
+  -webkit-mask-image: none;
+  mask-image: none;
 }
 
 .cy-root[data-skin="regal"] .lt-intro-title {
   font-family: var(--display);
   font-weight: 700;
-  letter-spacing: 0.08em;
-  color: #f6e7b8;
-  text-shadow: 0 2px 16px rgba(0, 0, 0, 0.72), 0 0 22px rgba(230, 200, 120, 0.35);
+  letter-spacing: 0.14em;
+  color: #f8e7b4;
+  text-shadow: 0 2px 18px rgba(0, 0, 0, 0.55);
 }
 
 .cy-root[data-skin="regal"] .lt-intro-copy {
   font-family: var(--body);
-  font-weight: 400;
-  color: #f4e8c8;
-  text-shadow: 0 2px 14px rgba(0, 0, 0, 0.75);
+  font-weight: 500;
+  color: #f6edd8;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.55);
 }
 
 .cy-root[data-skin="regal"] .lt-intro-cta {
-  background: linear-gradient(180deg, #f8e7b4 0%, #e6c878 46%, #b8893a 100%);
-  color: #2a160e;
-  border: 1px solid #f3e2b0;
-  border-radius: 4px;
+  background: linear-gradient(180deg, #f8e7b4 0%, #e6c878 48%, #b8893a 100%);
+  color: #3a160e;
+  border: 1px solid #f8e7b4;
+  border-radius: 2px;
   font-family: var(--display);
   font-weight: 700;
-  letter-spacing: 0.04em;
-  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.7);
+  letter-spacing: 0.08em;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.7);
 }
 
 .cy-root[data-skin="regal"] .lt-intro-cta:hover {
@@ -4861,24 +4880,57 @@ body.lt-skin-lumen[data-lumen-sky="dusk"] .cy-lumen-hint kbd {
 
 @media (max-width: 900px) {
   .cy-root[data-skin="regal"] {
-    --rose-y: 0px;
-    --rose-r: 168px;
-    padding-top: 64px;
+    align-items: flex-start;
+    justify-content: flex-start;
+    padding: 146px 10px 12px;
   }
 
-  .cy-root[data-skin="regal"] .cy-left-panel {
-    border-right: 0;
-    border-bottom: 1px solid #c6a15a;
-    border-radius: 2px 2px 0 0;
+  .cy-root[data-skin="regal"]::before {
+    top: 6px;
+    width: min(348px, 92vw);
+    height: 136px;
+    border-radius: 0;
+  }
+
+  .cy-root[data-skin="regal"] .cy-book-wrapper {
+    width: 100%;
+    height: auto;
+    margin-top: 0;
+  }
+
+  .cy-root[data-skin="regal"] .cy-tabs {
+    order: 1;
   }
 
   .cy-root[data-skin="regal"] .cy-right-panel {
-    border-radius: 0 0 2px 2px;
+    order: 2;
+    padding-left: 12px;
+    border-radius: 0;
+    min-height: calc(100svh - 96px);
+  }
+
+  .cy-root[data-skin="regal"] .cy-left-panel {
+    order: 3;
+    width: 100%;
+    border-right: 0;
+    border-top: 1px solid #e6c878;
+    border-bottom: 0;
+    border-radius: 0;
+  }
+
+  .cy-root[data-skin="regal"] .cy-profile-pic {
+    width: 88px;
+    height: 88px;
+  }
+
+  .cy-root[data-skin="regal"] .cy-intro-text {
+    max-height: 4.4em;
   }
 
   .cy-root[data-skin="regal"] .cy-tab-btn,
   .cy-root[data-skin="regal"] .cy-tab-btn:hover,
   .cy-root[data-skin="regal"] .cy-tab-btn.active {
-    border-radius: 4px 4px 0 0;
+    border-radius: 3px 3px 0 0;
+    box-shadow: none;
   }
 }

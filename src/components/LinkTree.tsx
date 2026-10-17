@@ -1043,6 +1043,7 @@ export default function LinkTree() {
         rel: "stylesheet",
         href:
           "https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700" +
+          "&family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500" +
           "&family=Nanum+Myeongjo:wght@400;700&display=swap",
         crossOrigin: ""
       }
