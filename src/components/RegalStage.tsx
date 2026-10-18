@@ -10,6 +10,8 @@ import { asset } from "@/lib/asset";
    재질 사진은 Poly Haven CC0 입니다.
    plastered_stone_wall, wood_floor_worn, fabric_leather_02(진홍으로 물들임).
    https://polyhaven.com
+   콘텐츠 양옆의 인물 그림은 이 사이트를 위해 만든 성당 벽화입니다.
+   실제 인물이나 특정 명화를 베끼지 않았고, 글자는 없습니다.
 
    CSS3D 는 탭 내용입니다. 칸마다 금테 액자가 있고, 메뉴를 고르면
    그 액자 앞까지 복도를 걸어갑니다. 멈추면 글을 정수 픽셀에 붙여
@@ -40,6 +42,8 @@ const WOOD_DIFF = asset("/assets/regal/wood_diff.jpg");
 const WOOD_NOR = asset("/assets/regal/wood_nor.jpg");
 const VELVET_DIFF = asset("/assets/regal/velvet_diff.jpg");
 const VELVET_NOR = asset("/assets/regal/velvet_nor.jpg");
+const FIGURE_LEFT = asset("/assets/regal/figure_left.jpg");
+const FIGURE_RIGHT = asset("/assets/regal/figure_right.jpg");
 
 export default function RegalStage({
   tabs,
@@ -308,7 +312,7 @@ function buildStage({
   const textures: import("three").Texture[] = [envTex];
   const materials: import("three").Material[] = [];
   const geometries: import("three").BufferGeometry[] = [];
-  let pending = 6;
+  let pending = 8;
   let wantGL = true;
   let alive = true;
 
@@ -438,6 +442,18 @@ function buildStage({
   loadTex(VELVET_DIFF, THREE.SRGBColorSpace, diff => {
     loadTex(VELVET_NOR, THREE.NoColorSpace, nor => paintVelvet(diff, nor));
   });
+
+  const figLMat = matStd(0xf3e6cf, 0.92);
+  const figRMat = matStd(0xf3e6cf, 0.92);
+  figLMat.side = THREE.FrontSide;
+  figRMat.side = THREE.FrontSide;
+  function paintFigure(mat: import("three").MeshStandardMaterial, tex: import("three").Texture) {
+    mat.map = tex;
+    mat.color.set(0xffffff);
+    mat.needsUpdate = true;
+  }
+  loadTex(FIGURE_LEFT, THREE.SRGBColorSpace, tex => paintFigure(figLMat, tex));
+  loadTex(FIGURE_RIGHT, THREE.SRGBColorSpace, tex => paintFigure(figRMat, tex));
 
   function addMesh(geo: import("three").BufferGeometry, material: import("three").Material) {
     geometries.push(geo);
@@ -626,6 +642,52 @@ function buildStage({
     light.position.y = -0.5;
     lamp.add(chain, ring, bulb, light);
     glScene.add(lamp);
+  }
+
+  /* 콘텐츠 양옆의 성당 벽화입니다. 평면은 +Z 를 보고, 카메라가 +Z 에 있으므로
+     정면이 복도 쪽입니다. 왼쪽은 가운데를 향해 조금 돕니다. */
+  const figH = 1.62;
+  const figW = figH * (360 / 708);
+  const figGeo = new THREE.PlaneGeometry(figW, figH);
+  const figBackGeo = new THREE.BoxGeometry(figW, figH, 0.028);
+  const figPlinthGeo = new THREE.BoxGeometry(figW + 0.2, 0.16, 0.18);
+  const figFrameT = 0.04;
+  const figFrameH = new THREE.BoxGeometry(figW + figFrameT * 2, figFrameT, 0.042);
+  const figFrameV = new THREE.BoxGeometry(figFrameT, figH, 0.042);
+  geometries.push(figGeo, figBackGeo, figPlinthGeo, figFrameH, figFrameV);
+  const figBackMat = matStd(0x4e321c, 0.66);
+  const figPlinthMat = matStd(0xc9bba6, 0.86);
+
+  const figures: { group: import("three").Group; z: number }[] = [];
+  function addFigure(mat: import("three").Material, side: number, z: number) {
+    const g = new THREE.Group();
+    const y0 = 0.16;
+    const midY = y0 + figH / 2;
+    const back = new THREE.Mesh(figBackGeo, figBackMat);
+    back.position.set(0, midY, -0.02);
+    const face = new THREE.Mesh(figGeo, mat);
+    face.position.set(0, midY, 0.014);
+    const plinth = new THREE.Mesh(figPlinthGeo, figPlinthMat);
+    plinth.position.set(0, 0.08, 0);
+    const top = new THREE.Mesh(figFrameH, gold);
+    top.position.set(0, y0 + figH + figFrameT / 2, 0.02);
+    const bottom = new THREE.Mesh(figFrameH, gold);
+    bottom.position.set(0, y0 - figFrameT / 2, 0.02);
+    const leftBar = new THREE.Mesh(figFrameV, gold);
+    leftBar.position.set(-figW / 2 - figFrameT / 2, midY, 0.02);
+    const rightBar = new THREE.Mesh(figFrameV, gold);
+    rightBar.position.set(figW / 2 + figFrameT / 2, midY, 0.02);
+    g.add(back, face, plinth, top, bottom, leftBar, rightBar);
+    g.position.set(side * 1.48, 0, z);
+    g.rotation.y = side < 0 ? 0.16 : -0.16;
+    glScene.add(g);
+    figures.push({ group: g, z });
+  }
+
+  for (let i = 0; i < N; i++) {
+    const z = -i * BAY + 0.18;
+    addFigure(figLMat, -1, z);
+    addFigure(figRMat, 1, z);
   }
 
   const frames: import("three").Group[] = [];
@@ -822,6 +884,8 @@ function buildStage({
     camZ = walkT >= 1 ? walkTo : walkFrom + (walkTo - walkFrom) * u;
     const moving = walkT < 1;
     if (moving) releaseCrisp();
+    /* 액자 바로 앞을 지나면 벽화가 화면을 덮습니다. 그때만 감춥니다. */
+    for (const fig of figures) fig.group.visible = Math.abs(camZ - fig.z) > 2.15;
 
     /* 높이만 흔듭니다. 시선은 항상 복도 −Z 이고, 멈추면 흔들림도 없습니다. */
     const bob = moving && !reduced ? Math.sin(elapsed * 6.2) * 0.012 : 0;
