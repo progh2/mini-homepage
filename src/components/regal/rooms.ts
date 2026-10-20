@@ -119,7 +119,7 @@ export type DoorStyle = {
   head: "pediment" | "segmental" | "fanlight" | "cornice" | "gothic" | "transom";
 };
 
-export type FloorKind = "opusMosaic" | "oakBoards" | "herringbone" | "versailles" | "cubeParquet" | "terracotta" | "encaustic" | "walnutBoards" | "minton";
+export type FloorKind = "opusMosaic" | "oakBoards" | "herringbone" | "versailles" | "cubeParquet" | "terracotta" | "encaustic" | "walnutBoards" | "minton" | "yorkstone";
 export type WallKind = "panelledStone" | "chintz" | "velvet" | "damask" | "redDamask" | "wedgwood" | "glass" | "plumVelvet"
   /* morris: 아래는 링크러스타(돋을무늬 벽지) 징두리, 가운데는 paper 의 모리스 벽지, 위는 프리즈.
      hallOak: 참나무 판벽 + 스텐실 벽. oakLibrary: 참나무 판벽 + 돋을 가죽 벽지 */
@@ -206,7 +206,7 @@ export const ROOMS: Room[] = [
       { kind: "sconce", at: [-5.97, 5.3], rot: 90, opts: { y: 2.75, gas: true } },
       { kind: "sconce", at: [5.97, -1.9], rot: -90, opts: { y: 2.75, gas: true } },
       { kind: "sconce", at: [5.97, 4.6], rot: -90, opts: { y: 2.75, gas: true } },
-      { kind: "rug", at: [0.4, 1.4], opts: { w: 3.4, d: 2.3, style: "persian" } }
+      { kind: "rug", at: [0.4, 1.4], opts: { w: 3.4, d: 2.3, style: "ushak" } }
     ],
     paintings: [
       {
@@ -327,7 +327,7 @@ export const ROOMS: Room[] = [
       { kind: "globe", at: [-3.6, -1.6] },
       { kind: "vitrine", at: [-2.4, -2.0], rot: 35, opts: { item: "manuscript", title: "채색 필사본", sub: "Illuminated manuscript · 15th c." } },
       { kind: "electrolier", at: [0.2, -0.4], opts: { y: 2.75, size: 0.75 } },
-      { kind: "rug", at: [-0.6, 0.2], opts: { w: 5.2, d: 3.8, style: "persian" } }
+      { kind: "rug", at: [-0.6, 0.2], opts: { w: 5.2, d: 3.8, style: "heriz" } }
     ],
     paintings: [
       {
@@ -439,7 +439,7 @@ export const ROOMS: Room[] = [
       { kind: "gasolier", at: [0.4, -0.4], opts: { y: 3.75, size: 0.95, arms: 4 } },
       { kind: "sconce", at: [1.0, -3.97], rot: 0, opts: { y: 2.5, gas: true } },
       { kind: "sconce", at: [3.4, -3.97], rot: 0, opts: { y: 2.5, gas: true } },
-      { kind: "rug", at: [0.8, -0.6], opts: { w: 5, d: 3.6, style: "savonnerie" } }
+      { kind: "rug", at: [0.8, -0.6], opts: { w: 5, d: 3.6, style: "hammersmith" } }
     ],
     paintings: [
       {
@@ -463,10 +463,10 @@ export const ROOMS: Room[] = [
     nameEn: "Conservatory",
     menu: "links",
     grid: [2, 0],
-    /* 큐 팜하우스(1844~48)식 주철·유리 온실: 곡면 유리 지붕, 주철 기둥과 늑재, 민턴 타일 바닥 */
+    /* 큐 팜하우스(1844~48)식 주철·유리 온실: 곡면 유리 지붕, 주철 기둥과 늑재, 요크석 판석 바닥(4차) */
     size: { w: 8, d: 10, h: 5.4 },
     palette: { main: "#F2F2EE", second: "#4F7A4A", trim: "#FFFFFF" },
-    floor: "minton",
+    floor: "yorkstone",
     walls: "glass",
     ceiling: "glassCurve",
     light: { color: "#FFFFFF", intensity: 3.2, at: [3, 9, 4], distance: 0 },

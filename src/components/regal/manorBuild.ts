@@ -1035,6 +1035,213 @@ function mintonFloor(kit: Kit) {
   });
 }
 
+/* 4차: 대홀 민턴 "팔각 + 점" 타일(1880년대 복도·현관 바닥의 대표 배치).
+   한 장(1024px)이 1.2m → 팔각 한 칸 30cm, 줄눈 약 6mm. 줄눈·면 기울기·장마다 다른 색조가 들어가
+   카펫이 아니라 단단한 타일로 읽히게 합니다. bump=true 면 같은 배치의 높이 지도(타일 흰색, 줄눈 검정). */
+function hallTileDraw(g: CanvasRenderingContext2D, bump: boolean) {
+  const S = 256;
+  const N = 4;
+  const cut = S * 0.29;
+  const grout = bump ? "#000" : "#b6ab95";
+  const r = mulberry(41);
+  const red = "#983a26";
+  const cream = "#dccaa2";
+  const black = "#1d1916";
+  const blue = "#33465f";
+  g.fillStyle = grout;
+  g.fillRect(0, 0, 1024, 1024);
+  const tile = (pts: [number, number][], col: string, inlay?: (cx: number, cy: number) => void) => {
+    g.beginPath();
+    pts.forEach(([x, y], i) => (i ? g.lineTo(x, y) : g.moveTo(x, y)));
+    g.closePath();
+    if (bump) {
+      g.fillStyle = "#fff";
+      g.fill();
+      g.lineWidth = 7;
+      g.strokeStyle = "#000";
+      g.stroke();
+      /* 모서리가 살짝 둥근 "베개" 면 */
+      g.lineWidth = 3;
+      g.strokeStyle = "#bbb";
+      g.stroke();
+      return;
+    }
+    const xs = pts.map(p => p[0]);
+    const ys = pts.map(p => p[1]);
+    const x0 = Math.min(...xs), x1 = Math.max(...xs), y0 = Math.min(...ys), y1 = Math.max(...ys);
+    g.fillStyle = col;
+    g.fill();
+    g.save();
+    g.clip();
+    if (inlay) inlay((x0 + x1) / 2, (y0 + y1) / 2);
+    /* 장마다 다른 굽기 색 */
+    const v = (r() - 0.5) * 0.16;
+    g.fillStyle = v > 0 ? `rgba(255,244,222,${v})` : `rgba(20,10,4,${-v})`;
+    g.fillRect(x0, y0, x1 - x0, y1 - y0);
+    /* 미세한 흙 알갱이 */
+    for (let k = 0; k < 90; k++) {
+      g.fillStyle = r() > 0.5 ? "rgba(255,240,210,0.08)" : "rgba(0,0,0,0.08)";
+      g.fillRect(x0 + r() * (x1 - x0), y0 + r() * (y1 - y0), 1.5, 1.5);
+    }
+    /* 면 기울기: 왼쪽 위 밝게, 오른쪽 아래 어둡게(유약 반광) */
+    const gr = g.createLinearGradient(x0, y0, x1, y1);
+    gr.addColorStop(0, "rgba(255,250,236,0.16)");
+    gr.addColorStop(0.45, "rgba(255,255,255,0)");
+    gr.addColorStop(1, "rgba(0,0,0,0.14)");
+    g.fillStyle = gr;
+    g.fillRect(x0, y0, x1 - x0, y1 - y0);
+    g.restore();
+    /* 줄눈 */
+    g.lineWidth = 7;
+    g.strokeStyle = grout;
+    g.stroke();
+    /* 줄눈 바로 안쪽 그늘 선 */
+    g.lineWidth = 1.2;
+    g.strokeStyle = "rgba(40,24,14,0.35)";
+    g.stroke();
+  };
+  const inlay = (cx: number, cy: number) => {
+    /* 크림 바탕 상감: 빨강 사엽(quatrefoil) + 남색 중심 + 검은 테 */
+    const t = S * 0.34;
+    g.strokeStyle = black;
+    g.lineWidth = 6;
+    g.beginPath();
+    g.rect(cx - t, cy - t, t * 2, t * 2);
+    g.stroke();
+    g.fillStyle = red;
+    for (let k = 0; k < 4; k++) {
+      const a = (k / 4) * Math.PI * 2;
+      g.beginPath();
+      g.arc(cx + Math.cos(a) * t * 0.42, cy + Math.sin(a) * t * 0.42, t * 0.36, 0, Math.PI * 2);
+      g.fill();
+    }
+    g.fillStyle = cream;
+    g.beginPath();
+    g.arc(cx, cy, t * 0.34, 0, Math.PI * 2);
+    g.fill();
+    g.fillStyle = blue;
+    g.beginPath();
+    for (let k = 0; k < 8; k++) {
+      const a = (k / 8) * Math.PI * 2;
+      const rr = k % 2 ? t * 0.12 : t * 0.28;
+      g.lineTo(cx + Math.cos(a) * rr, cy + Math.sin(a) * rr);
+    }
+    g.closePath();
+    g.fill();
+    g.fillStyle = black;
+    for (const [sx, sy] of [[-1, -1], [1, -1], [1, 1], [-1, 1]]) {
+      g.beginPath();
+      g.arc(cx + sx * t * 0.82, cy + sy * t * 0.82, t * 0.08, 0, Math.PI * 2);
+      g.fill();
+    }
+  };
+  for (let i = 0; i < N; i++) {
+    for (let j = 0; j < N; j++) {
+      const x = i * S;
+      const y = j * S;
+      const oct: [number, number][] = [[x + cut, y], [x + S - cut, y], [x + S, y + cut], [x + S, y + S - cut], [x + S - cut, y + S], [x + cut, y + S], [x, y + S - cut], [x, y + cut]];
+      if ((i + j) % 2 === 0) tile(oct, red);
+      else tile(oct, cream, inlay);
+    }
+  }
+  /* 모서리 "점" 타일(검정 마름모). 가장자리는 반대편과 이어지도록 0~1024 모두 그립니다. */
+  for (let i = 0; i <= N; i++) {
+    for (let j = 0; j <= N; j++) {
+      const x = i * S;
+      const y = j * S;
+      tile([[x, y - cut], [x + cut, y], [x, y + cut], [x - cut, y]], (i + j) % 2 ? blue : black);
+    }
+  }
+}
+
+function hallTileFloor(kit: Kit) {
+  return kit.canvas("floor:hallTile4", 1024, 1024, g => hallTileDraw(g, false));
+}
+function hallTileBump(kit: Kit) {
+  return kit.canvas("floor:hallTile4b", 1024, 1024, g => hallTileDraw(g, true), { srgb: false });
+}
+
+/* 4차: 온실 요크석(Yorkstone) 판석. 한 장 1024px = 2.4m. 줄마다 높이가 다른 난척(random length) 깔기.
+   bump=true 면 줄눈 높이 지도. */
+function yorkDraw(g: CanvasRenderingContext2D, bump: boolean) {
+  const r = mulberry(77);
+  const rows = [230, 196, 256, 172, 170];
+  const joint = bump ? "#000" : "#5d564b";
+  g.fillStyle = joint;
+  g.fillRect(0, 0, 1024, 1024);
+  let y = 0;
+  for (const rh of rows) {
+    let x = -r() * 300;
+    while (x < 1024) {
+      const len = 220 + r() * 190;
+      const t0 = r() * 22;
+      const base = [148 + t0 + r() * 6, 142 + t0 + r() * 6, 126 + t0 + r() * 5];
+      const warm = r();
+      if (warm > 0.7) {
+        base[0] += 8;
+        base[1] += 3;
+        base[2] -= 4;
+      }
+      for (const ox of [0, 1024]) {
+        const fx = x - ox;
+        if (fx + len < 0 || fx > 1024) continue;
+        const px = fx + 3, py = y + 3, pw = len - 6, ph = rh - 6;
+        if (bump) {
+          g.fillStyle = "#e8e8e8";
+          g.fillRect(px, py, pw, ph);
+          continue;
+        }
+        g.fillStyle = `rgb(${base[0] | 0},${base[1] | 0},${base[2] | 0})`;
+        g.fillRect(px, py, pw, ph);
+        g.save();
+        g.beginPath();
+        g.rect(px, py, pw, ph);
+        g.clip();
+        const rr = mulberry(Math.floor(x * 13 + y));
+        /* 층리(옅은 띠)와 녹물 띠(Liesegang) */
+        for (let k = 0; k < 7; k++) {
+          g.strokeStyle = rr() > 0.75 ? "rgba(150,96,50,0.12)" : "rgba(255,248,230,0.07)";
+          g.lineWidth = 6 + rr() * 18;
+          g.beginPath();
+          const yy = py + rr() * ph;
+          g.moveTo(px - 10, yy);
+          g.bezierCurveTo(px + pw * 0.3, yy + (rr() - 0.5) * 40, px + pw * 0.7, yy + (rr() - 0.5) * 40, px + pw + 10, yy + (rr() - 0.5) * 30);
+          g.stroke();
+        }
+        for (let k = 0; k < 900; k++) {
+          const d = rr();
+          g.fillStyle = d > 0.5 ? "rgba(255,250,235,0.10)" : "rgba(30,24,16,0.12)";
+          g.fillRect(px + rr() * pw, py + rr() * ph, 1 + rr() * 1.5, 1 + rr() * 1.5);
+        }
+        /* 닳은 가장자리 그늘 */
+        const e = g.createLinearGradient(px, py, px, py + ph);
+        e.addColorStop(0, "rgba(0,0,0,0.12)");
+        e.addColorStop(0.12, "rgba(0,0,0,0)");
+        e.addColorStop(0.88, "rgba(0,0,0,0)");
+        e.addColorStop(1, "rgba(0,0,0,0.14)");
+        g.fillStyle = e;
+        g.fillRect(px, py, pw, ph);
+        /* 이끼·습기 얼룩(유리온실) */
+        if (rr() > 0.6) {
+          g.fillStyle = "rgba(70,80,50,0.06)";
+          g.beginPath();
+          g.ellipse(px + rr() * pw, py + rr() * ph, 20 + rr() * 50, 10 + rr() * 30, rr() * 3, 0, Math.PI * 2);
+          g.fill();
+        }
+        g.restore();
+      }
+      x += len;
+    }
+    y += rh;
+  }
+}
+function yorkFloor(kit: Kit) {
+  return kit.canvas("floor:york", 1024, 1024, g => yorkDraw(g, false));
+}
+function yorkBump(kit: Kit) {
+  return kit.canvas("floor:yorkb", 1024, 1024, g => yorkDraw(g, true), { srgb: false });
+}
+
 /* 민턴 바닥 테두리(검정 바탕 + 빨강/담황 톱니). 정사각 반복이라 어느 방향으로 깔아도 됩니다. */
 function mintonBorder(kit: Kit) {
   return kit.canvas("floor:mintonBorder", 256, 256, g => {
@@ -1293,7 +1500,427 @@ function opusOverlay(kit: Kit) {
 /* 양탄자. 방마다 다른 직조 양식입니다(한 장, 반복 없음).
    persian: 페르시아 메달리온 + 꽃잎 바탕, aubusson-*: 프랑스 오뷔송 꽃다발 타원,
    savonnerie: 사보느리 소용돌이와 가운데 장미, gul: 투르크멘 굴(팔각) 줄무늬. */
+/* 4차 깔개: 헤리즈(페르시아 북서부), 우샤크(서부 아나톨리아 별 메달리온), 모리스 "해머스미스"(손매듭 영국제).
+   모두 코드로 그린 무늬이며 실제 특정 작품의 복제가 아닙니다(출처는 PERIOD.md 23~27). */
+const RUGS4 = new Set(["heriz", "ushak", "hammersmith"]);
+
+function rugTexture4(kit: Kit, style: string) {
+  return kit.canvas(`rug4:${style}`, 1024, 768, g => {
+    const W = 1024;
+    const H = 768;
+    const rnd = mulberry(style.length * 131 + style.charCodeAt(1));
+    const poly = (pts: [number, number][], fill: string, stroke?: string, lw = 3) => {
+      g.beginPath();
+      pts.forEach(([x, y], i) => (i ? g.lineTo(x, y) : g.moveTo(x, y)));
+      g.closePath();
+      g.fillStyle = fill;
+      g.fill();
+      if (stroke) {
+        g.lineWidth = lw;
+        g.strokeStyle = stroke;
+        g.stroke();
+      }
+    };
+    /* 계단식(매듭 격자) 마름모: 헤리즈·우샤크의 각진 윤곽 */
+    const stepDiamond = (cx: number, cy: number, rx: number, ry: number, steps: number): [number, number][] => {
+      const pts: [number, number][] = [];
+      const q: [number, number][] = [];
+      for (let k = 0; k <= steps; k++) {
+        const x = (rx * k) / steps;
+        const y = ry * (1 - k / steps);
+        q.push([x, y]);
+        if (k < steps) q.push([x + rx / steps, y]);
+      }
+      for (const [x, y] of q) pts.push([cx + x, cy - y]);
+      for (let i = q.length - 1; i >= 0; i--) pts.push([cx + q[i][0], cy + q[i][1]]);
+      for (const [x, y] of q) pts.push([cx - x, cy + y]);
+      for (let i = q.length - 1; i >= 0; i--) pts.push([cx - q[i][0], cy - q[i][1]]);
+      return pts;
+    };
+    const quad = (draw: () => void) => {
+      for (const sx of [1, -1]) {
+        for (const sy of [1, -1]) {
+          g.save();
+          g.translate(W / 2, H / 2);
+          g.scale(sx, sy);
+          draw();
+          g.restore();
+        }
+      }
+    };
+    const abrash = (base: string, n: number) => {
+      g.fillStyle = base;
+      g.fillRect(0, 0, W, H);
+      let y = 0;
+      while (y < H) {
+        const hh = 18 + rnd() * 60;
+        g.fillStyle = rnd() > 0.5 ? `rgba(255,220,190,${rnd() * 0.06})` : `rgba(20,0,0,${rnd() * 0.08})`;
+        g.fillRect(0, y, W, hh);
+        y += hh;
+      }
+      void n;
+    };
+    const knots = () => {
+      /* 매듭 결: 가는 가로줄 + 보풀 */
+      for (let y = 0; y < H; y += 3) {
+        g.fillStyle = "rgba(0,0,0,0.035)";
+        g.fillRect(0, y, W, 1);
+      }
+      for (let i = 0; i < 9000; i++) {
+        g.fillStyle = `rgba(${rnd() > 0.5 ? "255,240,220" : "15,8,4"},${0.03 + rnd() * 0.05})`;
+        g.fillRect(rnd() * W, rnd() * H, 1 + rnd() * 2.5, 1);
+      }
+      /* 가장자리 닳음 */
+      const v = g.createRadialGradient(W / 2, H / 2, H * 0.3, W / 2, H / 2, W * 0.62);
+      v.addColorStop(0, "rgba(0,0,0,0)");
+      v.addColorStop(1, "rgba(0,0,0,0.18)");
+      g.fillStyle = v;
+      g.fillRect(0, 0, W, H);
+    };
+    const bands = (list: [number, string][]) => {
+      let ins = 0;
+      for (const [wdt, col] of list) {
+        g.strokeStyle = col;
+        g.lineWidth = wdt;
+        g.strokeRect(ins + wdt / 2, ins + wdt / 2, W - ins * 2 - wdt, H - ins * 2 - wdt);
+        ins += wdt;
+      }
+      return ins;
+    };
+    /* 테두리 띠 위에 반복 무늬를 찍습니다(네 변, 모서리 포함). */
+    const alongBorder = (inset: number, step: number, draw: (x: number, y: number, horiz: boolean) => void) => {
+      for (let x = inset + step / 2; x < W - inset; x += step) {
+        draw(x, inset, true);
+        draw(x, H - inset, true);
+      }
+      for (let y = inset + step / 2; y < H - inset; y += step) {
+        draw(inset, y, false);
+        draw(W - inset, y, false);
+      }
+    };
+
+    if (style === "heriz") {
+      const red = "#86301f";
+      const navy = "#1c2540";
+      const ivory = "#cdb992";
+      const sky = "#5f7c94";
+      const rust = "#a3582c";
+      abrash(red, 0);
+      /* 바탕: 격자로 흩은 작은 계단 꽃(남색 + 상아 심) 과 각진 잎 */
+      let row = 0;
+      for (let y = 120; y < H - 100; y += 62) {
+        for (let x = 130 + (row % 2) * 40; x < W - 110; x += 80) {
+          if (rnd() < 0.25) continue;
+          poly(stepDiamond(x, y, 14, 12, 3), rnd() > 0.3 ? navy : sky);
+          poly(stepDiamond(x, y, 5, 4, 1), ivory);
+          g.fillStyle = navy;
+          g.fillRect(x + 18, y - 2, 12, 4);
+        }
+        row++;
+      }
+      /* 모서리 스팬드럴: 상아색 계단 삼각 */
+      quad(() => {
+        const ox = W / 2 - 112;
+        const oy = H / 2 - 112;
+        const pts: [number, number][] = [[ox, oy]];
+        const st = 7;
+        for (let k = 0; k <= st; k++) {
+          pts.push([ox - (k * 210) / st, oy - ((st - k) * 150) / st]);
+          if (k < st) pts.push([ox - ((k + 1) * 210) / st, oy - ((st - k) * 150) / st]);
+        }
+        poly(pts, ivory, navy, 5);
+        /* 안쪽 각진 갈고리 무늬 */
+        g.strokeStyle = red;
+        g.lineWidth = 7;
+        g.beginPath();
+        g.moveTo(ox - 20, oy - 18);
+        g.lineTo(ox - 55, oy - 18);
+        g.lineTo(ox - 55, oy - 50);
+        g.lineTo(ox - 80, oy - 50);
+        g.stroke();
+        poly(stepDiamond(ox - 36, oy - 46, 12, 12, 2), navy);
+        poly(stepDiamond(ox - 100, oy - 18, 10, 10, 2), sky);
+      });
+      /* 중앙 메달리온: 상아 윤곽 → 남색 → 빨강 → 상아 별 */
+      const cx = W / 2;
+      const cy = H / 2;
+      poly(stepDiamond(cx, cy, 292, 204, 9), ivory);
+      poly(stepDiamond(cx, cy, 282, 196, 9), navy);
+      /* 양 끝 펜던트 */
+      for (const s of [-1, 1]) {
+        poly(stepDiamond(cx + s * 330, cy, 46, 46, 3), ivory, navy, 3);
+        poly(stepDiamond(cx + s * 330, cy, 24, 24, 2), red);
+      }
+      poly(stepDiamond(cx, cy, 200, 140, 7), red, ivory, 4);
+      /* 메달리온 안 각진 야자잎(palmette) 넷 */
+      for (const [dx, dy, rot] of [[110, 0, 0], [-110, 0, Math.PI], [0, 70, Math.PI / 2], [0, -70, -Math.PI / 2]] as [number, number, number][]) {
+        g.save();
+        g.translate(cx + dx, cy + dy);
+        g.rotate(rot);
+        poly([[-30, -26], [10, -26], [40, 0], [10, 26], [-30, 26], [-14, 0]], navy, ivory, 2);
+        poly([[-12, -10], [12, 0], [-12, 10]], rust);
+        g.restore();
+      }
+      const star: [number, number][] = [];
+      for (let k = 0; k < 16; k++) {
+        const a = (k / 16) * Math.PI * 2;
+        const rr = k % 2 ? 30 : 62;
+        star.push([cx + Math.cos(a) * rr * 1.1, cy + Math.sin(a) * rr * 0.85]);
+      }
+      poly(star, ivory, navy, 3);
+      poly(stepDiamond(cx, cy, 20, 16, 2), sky);
+      /* 테두리: 바깥 남색 가드 / 남색 주 테두리 + 거북 팔메트 / 상아 안쪽 가드 */
+      const ins = bands([[16, navy], [6, ivory], [74, navy], [6, ivory], [14, rust], [4, navy]]);
+      void ins;
+      alongBorder(16 + 6 + 37, 74, (x, y) => {
+        poly(stepDiamond(x, y, 26, 24, 3), red, ivory, 2);
+        poly(stepDiamond(x, y, 10, 9, 1), ivory);
+        g.fillStyle = sky;
+        g.fillRect(x - 36, y - 3, 8, 6);
+      });
+      /* 바깥 가드의 톱니 */
+      g.fillStyle = ivory;
+      for (let x = 0; x < W; x += 16) {
+        g.fillRect(x + 4, 6, 6, 4);
+        g.fillRect(x + 4, H - 10, 6, 4);
+      }
+      knots();
+      return;
+    }
+
+    if (style === "ushak") {
+      const red = "#a33221";
+      const navy = "#1e2b52";
+      const gold = "#d6ae4c";
+      const green = "#4d6a4a";
+      const ivory = "#ecdcb8";
+      abrash(red, 0);
+      /* 바탕 덩굴: 노란 가는 줄기와 작은 꽃 */
+      g.strokeStyle = gold;
+      g.lineWidth = 2.5;
+      for (let k = 0; k < 40; k++) {
+        const x = 120 + rnd() * (W - 240);
+        const y = 120 + rnd() * (H - 240);
+        g.beginPath();
+        g.moveTo(x, y);
+        g.bezierCurveTo(x + 20, y - 30, x + 50, y + 30, x + 70, y);
+        g.stroke();
+        g.fillStyle = rnd() > 0.5 ? navy : ivory;
+        g.beginPath();
+        g.arc(x + 70, y, 5, 0, Math.PI * 2);
+        g.fill();
+      }
+      /* 우샤크 "별" 메달리온: 팔각 별(가운데 하나, 테두리에 걸린 반쪽 넷) */
+      const starMed = (cx: number, cy: number, s: number) => {
+        const pts: [number, number][] = [];
+        for (let k = 0; k < 16; k++) {
+          const a = (k / 16) * Math.PI * 2 + Math.PI / 16;
+          const rr = k % 2 ? s * 0.72 : s;
+          pts.push([cx + Math.cos(a) * rr, cy + Math.sin(a) * rr * 0.82]);
+        }
+        poly(pts, navy, gold, 4);
+        /* 안쪽 노란 아라베스크 */
+        g.strokeStyle = gold;
+        g.lineWidth = 3;
+        for (let k = 0; k < 8; k++) {
+          const a = (k / 8) * Math.PI * 2;
+          g.beginPath();
+          g.moveTo(cx + Math.cos(a) * s * 0.22, cy + Math.sin(a) * s * 0.18);
+          g.quadraticCurveTo(cx + Math.cos(a + 0.5) * s * 0.55, cy + Math.sin(a + 0.5) * s * 0.45, cx + Math.cos(a) * s * 0.62, cy + Math.sin(a) * s * 0.5);
+          g.stroke();
+        }
+        const inner: [number, number][] = [];
+        for (let k = 0; k < 8; k++) {
+          const a = (k / 8) * Math.PI * 2;
+          inner.push([cx + Math.cos(a) * s * 0.24, cy + Math.sin(a) * s * 0.2]);
+        }
+        poly(inner, red, gold, 2);
+        g.fillStyle = ivory;
+        g.beginPath();
+        g.arc(cx, cy, s * 0.08, 0, Math.PI * 2);
+        g.fill();
+      };
+      const lozenge = (cx: number, cy: number, s: number) => {
+        poly([[cx, cy - s * 0.6], [cx + s, cy], [cx, cy + s * 0.6], [cx - s, cy]], green, gold, 3);
+        poly([[cx, cy - s * 0.3], [cx + s * 0.5, cy], [cx, cy + s * 0.3], [cx - s * 0.5, cy]], red);
+      };
+      starMed(W / 2, H / 2, 190);
+      for (const [x, y] of [[110, 110], [W - 110, 110], [110, H - 110], [W - 110, H - 110]]) starMed(x, y, 150);
+      for (const [x, y] of [[W / 2, 150], [W / 2, H - 150], [230, H / 2], [W - 230, H / 2]]) lozenge(x, y, 70);
+      /* 테두리: 노랑 가드 / 남색 주 테두리 + 구름띠(chi) / 빨강 가드 */
+      const ins = bands([[10, gold], [8, red], [64, navy], [8, red], [8, gold]]);
+      void ins;
+      alongBorder(18 + 32, 88, (x, y, horiz) => {
+        g.save();
+        g.translate(x, y);
+        if (!horiz) g.rotate(Math.PI / 2);
+        g.strokeStyle = gold;
+        g.lineWidth = 5;
+        g.beginPath();
+        g.moveTo(-32, 6);
+        g.bezierCurveTo(-18, -16, -2, 16, 12, -6);
+        g.bezierCurveTo(20, -16, 30, -8, 34, 4);
+        g.stroke();
+        g.fillStyle = red;
+        g.beginPath();
+        g.arc(-12, -10, 6, 0, Math.PI * 2);
+        g.fill();
+        g.fillStyle = ivory;
+        g.beginPath();
+        g.arc(18, 12, 4, 0, Math.PI * 2);
+        g.fill();
+        g.restore();
+      });
+      knots();
+      return;
+    }
+
+    /* hammersmith: 모리스식 남색 바탕, 대칭으로 말린 아칸서스 잎, 꼭두서니 빨강 테두리 */
+    const indigo = "#1f2b48";
+    const mid = "#3d5a86";
+    const pale = "#8ea7c4";
+    const madder = "#8c3828";
+    const leafG = "#55704a";
+    const ochre = "#c99c47";
+    const cream = "#eadbb6";
+    abrash(indigo, 0);
+    /* 바탕 전체를 덮는 잔 덩굴(모리스 카펫은 빈 바탕이 거의 없습니다) */
+    for (let k = 0; k < 520; k++) {
+      const x = rnd() * W;
+      const y = rnd() * H;
+      const a2 = rnd() * Math.PI * 2;
+      g.fillStyle = rnd() > 0.5 ? "#2c3c62" : "#34507a";
+      g.beginPath();
+      g.ellipse(x, y, 9 + rnd() * 6, 3 + rnd() * 2, a2, 0, Math.PI * 2);
+      g.fill();
+    }
+    g.strokeStyle = "#2f4470";
+    g.lineWidth = 2;
+    for (let k = 0; k < 60; k++) {
+      const x = rnd() * W;
+      const y = rnd() * H;
+      g.beginPath();
+      g.moveTo(x, y);
+      g.bezierCurveTo(x + 30, y - 20, x + 40, y + 30, x + 80, y + 10);
+      g.stroke();
+    }
+    const acanthus = (len: number, curl: number) => {
+      /* 굵은 S자 잎줄기 + 톱니 잎 */
+      g.lineCap = "round";
+      g.strokeStyle = "#141d33";
+      g.lineWidth = 22;
+      g.beginPath();
+      g.moveTo(0, 0);
+      g.bezierCurveTo(len * 0.3, -curl, len * 0.7, curl, len, 0);
+      g.stroke();
+      g.strokeStyle = mid;
+      g.lineWidth = 17;
+      g.beginPath();
+      g.moveTo(0, 0);
+      g.bezierCurveTo(len * 0.3, -curl, len * 0.7, curl, len, 0);
+      g.stroke();
+      g.strokeStyle = pale;
+      g.lineWidth = 6;
+      g.stroke();
+      for (let k = 1; k < 6; k++) {
+        const t = k / 6;
+        const x = len * t;
+        const y = Math.sin(t * Math.PI * 2) * -curl * 0.55;
+        const side = k % 2 ? 1 : -1;
+        g.fillStyle = leafG;
+        g.beginPath();
+        g.ellipse(x, y + side * 26, 30, 11, side * 0.7, 0, Math.PI * 2);
+        g.fill();
+        g.strokeStyle = "rgba(230,220,180,0.45)";
+        g.lineWidth = 2;
+        g.beginPath();
+        g.moveTo(x - 22, y + side * 20);
+        g.lineTo(x + 22, y + side * 32);
+        g.stroke();
+      }
+    };
+    const flower = (x: number, y: number, r: number) => {
+      for (let k = 0; k < 8; k++) {
+        const a = (k / 8) * Math.PI * 2;
+        g.fillStyle = madder;
+        g.beginPath();
+        g.ellipse(x + Math.cos(a) * r * 0.55, y + Math.sin(a) * r * 0.55, r * 0.5, r * 0.26, a, 0, Math.PI * 2);
+        g.fill();
+      }
+      g.fillStyle = ochre;
+      g.beginPath();
+      g.arc(x, y, r * 0.34, 0, Math.PI * 2);
+      g.fill();
+      g.fillStyle = cream;
+      g.beginPath();
+      g.arc(x, y, r * 0.14, 0, Math.PI * 2);
+      g.fill();
+    };
+    quad(() => {
+      g.save();
+      g.translate(20, 40);
+      g.rotate(-0.25);
+      acanthus(330, 70);
+      g.restore();
+      g.save();
+      g.translate(60, 170);
+      g.rotate(0.15);
+      acanthus(260, -50);
+      g.restore();
+      g.save();
+      g.translate(200, 40);
+      g.rotate(0.9);
+      acanthus(180, 30);
+      g.restore();
+      flower(250, 120, 26);
+      flower(370, 230, 20);
+      flower(140, 250, 17);
+      flower(320, 60, 14);
+    });
+    /* 가운데 꽃 다발 */
+    poly([[W / 2, H / 2 - 120], [W / 2 + 150, H / 2], [W / 2, H / 2 + 120], [W / 2 - 150, H / 2]], "#2a3b60", ochre, 3);
+    flower(W / 2, H / 2, 44);
+    for (let k = 0; k < 4; k++) {
+      const a = (k / 4) * Math.PI * 2 + Math.PI / 4;
+      g.fillStyle = leafG;
+      g.beginPath();
+      g.ellipse(W / 2 + Math.cos(a) * 70, H / 2 + Math.sin(a) * 60, 36, 12, a, 0, Math.PI * 2);
+      g.fill();
+    }
+    /* 테두리: 황토 가드 / 꼭두서니 주 테두리 + 굽이치는 덩굴 / 남색 가드 */
+    bands([[8, indigo], [8, ochre], [70, madder], [8, ochre], [6, indigo]]);
+    const by = 16 + 35;
+    g.strokeStyle = ochre;
+    g.lineWidth = 5;
+    for (const [x0, y0, x1, y1] of [[by, by, W - by, by], [by, H - by, W - by, H - by]]) {
+      g.beginPath();
+      for (let x = x0; x <= x1; x += 4) g.lineTo(x, y0 + Math.sin((x - x0) / 34) * 16);
+      g.stroke();
+      void y1;
+    }
+    for (const xx of [by, W - by]) {
+      g.beginPath();
+      for (let y = by; y <= H - by; y += 4) g.lineTo(xx + Math.sin((y - by) / 34) * 16, y);
+      g.stroke();
+    }
+    alongBorder(by, 107, (x, y, horiz) => {
+      const fx = horiz ? x : x + 14;
+      const fy = horiz ? y - 14 : y;
+      g.fillStyle = pale;
+      g.beginPath();
+      g.arc(fx, fy, 10, 0, Math.PI * 2);
+      g.fill();
+      g.fillStyle = cream;
+      g.beginPath();
+      g.arc(fx, fy, 4, 0, Math.PI * 2);
+      g.fill();
+    });
+    knots();
+  });
+}
+
 function rugTexture(kit: Kit, style: string) {
+  if (RUGS4.has(style)) return rugTexture4(kit, style);
   return kit.canvas(`rug:${style}`, 1024, 768, g => {
     const W = 1024;
     const H = 768;
@@ -1832,8 +2459,18 @@ export function buildRoom(kit: Kit, room: Room, ctx: BuildCtx): BuiltRoom {
         uvx(g, w / 0.9, d / 0.9);
         break;
       case "minton":
-        m = std({ map: mintonFloor(kit), roughness: 0.42 });
-        uvx(g, w / (room.id === "hall" ? 1.6 : 1.3), d / (room.id === "hall" ? 1.6 : 1.3));
+        if (room.id === "hall") {
+          /* 4차: 30cm 팔각+점 타일, 줄눈 bump, 반광 */
+          m = std({ map: hallTileFloor(kit), bumpMap: hallTileBump(kit), bumpScale: 2.2, roughness: 0.26 });
+          uvx(g, w / 1.2, d / 1.2);
+        } else {
+          m = std({ map: mintonFloor(kit), roughness: 0.42 });
+          uvx(g, w / 1.3, d / 1.3);
+        }
+        break;
+      case "yorkstone":
+        m = std({ map: yorkFloor(kit), bumpMap: yorkBump(kit), bumpScale: 2.5, color: 0xdedad2, roughness: 0.78 });
+        uvx(g, w / 2.4, d / 2.4);
         break;
       case "terracotta":
         m = std({ map: kit.texture(`${TEX}terracotta_floor_tiles_diff.webp`), normalMap: kit.texture(`${TEX}terracotta_floor_tiles_nor.webp`, false), color: 0xe8a088, roughness: 0.7 });
@@ -1848,7 +2485,7 @@ export function buildRoom(kit: Kit, room: Room, ctx: BuildCtx): BuiltRoom {
 
     /* 가장자리 상감 띠: 대리석/나무/검은 타일 */
     const bandMat =
-      room.floor === "opusMosaic" ? null
+      room.floor === "opusMosaic" || room.floor === "yorkstone" ? null
       : room.floor === "minton" ? std({ map: mintonBorder(kit), roughness: 0.42 })
       : room.floor === "encaustic" || room.floor === "terracotta" ? std({ color: 0x26201c, roughness: 0.5 })
       : std({ color: 0x3a2416, roughness: 0.38, map: kit.texture(`${TEX}black_walnut_veneer_01_diff.webp`) });
@@ -1858,7 +2495,7 @@ export function buildRoom(kit: Kit, room: Room, ctx: BuildCtx): BuiltRoom {
       for (const [bw, bd, x, z] of [[w - ins * 2, bw0, 0, -d / 2 + ins + bw0 / 2], [w - ins * 2, bw0, 0, d / 2 - ins - bw0 / 2], [bw0, d - ins * 2 - bw0 * 2, -w / 2 + ins + bw0 / 2, 0], [bw0, d - ins * 2 - bw0 * 2, w / 2 - ins - bw0 / 2, 0]] as [number, number, number, number][]) {
         const b2 = plane(bw, bd, bandMat, group, x, 0.003, z);
         b2.rotation.x = -Math.PI / 2;
-        if (room.floor === "minton") uvx(b2.geometry, bw / 0.3, bd / 0.3);
+        if (room.floor === "minton") uvx(b2.geometry, bw / 0.6, bd / 0.6);
         else uvx(b2.geometry, Math.max(1, bw / 1.2), Math.max(1, bd / 1.2));
       }
     }
@@ -5424,10 +6061,11 @@ function makeProps(k: Tools) {
     const rw = Number(p.opts?.w ?? 3);
     const rd = Number(p.opts?.d ?? 2);
     const tex = k.rug(kit, String(p.opts?.style ?? "persian"));
-    const r = plane(rw, rd, std({ map: tex, roughness: 0.95 }), g, 0, 0.018, 0);
+    const r = plane(rw, rd, std({ map: tex, roughness: 0.95, color: RUGS4.has(String(p.opts?.style)) ? 0xd8cfc4 : 0xffffff }), g, 0, 0.018, 0);
     r.rotation.x = -Math.PI / 2;
     const fringe = std({ color: 0xece0c4, roughness: 1 });
-    for (const s of [-1, 1]) box(rw, 0.008, 0.06, fringe, g, 0, 0.012, s * (rd / 2 + 0.03));
+    /* 술은 날실이 끝나는 짧은 두 변(x 끝)에 */
+    for (const s of [-1, 1]) box(0.06, 0.008, rd * 0.96, fringe, g, s * (rw / 2 + 0.03), 0.012, 0);
   };
 
   B.runner = (g, p) => {
