@@ -1786,9 +1786,9 @@ function rugTexture4(kit: Kit, style: string) {
       const muted = style === "heriz-wine";
       const red = muted ? "#4a1b1c" : "#7a2a1c";
       const navy = muted ? "#1b1d29" : "#1a223a";
-      const ivory = muted ? "#7d6a50" : "#b7a27c";
-      const sky = muted ? "#3e4a56" : "#5f7c94";
-      const rust = muted ? "#6a3522" : "#a3582c";
+      const ivory = muted ? "#5e4f3b" : "#b7a27c";
+      const sky = muted ? "#343e48" : "#5f7c94";
+      const rust = muted ? "#552b1d" : "#a3582c";
       abrash(red, 0);
       /* 바탕: 격자로 흩은 작은 계단 꽃(남색 + 상아 심) 과 각진 잎 */
       let row = 0;
