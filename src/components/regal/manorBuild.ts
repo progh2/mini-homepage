@@ -3923,10 +3923,13 @@ export function buildRoom(kit: Kit, room: Room, ctx: BuildCtx): BuiltRoom {
     box(ww + 0.12, 0.12, 0.03, fm, wg, cx, sill - 0.105, 0.015);
     /* 창 밑 판: 바닥에서 창턱까지 판 두 장(낮은 빅토리아 창턱 아래의 흔한 마감, 추정) */
     if (sill > 0.25) {
+      /* 창 아래 판벽: 흰 칠 대신 걸레받이·문짝과 같은 짙은 목재 칠(나뭇결 칠, 추정) */
       const bh = sill - 0.045;
-      box(ww + 0.2, bh, 0.026, fm, wg, cx, bh / 2, 0.013);
+      const backM = fm === walnut ? walnut : std({ color: 0x4a3426, roughness: 0.5 });
+      const panM = fm === walnut ? walnut : std({ color: 0x5a4030, roughness: 0.42 });
+      box(ww + 0.2, bh, 0.026, backM, wg, cx, bh / 2, 0.013);
       const pw2 = (ww + 0.2) / 2 - 0.12;
-      for (const sx of [-1, 1]) box(pw2, Math.max(0.05, bh - 0.26), 0.016, fm, wg, cx + sx * (pw2 / 2 + 0.04), bh / 2 + 0.02, 0.032);
+      for (const sx of [-1, 1]) box(pw2, Math.max(0.05, bh - 0.26), 0.016, panM, wg, cx + sx * (pw2 / 2 + 0.04), bh / 2 + 0.02, 0.032);
     }
     /* 상자 틀: 도르래 기둥, 머리, 바깥 창턱 */
     const fz = -0.2;

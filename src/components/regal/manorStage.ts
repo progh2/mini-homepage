@@ -87,7 +87,7 @@ export function createManorStage(opts: {
   let walk: { from: T.Vector3; to: T.Vector3; start: number; next: string } | null = null;
 
   /* 비밀 책장이 열리는 동안(1.3초) 기다렸다가 걸어 들어갑니다. */
-  let opening: { t: number; to: string; point: T.Vector3; yaw0: number; yaw1: number } | null = null;
+  let opening: { t: number; start: number; to: string; point: T.Vector3; yaw0: number; yaw1: number } | null = null;
   let fadeIn = 0;
   let fadeStart = 0;
   const busy = () => !!walk || !!opening || fadeIn > 0;
@@ -236,7 +236,7 @@ export function createManorStage(opts: {
         const baseYaw = Math.atan2(dir.x, dir.z);
         let want = Math.atan2(h.point.x - basePos.x, h.point.z - basePos.z) - baseYaw;
         want = Math.atan2(Math.sin(want), Math.cos(want));
-        opening = { t: 0, to: hit.to, point: h.point.clone(), yaw0: yaw, yaw1: Math.max(-28 * DEG, Math.min(28 * DEG, want * 0.7)) };
+        opening = { t: 0, start: performance.now(), to: hit.to, point: h.point.clone(), yaw0: yaw, yaw1: Math.max(-28 * DEG, Math.min(28 * DEG, want * 0.7)) };
       }
       else if (hit.type === "door") goTo(hit.to, true, h.point);
       else events.onCharacter();
@@ -265,23 +265,19 @@ export function createManorStage(opts: {
   /* 그리기 */
   const head = new THREE.Vector3();
   const minFrame = opts.mobile ? 1000 / 30 : 0;
-  let last = performance.now();
   let lastDraw = 0;
   let frame = 0;
   const t0 = performance.now();
   function tick(now: number) {
     frame = requestAnimationFrame(tick);
     if (document.hidden) {
-      last = now;
       return;
     }
     if (now - lastDraw < minFrame - 1) return;
     lastDraw = now;
-    const dt = Math.min(0.1, (now - last) / 1000);
-    last = now;
     const t = (now - t0) / 1000;
     if (opening && current) {
-      opening.t = Math.min(1, opening.t + dt / 1.3);
+      opening.t = Math.min(1, (now - opening.start) / 1300);
       const u = opening.t;
       current.openSecret?.(1 - Math.pow(1 - u, 3));
       const e = Math.min(1, u * 1.6);
