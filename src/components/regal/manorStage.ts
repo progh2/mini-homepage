@@ -29,6 +29,8 @@ export type ManorStage = {
 
 const DEG = Math.PI / 180;
 const LOOK_LIMIT = 10 * DEG;
+/* 세로 화면은 가로 화각이 좁아서 좌우로 조금 더 돌아볼 수 있게 합니다. */
+const LOOK_LIMIT_PORTRAIT = 20 * DEG;
 
 export function neighbours(room: Room) {
   return room.doors.map(d => d.to).filter((id, i, a) => a.indexOf(id) === i && ROOM_BY_ID[id]);
@@ -123,6 +125,17 @@ export function createManorStage(opts: {
     return Math.min(78, Math.max(46, v));
   }
 
+  const portrait = () => rect.w < rect.h;
+  const yawLimit = () => (portrait() ? LOOK_LIMIT_PORTRAIT : LOOK_LIMIT);
+
+  /* 방의 기본 시점. 세로 화면이고 방에 portraitCamera 가 있으면 그쪽을 씁니다. */
+  function setBase() {
+    if (!current) return;
+    const c = (portrait() && current.room.portraitCamera) || current.room.camera;
+    basePos.set(...c.pos);
+    baseLook.set(...c.look);
+  }
+
   function applyCamera() {
     camera.aspect = rect.w / Math.max(1, rect.h);
     camera.fov = fovFor();
@@ -141,8 +154,7 @@ export function createManorStage(opts: {
     scene.fog = new THREE.Fog(new THREE.Color(r.fog.color), r.fog.near, r.fog.far);
     scene.background = new THREE.Color(r.fog.color);
     renderer.toneMappingExposure = r.exposure;
-    basePos.set(...r.camera.pos);
-    baseLook.set(...r.camera.look);
+    setBase();
     yaw = 0;
     pitch = 0;
     placeCamera();
@@ -223,7 +235,7 @@ export function createManorStage(opts: {
     const dx = e.clientX - down.x;
     const dy = e.clientY - down.y;
     if (Math.abs(dx) + Math.abs(dy) < 6) return;
-    yaw = Math.max(-LOOK_LIMIT, Math.min(LOOK_LIMIT, down.yaw - dx * 0.0025));
+    yaw = Math.max(-yawLimit(), Math.min(yawLimit(), down.yaw - dx * 0.0025));
     pitch = Math.max(-LOOK_LIMIT, Math.min(LOOK_LIMIT, down.pitch + dy * 0.0025));
     placeCamera();
   };
@@ -404,9 +416,15 @@ export function createManorStage(opts: {
   return {
     goTo: (id, animate) => goTo(id, animate),
     resize(r) {
+      const wasPortrait = portrait();
       rect = r;
       renderer.setSize(r.w, r.h);
       applyCamera();
+      if (wasPortrait !== portrait() && !walk && !opening) {
+        /* 화면을 돌리면 그 방향의 기본 시점으로 바꿉니다. */
+        setBase();
+        yaw = Math.max(-yawLimit(), Math.min(yawLimit(), yaw));
+      }
       placeCamera();
     },
     dispose() {

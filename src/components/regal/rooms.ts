@@ -153,6 +153,8 @@ export type Room = {
   exposure: number;
   /* 고정 카메라. 문 쪽에서 본 3/4 시점입니다. */
   camera: { pos: [number, number, number]; look: [number, number, number] };
+  /* 세로 화면(폰)에서만 쓰는 카메라. 없으면 camera 를 그대로 씁니다. */
+  portraitCamera?: { pos: [number, number, number]; look: [number, number, number] };
   doors: Door[];
   doorStyle: DoorStyle;
   windows: Window[];
@@ -313,6 +315,9 @@ export const ROOMS: Room[] = [
     fog: { color: "#1a140e", near: 12, far: 30 },
     exposure: 1.3,
     camera: { pos: [4.1, 1.55, 2.3], look: [-1.8, 1.35, -1.4] },
+    /* 폰 세로 화면은 가로 화각이 좁고 그림이 작아 서쪽 벽의 빨간 책이 점 하나로 보였습니다.
+       한 걸음 서쪽으로 들어서서 사서와 비밀 책장이 함께 들어오게 봅니다. */
+    portraitCamera: { pos: [0.6, 1.55, 2.6], look: [-2.6, 1.35, -1.25] },
     doors: [
       { wall: "E", to: "reception" },
       { wall: "W", to: "secret", secret: true, offset: 1.0 }
