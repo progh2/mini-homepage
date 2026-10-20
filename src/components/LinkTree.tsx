@@ -35,6 +35,8 @@ import {
   type VisitCounts
 } from "@/lib/firebase";
 import {
+  bgmCredit,
+  bgmTracks,
   boardPosts,
   episodes,
   guestbook,
@@ -61,6 +63,7 @@ const LumenStage = dynamic(() => import("@/components/LumenStage"), { ssr: false
 /* 왕실 복도도 고른 사람만 받습니다. 석재 재질과 3D 가 클래식 첫 화면에
    섞이면 안 됩니다. */
 const RegalStage = dynamic(() => import("@/components/RegalStage"), { ssr: false });
+type RegalExtra = "guestbook" | "bgm" | "links";
 
 /* 네온 무대를 못 불러와도 미니홈피가 통째로 사라지지 않게 막습니다.
 
@@ -112,6 +115,53 @@ class LumenBoundary extends Component<
 }
 
 /* 왕실 무대를 못 불러와도 같은 이유로 미니홈피 전체를 죽이지 않습니다. */
+/* 왕실 대저택에서 사이트 탭이 아닌 방(응접실, 음악실, 온실)의 카드 내용입니다. */
+function regalExtra(menu: RegalExtra, playBgm: () => void, openHud: () => void) {
+  if (menu === "guestbook") {
+    return (
+      <div className="cy-manor-extra">
+        <p className="cy-manor-lead">차 한 잔과 함께 한 줄 남겨 주세요.</p>
+        <GuestbookList />
+      </div>
+    );
+  }
+  if (menu === "bgm") {
+    return (
+      <div className="cy-manor-extra">
+        <ol className="cy-manor-tracks">
+          {bgmTracks.map(t => (
+            <li key={t.id}>
+              <b>{t.title}</b> <span>{t.artist}</span>
+            </li>
+          ))}
+        </ol>
+        <div className="cy-manor-actions">
+          <button type="button" onClick={playBgm}>
+            ▶ 연주 시작
+          </button>
+          <button type="button" className="cy-manor-hud" onClick={openHud}>
+            음악 조절판 열기
+          </button>
+        </div>
+        <p className="cy-manor-note">{bgmCredit}</p>
+      </div>
+    );
+  }
+  return (
+    <div className="cy-manor-extra">
+      <ul className="cy-manor-links">
+        {waveLinks.map(l => (
+          <li key={l.id}>
+            <a href={l.href} target="_blank" rel="noreferrer">
+              {l.label}
+            </a>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
 class RegalBoundary extends Component<
   { onError: () => void; children: ReactNode },
   { failed: boolean }
@@ -986,13 +1036,16 @@ export default function LinkTree() {
   /* ?tab=프로필 처럼 탭 딥링크로 들어오면 진입 화면을 건너뜁니다.
      정적 배포에서도 동작하도록 브라우저에서 읽습니다. */
   useEffect(() => {
-    const tab = new URLSearchParams(window.location.search).get("tab");
+    const params = new URLSearchParams(window.location.search);
+    const tab = params.get("tab");
     const found = TABS.find(t => t === tab);
+    /* 왕실 대저택의 ?room= 방 바로가기도 진입 화면을 건너뜁니다. */
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (params.get("room")) setIntroSkipped(true);
     if (found) {
       /* output: "export" 라 HTML 은 홈 탭으로 미리 만들어집니다. 주소창의 ?tab= 은
          브라우저에만 있으므로 하이드레이션 뒤에 읽어 맞출 수밖에 없습니다.
          렌더 중에 읽으면 서버 HTML 과 달라져 하이드레이션이 어긋납니다. */
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setActiveTab(found);
       setIntroSkipped(true);
     }
@@ -1070,7 +1123,8 @@ export default function LinkTree() {
         href:
           "https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700" +
           "&family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500" +
-          "&family=Nanum+Myeongjo:wght@400;700&display=swap",
+          "&family=Nanum+Myeongjo:wght@400;700" +
+          "&family=Noto+Serif+KR:wght@600&family=Noto+Sans+KR:wght@400;600&display=swap",
         crossOrigin: ""
       }
     ].map(spec => {
@@ -1117,7 +1171,7 @@ export default function LinkTree() {
     const onPointerDown = (event: PointerEvent) => {
       const target = event.target;
       if (!(target instanceof Element)) return;
-      if (target.closest("#cy-hud, .cy-hud-toggle")) return;
+      if (target.closest("#cy-hud, .cy-hud-toggle, .cy-manor-hud")) return;
       /* 왕실에서는 화면 옆을 누르면 다음 방으로 걷습니다.
          서랍을 닫는 탭이 그 걸음이 되지 않게 클릭을 삼킵니다. */
       if (regal) event.preventDefault();
@@ -1290,6 +1344,9 @@ export default function LinkTree() {
                     backgroundRef={backgroundRef}
                     locked={showIntro}
                     onFallback={() => setFailedSkin("regal")}
+                    renderExtra={menu => regalExtra(menu, () => bgmRef.current?.start(), () => setHudOpen(true))}
+                    hudOpen={hudOpen}
+                    onToggleHud={() => setHudOpen(o => !o)}
                   />
                 </RegalBoundary>
               ) : (
@@ -1351,7 +1408,7 @@ export default function LinkTree() {
 
       {regal && !stageFailed ? (
         <div className="cy-regal-hint" aria-hidden="true">
-          <kbd>◀</kbd> <kbd>▶</kbd> 방향키나 아래 메뉴로 다음 방을 걸어갑니다
+          문이나 문패를 누르면 다음 방으로 걸어갑니다 · <kbd>◀</kbd> <kbd>▶</kbd>
         </div>
       ) : null}
 
