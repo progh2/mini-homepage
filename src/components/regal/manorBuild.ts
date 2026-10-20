@@ -1044,8 +1044,8 @@ function hallTileDraw(g: CanvasRenderingContext2D, bump: boolean) {
   const cut = S * 0.29;
   const grout = bump ? "#000" : "#b6ab95";
   const r = mulberry(41);
-  const red = "#86301f";
-  const cream = "#d6c49c";
+  const red = "#74281a";
+  const cream = "#cbb88e";
   const black = "#1d1916";
   const blue = "#33465f";
   g.fillStyle = grout;
@@ -1781,9 +1781,9 @@ function rugTexture4(kit: Kit, style: string) {
     };
 
     if (style === "heriz") {
-      const red = "#86301f";
-      const navy = "#1c2540";
-      const ivory = "#cdb992";
+      const red = "#7a2a1c";
+      const navy = "#1a223a";
+      const ivory = "#b7a27c";
       const sky = "#5f7c94";
       const rust = "#a3582c";
       abrash(red, 0);
@@ -1877,18 +1877,18 @@ function rugTexture4(kit: Kit, style: string) {
       const ivory = "#ecdcb8";
       abrash(red, 0);
       /* 바탕 덩굴: 노란 가는 줄기와 작은 꽃 */
-      g.strokeStyle = gold;
-      g.lineWidth = 2.5;
-      for (let k = 0; k < 40; k++) {
-        const x = 120 + rnd() * (W - 240);
-        const y = 120 + rnd() * (H - 240);
+      g.strokeStyle = "rgba(196,154,70,0.7)";
+      g.lineWidth = 1.6;
+      for (let k = 0; k < 220; k++) {
+        const x = 100 + rnd() * (W - 200);
+        const y = 100 + rnd() * (H - 200);
         g.beginPath();
         g.moveTo(x, y);
-        g.bezierCurveTo(x + 20, y - 30, x + 50, y + 30, x + 70, y);
+        g.bezierCurveTo(x + 8, y - 12, x + 20, y + 12, x + 28, y);
         g.stroke();
         g.fillStyle = rnd() > 0.5 ? navy : ivory;
         g.beginPath();
-        g.arc(x + 70, y, 5, 0, Math.PI * 2);
+        g.arc(x + 28, y, 2.5, 0, Math.PI * 2);
         g.fill();
       }
       /* 우샤크 "별" 메달리온: 팔각 별(가운데 하나, 테두리에 걸린 반쪽 넷) */
@@ -2642,7 +2642,7 @@ export function buildRoom(kit: Kit, room: Room, ctx: BuildCtx): BuiltRoom {
       case "minton":
         if (room.id === "hall") {
           /* 4차: 30cm 팔각+점 타일, 줄눈 bump, 반광 */
-          m = std({ map: hallTileFloor(kit), bumpMap: hallTileBump(kit), bumpScale: 2.2, roughness: 0.26 });
+          m = std({ map: hallTileFloor(kit), bumpMap: hallTileBump(kit), bumpScale: 2.2, color: 0xd6cec6, roughness: 0.26 });
           uvx(g, w / 1.2, d / 1.2);
         } else {
           m = std({ map: mintonFloor(kit), roughness: 0.42 });
@@ -4086,27 +4086,111 @@ export function buildRoom(kit: Kit, room: Room, ctx: BuildCtx): BuiltRoom {
      발밑에는 부드러운 둥근 그림자를 깔고, 숨쉬기(세로 0.6%)와
      아주 작은 기울임만 줍니다. */
   function buildStandee(c: Character) {
-    const tex = kit.texture(c.src);
+    /* 4차: 2D 그림을 방에 "앉히는" 후처리(캔버스에서 한 번만).
+       ① 알파 가장자리를 0.7px 흐려 계단 줄이기 ② 윤곽 안쪽 어둡게(림 다크닝)
+       ③ 방 빛 색온도(주등 + 하늘빛)로 곱하기 ④ 등 쪽에서 밝고 반대쪽이 어두운 가로 그라데이션
+       ⑤ 발목 아래로 갈수록 어두워지는 AO ⑥ 종이 결 잡음.
+       한계: 그림은 여전히 평면이라 실제 3D 조명·그림자를 받지 않습니다(보고서 참고). */
     const ph = c.height;
     const pw = ph * c.aspect;
-    const m = std({ map: tex, transparent: true, alphaTest: 0.5, roughness: 0.92, side: THREE.DoubleSide });
-    /* 그림의 색을 살리려고 자기 색으로 조금 밝힙니다(셀 셰이딩 그림이라 조명에 덜 묻히게). */
+    const H = 768;
+    const W = Math.max(8, Math.round(H * c.aspect));
+    const lightC = new THREE.Color(room.light.color);
+    const skyC = new THREE.Color(room.ambient.sky);
+    const tintC = new THREE.Color(1, 1, 1).lerp(lightC.clone().lerp(skyC, 0.3), 0.55);
+    const theta = Math.atan2(camPos.x - c.at[0], camPos.z - c.at[1]) + (c.rot ?? 0) * DEG;
+    const lx = room.light.at[0] - c.at[0];
+    const lz = room.light.at[2] - c.at[1];
+    const side = Math.cos(theta) * lx - Math.sin(theta) * lz >= 0 ? 1 : -1;
+    const tex = kit.canvas(`standee4:${room.id}:${c.src}`, W, H, async g => {
+      const img = await kit.image(c.src);
+      const mk = () => {
+        const cv = document.createElement("canvas");
+        cv.width = W;
+        cv.height = H;
+        return [cv, cv.getContext("2d")!] as const;
+      };
+      const [baseC, b] = mk();
+      b.drawImage(img, 0, 0, W, H);
+      /* ① */
+      g.clearRect(0, 0, W, H);
+      g.filter = "blur(0.7px)";
+      g.drawImage(baseC, 0, 0);
+      g.filter = "none";
+      /* ③ 색온도 */
+      const [tC, t] = mk();
+      t.fillStyle = `#${tintC.getHexString()}`;
+      t.fillRect(0, 0, W, H);
+      t.globalCompositeOperation = "destination-in";
+      t.drawImage(baseC, 0, 0);
+      g.globalCompositeOperation = "multiply";
+      g.drawImage(tC, 0, 0);
+      /* ④⑤ 빛 방향 + 발 AO (그림 안쪽에만) */
+      const [lC, l] = mk();
+      const gx = l.createLinearGradient(side > 0 ? W : 0, 0, side > 0 ? 0 : W, 0);
+      gx.addColorStop(0, "rgb(255,255,255)");
+      gx.addColorStop(0.55, "rgb(236,232,228)");
+      gx.addColorStop(1, "rgb(190,184,180)");
+      l.fillStyle = gx;
+      l.fillRect(0, 0, W, H);
+      const gy = l.createLinearGradient(0, 0, 0, H);
+      gy.addColorStop(0, "rgba(255,255,255,0)");
+      gy.addColorStop(0.82, "rgba(255,255,255,0)");
+      gy.addColorStop(1, "rgba(70,60,54,1)");
+      l.globalCompositeOperation = "multiply";
+      l.fillStyle = gy;
+      l.fillRect(0, 0, W, H);
+      l.globalCompositeOperation = "destination-in";
+      l.drawImage(baseC, 0, 0);
+      g.drawImage(lC, 0, 0);
+      g.globalCompositeOperation = "source-over";
+      /* ② 림 다크닝: 실루엣 - 흐린 실루엣 = 가장자리 띠 */
+      const [rC, r] = mk();
+      r.fillStyle = "rgb(24,16,12)";
+      r.fillRect(0, 0, W, H);
+      r.globalCompositeOperation = "destination-in";
+      r.drawImage(baseC, 0, 0);
+      r.globalCompositeOperation = "destination-out";
+      r.filter = "blur(5px)";
+      r.drawImage(baseC, 0, 0);
+      r.filter = "none";
+      g.globalCompositeOperation = "source-atop";
+      g.globalAlpha = 0.5;
+      g.drawImage(rC, 0, 0);
+      g.globalAlpha = 1;
+      /* ⑥ 종이 결 */
+      const rr = mulberry(W * 7 + H);
+      for (let i = 0; i < W * H * 0.06; i++) {
+        g.fillStyle = rr() > 0.5 ? "rgba(255,248,236,0.06)" : "rgba(30,20,10,0.07)";
+        g.fillRect(rr() * W, rr() * H, 1, 1);
+      }
+      g.globalCompositeOperation = "source-over";
+    }, { repeat: false });
+    const m = std({ map: tex, transparent: true, alphaTest: 0.12, roughness: 0.95, side: THREE.DoubleSide });
+    /* 자체 발광은 낮춰(0.38→0.2) 방 조명 쪽 비중을 키웁니다. */
     m.emissive = new THREE.Color(0xffffff);
     m.emissiveMap = tex;
-    m.emissiveIntensity = 0.38;
+    m.emissiveIntensity = 0.2;
     const pivot = new THREE.Group();
     charGroup.add(pivot);
-    plane(pw, ph, m, pivot, 0, ph / 2, 0);
+    const card = plane(pw, ph, m, pivot, 0, ph / 2, 0);
+    card.renderOrder = 4;
     charGroup.position.set(c.at[0], 0, c.at[1]);
-    charGroup.rotation.y = Math.atan2(camPos.x - c.at[0], camPos.z - c.at[1]) + (c.rot ?? 0) * DEG;
-    /* 발밑 그림자: 진한 안쪽 + 넓고 옅은 바깥 */
-    blob(0, 0.02, pw * 1.25, 0.42, 0.9, charGroup);
-    blob(0, 0.04, pw * 2.2, 0.9, 0.45, charGroup);
+    charGroup.rotation.y = theta;
+    /* 발밑: 아주 진한 접지 그림자(신발 바로 아래) + 중간 + 넓고 옅은 바깥 */
+    blob(0, 0.014, pw * 0.55, 0.1, 1, charGroup);
+    blob(0, 0.015, pw * 0.75, 0.15, 1, charGroup);
+    blob(0, 0.02, pw * 1.25, 0.38, 0.8, charGroup);
+    blob(0, 0.04, pw * 2.2, 0.9, 0.35, charGroup);
+    /* 빛 반대쪽으로 길게 늘어진 옅은 그림자(빛 방향과 맞춤) */
+    const away = Math.atan2(-lx, -lz) - theta;
+    const sh = blob(Math.sin(away) * 0.35, Math.cos(away) * 0.35, pw * 1.1, 0.9, 0.35, charGroup);
+    sh.rotation.z = away;
     const ph0 = rnd() * 6;
     animators.push(t => {
-      pivot.scale.y = 1 + Math.sin(t * 1.6 + ph0) * 0.006;
-      pivot.scale.x = 1 - Math.sin(t * 1.6 + ph0) * 0.003;
-      pivot.rotation.z = Math.sin(t * 0.42 + ph0) * 0.012;
+      pivot.scale.y = 1 + Math.sin(t * 1.4 + ph0) * 0.003;
+      pivot.scale.x = 1 - Math.sin(t * 1.4 + ph0) * 0.0015;
+      pivot.rotation.z = Math.sin(t * 0.4 + ph0) * 0.005;
     });
     head.set(c.at[0], ph * 0.95, c.at[1]);
   }
