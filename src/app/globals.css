@@ -5011,85 +5011,32 @@ body.lt-skin-regal {
   background: transparent;
 }
 
-.cy-root[data-skin="regal"]:not(.no-3d) .cy-right-header {
-  position: fixed;
-  z-index: 30;
-  top: 16px;
-  left: 280px;
-  right: 28px;
-  margin: 0;
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 16px;
-  pointer-events: none;
+/* 대저택에서는 위 제목줄과 아래 탭 대신 평면도와 방 카드가 길잡이입니다. */
+.cy-root[data-skin="regal"]:not(.no-3d) .cy-right-header,
+.cy-root[data-skin="regal"]:not(.no-3d) .cy-tabs {
+  display: none;
 }
 
-.cy-root[data-skin="regal"]:not(.no-3d) .cy-title {
-  font-family: var(--display);
-  color: #f8e7b4;
-  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.65);
-}
-
-.cy-root[data-skin="regal"]:not(.no-3d) .cy-url {
-  color: rgba(248, 231, 180, 0.82);
-  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.7);
-}
-
+/* 왼쪽 주인장 칸은 '주인장' 버튼으로 여닫는 서랍입니다. */
 .cy-root[data-skin="regal"]:not(.no-3d) .cy-left-panel {
   position: fixed;
-  z-index: 30;
-  top: 16px;
-  left: 16px;
-  width: 248px;
-  height: auto;
-  max-height: calc(100svh - 32px);
+  z-index: 40;
+  top: 0;
+  left: 0;
+  width: min(88vw, 340px);
+  height: 100%;
+  max-height: none;
   overflow-x: hidden;
   overflow-y: auto;
-  border: 1px solid #e6c878;
-  border-radius: 2px;
-  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.45), inset 0 0 0 1px #8a6230;
+  border: 1px solid #c2a15a;
+  border-radius: 0 16px 16px 0;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.45);
+  transform: translateX(-105%);
+  transition: transform 0.5s cubic-bezier(.16, 1, .3, 1);
 }
 
-.cy-root[data-skin="regal"]:not(.no-3d) .cy-tabs {
-  position: fixed;
-  z-index: 31;
-  left: 0;
-  right: 0;
-  top: auto;
-  bottom: 14px;
-  width: auto;
-  height: auto;
-  display: flex;
-  flex-direction: row;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 0 16px;
-}
-
-.cy-root[data-skin="regal"]:not(.no-3d) .cy-tab-btn,
-.cy-root[data-skin="regal"]:not(.no-3d) .cy-tab-btn:hover,
-.cy-root[data-skin="regal"]:not(.no-3d) .cy-tab-btn.active {
-  width: auto;
-  min-width: 0;
-  min-height: 0;
-  padding: 8px 14px;
-  border: 1px solid #e6c878;
-  border-radius: 2px;
-  background: rgba(42, 16, 14, 0.84);
-  color: #f6edd8;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35);
-  font-family: var(--display);
-  font-size: 0.92rem;
-  letter-spacing: 0.08em;
-}
-
-.cy-root[data-skin="regal"]:not(.no-3d) .cy-tab-btn.active {
-  background: linear-gradient(180deg, #f8e7b4, #c6a15a);
-  color: #3a160e;
-  border-color: #f0d78a;
+.cy-root[data-skin="regal"]:not(.no-3d) .cy-left-panel.is-open {
+  transform: none !important;
 }
 
 .cy-root[data-skin="regal"] .cy-hud-toggle {
@@ -5097,137 +5044,476 @@ body.lt-skin-regal {
   pointer-events: auto;
 }
 
-.cy-root[data-skin="regal"]:not(.no-3d) .cy-regal-mount {
-  display: contents;
-}
-
-.cy-root[data-skin="regal"]:not(.no-3d) .cy-css3d {
-  position: fixed !important;
-  inset: 0;
-  z-index: 1;
-  pointer-events: none;
-  overflow: visible !important;
-}
-
-.cy-root[data-skin="regal"]:not(.no-3d) .cy-right-content {
-  display: block;
-  padding: 0;
-  gap: 0;
-  overflow: hidden;
-  border: 1px solid #c6a15a;
-  border-radius: 2px;
-  background: #fbf6ea;
-  box-shadow: inset 0 0 0 5px rgba(198, 161, 90, 0.22);
-  color: #3a2418;
-  pointer-events: none;
-  box-sizing: border-box;
-}
-
-.cy-root[data-skin="regal"]:not(.no-3d) .cy-right-content.is-active {
-  pointer-events: auto;
-}
-
-.cy-root[data-skin="regal"]:not(.no-3d) .cy-regal-face {
-  height: 100%;
-  overflow: auto;
-  overscroll-behavior: contain;
-  box-sizing: border-box;
-  padding: 16px 18px 22px;
-  touch-action: pan-y;
-  scrollbar-width: thin;
-  scrollbar-color: #c6a15a transparent;
-}
-
-.cy-root[data-skin="regal"]:not(.no-3d) .cy-panel-label {
-  margin: 0 0 8px;
-  text-align: center;
-  font-family: var(--display);
-  font-size: 0.78rem;
-  letter-spacing: 0.16em;
-  color: #6e1a2c;
-}
-
 .cy-root[data-skin="regal"] .cy-regal-hint {
   position: fixed;
   z-index: 5;
-  bottom: 72px;
-  left: 0;
-  right: 0;
-  text-align: center;
+  bottom: 14px;
+  left: 16px;
   pointer-events: none;
-  font-family: var(--body);
-  font-size: 0.78rem;
-  letter-spacing: 0.04em;
+  font-family: "Noto Sans KR", var(--body);
+  font-size: 0.76rem;
   color: rgba(248, 231, 180, 0.84);
   text-shadow: 0 1px 6px rgba(0, 0, 0, 0.75);
 }
 
 .cy-root[data-skin="regal"] .cy-regal-hint kbd {
-  font-family: var(--display);
-  padding: 0 6px;
-  margin: 0 2px;
+  padding: 0 5px;
   border: 1px solid rgba(240, 215, 150, 0.7);
   border-radius: 2px;
   color: #f8e7b4;
 }
 
+/* ---------- 대저택 화면 ---------- */
+
+.cy-manor {
+  --manor-gold: #c2a15a;
+  --manor-card: #f5efe3;
+  --manor-ink: #3a2a1c;
+  --manor-serif: "Cormorant Garamond", "Noto Serif KR", serif;
+  --manor-sans: "Noto Sans KR", system-ui, sans-serif;
+  font-family: var(--manor-sans);
+}
+
+.cy-manor-view {
+  position: fixed;
+  z-index: 1;
+  top: 0;
+  left: 0;
+  right: 0;
+  overflow: hidden;
+  touch-action: none;
+  cursor: grab;
+  background: #1a120e;
+}
+
+.cy-manor-gl,
+.cy-manor-gl canvas {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.cy-manor-still {
+  position: absolute;
+  inset: 0;
+}
+
+.cy-manor-still img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.cy-manor-still-who {
+  position: absolute;
+  left: 50%;
+  bottom: 18px;
+  transform: translateX(-50%);
+  padding: 8px 14px;
+  border: 1px solid var(--manor-gold);
+  border-radius: 999px;
+  background: rgba(30, 20, 14, 0.78);
+  color: #f8e7b4;
+  font-family: var(--manor-sans);
+  cursor: pointer;
+}
+
+.cy-manor-fade {
+  position: absolute;
+  inset: 0;
+  background: #0b0705;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.cy-manor-bubble {
+  position: absolute;
+  z-index: 3;
+  top: 0;
+  left: 0;
+  width: 0;
+  height: 0;
+  cursor: pointer;
+}
+
+.cy-manor-bubble.is-still {
+  top: 30%;
+  left: 50%;
+}
+
+.cy-manor-bubble-in {
+  position: absolute;
+  bottom: 18px;
+  left: 0;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: max-content;
+  max-width: min(78vw, 360px);
+  padding: 10px 14px;
+  border: 1px solid var(--manor-gold);
+  border-radius: 16px;
+  background: var(--manor-card);
+  color: var(--manor-ink);
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.4);
+  animation: manor-pop 0.25s ease-out;
+}
+
+.cy-manor-bubble-in::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -7px;
+  width: 12px;
+  height: 12px;
+  margin-left: -6px;
+  background: var(--manor-card);
+  border-right: 1px solid var(--manor-gold);
+  border-bottom: 1px solid var(--manor-gold);
+  transform: rotate(45deg);
+}
+
+.cy-manor-bubble-in img {
+  width: 56px;
+  height: 56px;
+  object-fit: cover;
+  object-position: top;
+  border-radius: 50%;
+  border: 1px solid var(--manor-gold);
+  background: #efe4cf;
+}
+
+.cy-manor-bubble-in p {
+  margin: 0;
+  font-size: 0.86rem;
+  line-height: 1.45;
+}
+
+.cy-manor-bubble-in b {
+  display: block;
+  font-family: var(--manor-serif);
+  font-weight: 600;
+  font-size: 0.8rem;
+  color: #7a1f2b;
+}
+
+@keyframes manor-pop {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 6px);
+  }
+}
+
+.cy-manor-top {
+  position: fixed;
+  z-index: 6;
+  top: 14px;
+  left: 14px;
+  display: flex;
+  gap: 8px;
+}
+
+.cy-manor-btn {
+  padding: 8px 14px;
+  border: 1px solid var(--manor-gold);
+  border-radius: 999px;
+  background: rgba(30, 20, 14, 0.74);
+  color: #f8e7b4;
+  font-family: "Noto Serif KR", var(--manor-serif);
+  font-weight: 600;
+  font-size: 0.86rem;
+  cursor: pointer;
+  backdrop-filter: blur(4px);
+}
+
+.cy-manor-btn:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.cy-manor-map {
+  position: fixed;
+  z-index: 6;
+  top: 12px;
+  right: 12px;
+  display: grid;
+  grid-template-columns: repeat(5, 52px);
+  grid-template-rows: repeat(4, 26px);
+  gap: 4px;
+  padding: 8px;
+  border: 1px solid var(--manor-gold);
+  border-radius: 12px;
+  background: rgba(24, 16, 11, 0.72);
+  backdrop-filter: blur(4px);
+}
+
+.cy-manor-map svg {
+  position: absolute;
+  inset: 8px;
+  width: calc(100% - 16px);
+  height: calc(100% - 16px);
+  pointer-events: none;
+}
+
+.cy-manor-map line {
+  stroke: rgba(194, 161, 90, 0.55);
+  stroke-width: 0.06;
+}
+
+.cy-manor-map-room {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 1px solid rgba(194, 161, 90, 0.55);
+  border-radius: 4px;
+  background: rgba(60, 42, 28, 0.92);
+  color: #eadcbc;
+  font-family: "Noto Serif KR", serif;
+  font-size: 0.66rem;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.cy-manor-map-room.is-here {
+  background: linear-gradient(180deg, #f2d98e, #c2a15a);
+  border-color: #f6e3a6;
+  color: #3a1a10;
+}
+
+.cy-manor-map-room.is-secret:not(.is-here) {
+  background: rgba(74, 30, 70, 0.92);
+}
+
+.cy-manor-map-room.is-door {
+  cursor: default;
+  border-style: dashed;
+  background: transparent;
+  color: rgba(234, 220, 188, 0.7);
+}
+
+.cy-manor-card {
+  position: fixed;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  border: 1px solid var(--manor-gold);
+  border-radius: 16px;
+  background: var(--manor-card);
+  color: var(--manor-ink);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.4);
+  overflow: hidden;
+}
+
+.cy-manor.is-wide .cy-manor-card {
+  top: 128px;
+  right: 16px;
+  bottom: 16px;
+  width: min(404px, 36vw);
+}
+
+.cy-manor.is-wide .cy-manor-card.is-closed {
+  bottom: auto;
+}
+
+.cy-manor.is-portrait .cy-manor-card {
+  left: 0;
+  right: 0;
+  bottom: 0;
+  margin-top: -14px;
+  border-radius: 16px 16px 0 0;
+  border-bottom: 0;
+}
+
+.cy-manor-card-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px 10px;
+  border-bottom: 1px solid rgba(194, 161, 90, 0.5);
+}
+
+.cy-manor-card-head > div {
+  flex: 1;
+  min-width: 0;
+}
+
+.cy-manor-card-head h2 {
+  margin: 0;
+  font-family: "Noto Serif KR", serif;
+  font-weight: 600;
+  font-size: 1.18rem;
+  color: #3a1a10;
+}
+
+.cy-manor-en {
+  display: block;
+  font-family: "Cormorant Garamond", serif;
+  font-weight: 600;
+  font-size: 0.82rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #8a6a2e;
+}
+
+.cy-manor-menu {
+  padding: 3px 10px;
+  border: 1px solid var(--manor-gold);
+  border-radius: 999px;
+  font-size: 0.74rem;
+  color: #6a4a22;
+}
+
+.cy-manor-fold {
+  padding: 3px 9px;
+  border: 0;
+  background: none;
+  color: #8a6a2e;
+  font-size: 0.74rem;
+  cursor: pointer;
+}
+
+.cy-manor-card-body {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
+  padding: 12px 14px 18px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--manor-gold) transparent;
+}
+
+.cy-manor-card-body .cy-content-box,
+.cy-manor-card-body .cy-section {
+  max-width: 100%;
+}
+
+.cy-manor-card-body img {
+  max-width: 100%;
+  height: auto;
+}
+
+.cy-manor-lead,
+.cy-manor-note,
+.cy-manor-empty {
+  margin: 0 0 10px;
+  font-size: 0.82rem;
+  color: #6a5338;
+}
+
+.cy-manor-note {
+  margin-top: 10px;
+  font-size: 0.72rem;
+}
+
+.cy-manor-tracks,
+.cy-manor-links,
+.cy-manor-secret ul {
+  margin: 0;
+  padding: 0 0 0 18px;
+  font-size: 0.86rem;
+  line-height: 1.9;
+}
+
+.cy-manor-tracks span {
+  color: #8a7354;
+  font-size: 0.76rem;
+}
+
+.cy-manor-links a {
+  color: #6e1a2c;
+}
+
+.cy-manor-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.cy-manor-actions button {
+  padding: 7px 14px;
+  border: 1px solid var(--manor-gold);
+  border-radius: 999px;
+  background: #fffaf0;
+  color: #3a1a10;
+  font-family: "Noto Serif KR", serif;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.cy-manor-gallery ul {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.cy-manor-gallery li {
+  padding: 6px;
+  border: 1px solid var(--manor-gold);
+  border-radius: 6px;
+  background: #fffaf0;
+  font-size: 0.74rem;
+  line-height: 1.35;
+}
+
+.cy-manor-gallery img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  margin-bottom: 4px;
+  border-radius: 3px;
+}
+
+.cy-manor-secret p {
+  margin: 0 0 10px;
+  font-size: 0.86rem;
+}
+
 @media (max-width: 900px) {
-  .cy-root[data-skin="regal"]:not(.no-3d) .cy-right-header {
-    left: 14px;
-    right: 14px;
-    top: 10px;
-    align-items: center;
-  }
-
-  .cy-root[data-skin="regal"]:not(.no-3d) .cy-url {
-    display: none;
-  }
-
-  .cy-root[data-skin="regal"]:not(.no-3d) .cy-left-panel {
-    top: 0;
-    left: 0;
-    width: min(88vw, 360px);
-    height: 100%;
-    max-height: none;
-    border-radius: 0 16px 16px 0;
-    transform: translateX(-105%);
-    transition: transform 0.5s cubic-bezier(.16, 1, .3, 1);
-  }
-
-  .cy-root[data-skin="regal"]:not(.no-3d) .cy-left-panel.is-open {
-    transform: none !important;
-    transition: none;
-    z-index: 40;
-  }
-
-  .cy-root[data-skin="regal"]:not(.no-3d) .cy-hud-toggle {
-    display: inline-flex;
-    align-items: center;
-    padding: 7px 12px;
-    border-radius: 2px;
-    border: 1px solid #e6c878;
-    background: rgba(42, 16, 14, 0.82);
-    color: #f8e7b4;
-    font-family: var(--display);
-    font-size: 0.85rem;
-    letter-spacing: 0.08em;
-    cursor: pointer;
-  }
-
   .cy-root[data-skin="regal"] .cy-regal-hint {
     display: none;
   }
 
-  .cy-root[data-skin="regal"]:not(.no-3d) .cy-tabs {
-    bottom: 10px;
-    gap: 6px;
-    padding: 0 8px;
+  .cy-manor-map {
+    top: 8px;
+    right: 8px;
+    grid-template-columns: repeat(5, 36px);
+    grid-template-rows: repeat(4, 20px);
+    gap: 3px;
+    padding: 6px;
   }
 
-  .cy-root[data-skin="regal"]:not(.no-3d) .cy-tab-btn,
-  .cy-root[data-skin="regal"]:not(.no-3d) .cy-tab-btn:hover,
-  .cy-root[data-skin="regal"]:not(.no-3d) .cy-tab-btn.active {
-    padding: 8px 10px;
+  .cy-manor-map svg {
+    inset: 6px;
+    width: calc(100% - 12px);
+    height: calc(100% - 12px);
+  }
+
+  .cy-manor-map-room {
+    font-size: 0.56rem;
+  }
+
+  .cy-manor-top {
+    top: 8px;
+    left: 8px;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .cy-manor-btn {
+    padding: 6px 11px;
     font-size: 0.78rem;
   }
 }
@@ -5235,5 +5521,9 @@ body.lt-skin-regal {
 @media (prefers-reduced-motion: reduce) {
   .cy-root[data-skin="regal"]:not(.no-3d) .cy-left-panel {
     transition: none;
+  }
+
+  .cy-manor-bubble-in {
+    animation: none;
   }
 }
