@@ -82,10 +82,18 @@ export function createManorStage(opts: {
   const baseLook = new THREE.Vector3();
   let yaw = 0;
   let pitch = 0;
-  let walk: { from: T.Vector3; to: T.Vector3; t: number; next: string } | null = null;
+  /* 걷기와 밝아지기는 프레임 수가 아니라 실제 시간(ms)으로 셉니다.
+     느린 기기에서 프레임이 늦어도 0.6초 + 0.35초 안에 방이 바뀝니다. */
+  let walk: { from: T.Vector3; to: T.Vector3; start: number; next: string } | null = null;
+
   /* 비밀 책장이 열리는 동안(1.3초) 기다렸다가 걸어 들어갑니다. */
   let opening: { t: number; to: string; point: T.Vector3; yaw0: number; yaw1: number } | null = null;
   let fadeIn = 0;
+  let fadeStart = 0;
+  const busy = () => !!walk || !!opening || fadeIn > 0;
+  const markBusy = () => {
+    host.dataset.manorBusy = busy() ? "1" : "0";
+  };
 
   function ensure(id: string) {
     let b = built.get(id);
@@ -140,9 +148,13 @@ export function createManorStage(opts: {
       else window.setTimeout(cb, 300);
     };
     for (const n of neighbours(r)) {
-      later(() => {
-        if (alive) ensure(n);
-      });
+      const build = () => {
+        if (!alive) return;
+        /* 방을 옮기는 중에는 미루어 전환이 끊기지 않게 합니다. */
+        if (busy()) later(build);
+        else ensure(n);
+      };
+      later(build);
     }
   }
 
@@ -162,8 +174,19 @@ export function createManorStage(opts: {
   }
 
   function goTo(id: string, animate: boolean, toward?: T.Vector3) {
-    if (!ROOM_BY_ID[id] || walk) {
-      note(`goTo ${id} ignored (${walk ? "walking to " + walk.next : "unknown"})`);
+    if (!ROOM_BY_ID[id]) {
+      note(`goTo ${id} ignored (unknown)`);
+      return;
+    }
+    if (walk) {
+      /* 이미 어두워지는 중이면 도착할 방만 바꿉니다. */
+      note(`goTo ${id} retarget (was ${walk.next})`);
+      walk.next = id;
+      return;
+    }
+    if (opening) {
+      /* 비밀 책장이 열리는 1.3초 동안은 비밀의 방으로 가는 것이 정해져 있습니다. */
+      note(`goTo ${id} ignored (secret shelf opening)`);
       return;
     }
     if (current && current.room.id === id) return;
@@ -174,7 +197,8 @@ export function createManorStage(opts: {
       return;
     }
     const target = toward ? basePos.clone().lerp(new THREE.Vector3(toward.x, basePos.y, toward.z), 0.45) : basePos.clone().add(dir.clone().multiplyScalar(1.2));
-    walk = { from: camera.position.clone(), to: target, t: 0, next: id };
+    walk = { from: camera.position.clone(), to: target, start: performance.now(), next: id };
+    markBusy();
   }
 
   /* 입력: 끌어서 둘러보기, 눌러서 문/인물 */
@@ -270,20 +294,23 @@ export function createManorStage(opts: {
       }
     }
     if (walk) {
-      walk.t = Math.min(1, walk.t + dt / 0.6);
-      const u = walk.t * walk.t * (3 - 2 * walk.t);
+      const wt = Math.min(1, (now - walk.start) / 600);
+      const u = wt * wt * (3 - 2 * wt);
       placeCamera(walk.from.clone().lerp(walk.to, u));
       events.onFade(u);
-      if (walk.t >= 1) {
+      if (wt >= 1) {
         const next = walk.next;
         walk = null;
-        enter(next);
+        if (!current || current.room.id !== next) enter(next);
+        else placeCamera();
         fadeIn = 1;
+        fadeStart = now;
       }
     } else if (fadeIn > 0) {
-      fadeIn = Math.max(0, fadeIn - dt / 0.35);
+      fadeIn = Math.max(0, 1 - (now - fadeStart) / 350);
       events.onFade(fadeIn);
     }
+    markBusy();
     if (current) {
       current.animate(t, camera.position);
       head.copy(current.head).project(camera);
@@ -301,7 +328,7 @@ export function createManorStage(opts: {
     const v = new THREE.Vector3();
     (window as unknown as Record<string, unknown>).__regalManorLog = trace;
     (window as unknown as Record<string, unknown>).__regalManor = {
-      state: () => ({ room: current?.room.id, yaw: yaw / DEG, pitch: pitch / DEG, walking: !!walk, opening: opening ? opening.t : null, tris: current?.triangles }),
+      state: () => ({ room: current?.room.id, yaw: yaw / DEG, pitch: pitch / DEG, walking: !!walk, busy: busy(), opening: opening ? opening.t : null, tris: current?.triangles }),
       hits: () => {
         if (!current) return [];
         const cr = renderer.domElement.getBoundingClientRect();
@@ -389,6 +416,7 @@ export function createManorStage(opts: {
       renderer.forceContextLoss();
       delete host.dataset.manorRoom;
       delete host.dataset.manorReady;
+      delete host.dataset.manorBusy;
       delete host.dataset.manorTris;
     }
   };
