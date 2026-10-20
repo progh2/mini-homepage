@@ -102,6 +102,8 @@ export type Character = {
   at: [number, number];
   /* 카메라를 바라보는 방향에서 더 돌릴 각도(°). 판 그림이라 작게만 씁니다. */
   rot?: number;
+  /* 방 빛(주광 방향·색)을 그림에 직접 그려 넣었으면 true: 캔버스 후처리를 약하게 합니다. */
+  bakedLight?: boolean;
   /* 눌렀을 때 말풍선 한 줄 */
   line: string;
   /* 방에 들어오자마자 띄우는 말풍선(비밀의 방) */
@@ -253,8 +255,9 @@ export const ROOMS: Room[] = [
     ],
     doorStyle: { wood: "oak", surround: "wood", head: "transom" },
     windows: [
-      { wall: "N", offset: -3.4, w: 1.4, h: 2.7, sill: 0.7 },
-      { wall: "N", offset: 3.0, w: 1.4, h: 2.7, sill: 0.7 }
+      /* 5차: 빅토리아 비례(폭:높이 ≈ 1:2.4), 창턱 0.5m, 머리 4.1m(코니스 바로 아래) */
+      { wall: "N", offset: -3.3, w: 1.5, h: 3.6, sill: 0.5 },
+      { wall: "N", offset: 3.0, w: 1.5, h: 3.6, sill: 0.5 }
     ],
     daylight: "#FFF4DD",
     props: [
@@ -265,7 +268,7 @@ export const ROOMS: Room[] = [
       { kind: "sconce", at: [-1.55, -3.97], rot: 0, opts: { y: 2.5, gas: true } },
       { kind: "sconce", at: [1.15, -3.97], rot: 0, opts: { y: 2.5, gas: true } },
       { kind: "gasolier", at: [-0.5, -0.4], opts: { y: 3.55, size: 0.85, arms: 3 } },
-      { kind: "rug", at: [-0.5, -0.4], opts: { w: 4.6, d: 3.4, style: "aubusson-sage" } }
+      { kind: "rug", at: [-0.5, -0.4], opts: { w: 4.6, d: 3.4, style: "morris-olive" } }
     ],
     paintings: [
       {
@@ -285,7 +288,9 @@ export const ROOMS: Room[] = [
       name: "하녀",
       role: "Maid",
       src: `${R}/characters/maid.webp`,
-      aspect: 282 / 707,
+      /* 5차: 방 빛을 그려 넣은 새 그림 → 캔버스 후처리를 약하게 */
+      bakedLight: true,
+      aspect: 275 / 709,
       height: 1.62,
       at: [-0.6, -0.9],
       line: "주인장 소개는 제가 앨범에 정리해 두었어요."
@@ -340,7 +345,9 @@ export const ROOMS: Room[] = [
       name: "사서",
       role: "Librarian",
       src: `${R}/characters/librarian.webp`,
-      aspect: 227 / 706,
+      /* 5차: 방 빛을 그려 넣은 새 그림 → 캔버스 후처리를 약하게 */
+      bakedLight: true,
+      aspect: 214 / 708,
       height: 1.78,
       at: [-0.4, -0.7],
       line: "쉿, 여기 기록들은 천천히 읽어 보세요."
@@ -384,7 +391,7 @@ export const ROOMS: Room[] = [
       { kind: "sconce", at: [-1.75, -3.97], rot: 0, opts: { y: 2.25, gas: true } },
       { kind: "sconce", at: [1.75, -3.97], rot: 0, opts: { y: 2.25, gas: true } },
       { kind: "sconce", at: [4.97, 0.9], rot: -90, opts: { y: 2.3, gas: true } },
-      { kind: "rug", at: [0.4, -0.8], opts: { w: 4.8, d: 3.6, style: "aubusson-rose" } }
+      { kind: "rug", at: [0.4, -0.8], opts: { w: 4.8, d: 3.6, style: "aubusson-wine" } }
     ],
     paintings: [
       {
@@ -400,7 +407,9 @@ export const ROOMS: Room[] = [
       name: "숙녀 손님",
       role: "Lady",
       src: `${R}/characters/lady.webp`,
-      aspect: 263 / 707,
+      /* 5차: 방 빛을 그려 넣은 새 그림 → 캔버스 후처리를 약하게 */
+      bakedLight: true,
+      aspect: 263 / 714,
       height: 1.66,
       at: [0.5, -1.2],
       line: "차 한 잔 어떠세요? 방명록에 한마디 남겨 주세요."
@@ -585,7 +594,9 @@ export const ROOMS: Room[] = [
       name: "큐레이터",
       role: "Curator",
       src: `${R}/characters/curator.webp`,
-      aspect: 320 / 705,
+      /* 5차: 방 빛을 그려 넣은 새 그림 → 캔버스 후처리를 약하게 */
+      bakedLight: true,
+      aspect: 318 / 708,
       height: 1.76,
       at: [-1.0, -2.6],
       line: "이쪽 액자부터 보시지요. 홍길동 님도 즐겨 보시는 작품들입니다."
@@ -615,13 +626,13 @@ export const ROOMS: Room[] = [
     props: [
       { kind: "marbleFireplace", at: [0, -3.82], opts: { overmantel: true, tiles: "lustre" } },
       { kind: "bookshelves", at: [3.75, 0.3], rot: -90, opts: { len: 6.6, gap: 0 } },
-      { kind: "chesterfield", at: [-2.3, -0.5], rot: 90, opts: { color: "#5a2348" } },
+      { kind: "chesterfield", at: [-2.3, -0.5], rot: 90, opts: { color: "#4a1a38", velvet: true } },
       { kind: "teaTable", at: [-0.9, -0.5] },
       { kind: "chaise", at: [1.9, -2.2], rot: -130 },
       { kind: "vitrine", at: [-2.9, -2.9], rot: 35, opts: { item: "crown", title: "왕관과 별 목걸이", sub: "제타의 보물 · Crown & Star" } },
       { kind: "candlestick", at: [-0.9, -0.5], opts: { y: 0.5 } },
       { kind: "gasolier", at: [0, -0.6], opts: { y: 3.25, size: 0.85, arms: 4, crystal: true } },
-      { kind: "rug", at: [-0.6, -0.6], opts: { w: 4.4, d: 3.2, style: "gul" } }
+      { kind: "rug", at: [-0.6, -0.6], opts: { w: 4.4, d: 3.2, style: "morris-wine" } }
     ],
     paintings: [
       {

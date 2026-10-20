@@ -37,7 +37,8 @@ export type BuiltRoom = {
   group: T.Group;
   hits: T.Object3D[];
   head: T.Vector3;
-  animate: (t: number) => void;
+  /* cam: 지금 카메라 위치(인물 판이 늘 카메라를 보게 하는 데 씀) */
+  animate: (t: number, cam?: T.Vector3) => void;
   dispose: () => void;
   triangles: number;
   /* 서재의 비밀 책장을 0(닫힘)~1(활짝) 사이로 엽니다. 없으면 undefined. */
@@ -1683,7 +1684,7 @@ function opusOverlay(kit: Kit) {
    savonnerie: 사보느리 소용돌이와 가운데 장미, gul: 투르크멘 굴(팔각) 줄무늬. */
 /* 4차 깔개: 헤리즈(페르시아 북서부), 우샤크(서부 아나톨리아 별 메달리온), 모리스 "해머스미스"(손매듭 영국제).
    모두 코드로 그린 무늬이며 실제 특정 작품의 복제가 아닙니다(출처는 PERIOD.md 23~27). */
-const RUGS4 = new Set(["heriz", "ushak", "hammersmith"]);
+const RUGS4 = new Set(["heriz", "ushak", "hammersmith", "morris-olive", "morris-wine", "aubusson-wine"]);
 
 function rugTexture4(kit: Kit, style: string) {
   return kit.canvas(`rug4:${style}`, 1024, 768, g => {
@@ -1956,26 +1957,104 @@ function rugTexture4(kit: Kit, style: string) {
       return;
     }
 
+    if (style === "aubusson-wine") {
+      /* 5차 응접실: 오뷔송(태피스트리 직 평직 깔개) — 어두운 와인 바탕, 바랜 상아(크림·흰색 아님) 타원 테,
+         흐린 장미 다발과 화환, 짙은 올리브갈색 테두리. 대비를 낮게. */
+      const wine = "#4c1a1f";
+      const wine2 = "#5e2629";
+      const ivory = "#a8987a";
+      const rose = "#8e544c";
+      const rose2 = "#a56e60";
+      const olive = "#555a38";
+      const brown = "#352c1e";
+      abrash(wine, 0);
+      const bouquet = (x: number, y: number, s2: number) => {
+        for (let k2 = 0; k2 < 7; k2++) {
+          const a2 = (k2 / 7) * Math.PI * 2;
+          g.fillStyle = olive;
+          g.beginPath();
+          g.ellipse(x + Math.cos(a2) * s2 * 1.1, y + Math.sin(a2) * s2 * 0.8, s2 * 0.6, s2 * 0.2, a2, 0, Math.PI * 2);
+          g.fill();
+        }
+        for (const [dx, dy, rr, c2] of [[0, 0, 1, rose], [-0.8, 0.3, 0.7, rose2], [0.8, 0.2, 0.7, rose2], [0.1, -0.7, 0.6, ivory]] as [number, number, number, string][]) {
+          g.fillStyle = c2;
+          g.beginPath();
+          g.arc(x + dx * s2, y + dy * s2, s2 * 0.5 * rr, 0, Math.PI * 2);
+          g.fill();
+          g.strokeStyle = "rgba(40,10,10,0.35)";
+          g.lineWidth = 1.5;
+          g.beginPath();
+          g.arc(x + dx * s2, y + dy * s2, s2 * 0.28 * rr, 0.4, 4.8);
+          g.stroke();
+        }
+      };
+      /* 가운데 타원 메달리온 */
+      g.fillStyle = wine2;
+      g.beginPath();
+      g.ellipse(W / 2, H / 2, 250, 170, 0, 0, Math.PI * 2);
+      g.fill();
+      g.strokeStyle = ivory;
+      g.lineWidth = 6;
+      g.stroke();
+      g.strokeStyle = "rgba(168,152,122,0.5)";
+      g.lineWidth = 2;
+      g.beginPath();
+      g.ellipse(W / 2, H / 2, 232, 154, 0, 0, Math.PI * 2);
+      g.stroke();
+      bouquet(W / 2, H / 2, 46);
+      /* 타원을 두른 화환 */
+      for (let k2 = 0; k2 < 18; k2++) {
+        const a2 = (k2 / 18) * Math.PI * 2;
+        bouquet(W / 2 + Math.cos(a2) * 250, H / 2 + Math.sin(a2) * 170, 13);
+      }
+      /* 모서리 꽃 덩굴 */
+      quad(() => {
+        g.strokeStyle = olive;
+        g.lineWidth = 5;
+        g.beginPath();
+        g.moveTo(330, 230);
+        g.bezierCurveTo(280, 170, 380, 150, 340, 90);
+        g.stroke();
+        bouquet(340, 250, 26);
+        bouquet(395, 150, 16);
+      });
+      /* 테두리: 짙은 올리브갈색 띠 + 장미 화환, 바랜 상아 가는 가드 */
+      bands([[10, brown], [4, ivory], [62, brown], [4, ivory], [8, wine]]);
+      alongBorder(14 + 31, 72, x0 => void x0);
+      for (let x = 60; x < W - 40; x += 72) {
+        bouquet(x, 45, 12);
+        bouquet(x, H - 45, 12);
+      }
+      for (let y = 100; y < H - 60; y += 72) {
+        bouquet(45, y, 12);
+        bouquet(W - 45, y, 12);
+      }
+      knots();
+      return;
+    }
+
     /* hammersmith: 모리스식 남색 바탕, 대칭으로 말린 아칸서스 잎, 꼭두서니 빨강 테두리 */
-    const indigo = "#1f2b48";
-    const mid = "#3d5a86";
-    const pale = "#8ea7c4";
-    const madder = "#8c3828";
-    const leafG = "#55704a";
-    const ochre = "#c99c47";
-    const cream = "#eadbb6";
+    /* 5차: 같은 도안을 어두운 바탕 배색으로도 씁니다(morris-olive: 접견실, morris-wine: 비밀의 방). 대비를 낮춘 배색. */
+    const PAL: Record<string, string[]> = {
+      /* field, mid, pale, flower, leaf, ochre, cream, bg1, bg2, stem, outline, border, medallion */
+      hammersmith: ["#1f2b48", "#3d5a86", "#8ea7c4", "#8c3828", "#55704a", "#c99c47", "#eadbb6", "#2c3c62", "#34507a", "#2f4470", "#141d33", "#8c3828", "#2a3b60"],
+      "morris-olive": ["#3b3c24", "#5d5e3a", "#86825a", "#7a4030", "#556238", "#94804a", "#b8aa86", "#44452a", "#4c4e30", "#4a4b2e", "#25261a", "#4e2622", "#45472c"],
+      "morris-wine": ["#45161e", "#6e3038", "#946660", "#9a5444", "#585a38", "#8e7646", "#b2a284", "#511d26", "#5a242c", "#5a2430", "#280c12", "#2a2234", "#55202a"]
+    };
+    const pal = PAL[style] ?? PAL.hammersmith;
+    const [indigo, mid, pale, madder, leafG, ochre, cream, bg1, bg2, stemC, outlineC, borderC, medC] = pal;
     abrash(indigo, 0);
     /* 바탕 전체를 덮는 잔 덩굴(모리스 카펫은 빈 바탕이 거의 없습니다) */
     for (let k = 0; k < 520; k++) {
       const x = rnd() * W;
       const y = rnd() * H;
       const a2 = rnd() * Math.PI * 2;
-      g.fillStyle = rnd() > 0.5 ? "#2c3c62" : "#34507a";
+      g.fillStyle = rnd() > 0.5 ? bg1 : bg2;
       g.beginPath();
       g.ellipse(x, y, 9 + rnd() * 6, 3 + rnd() * 2, a2, 0, Math.PI * 2);
       g.fill();
     }
-    g.strokeStyle = "#2f4470";
+    g.strokeStyle = stemC;
     g.lineWidth = 2;
     for (let k = 0; k < 60; k++) {
       const x = rnd() * W;
@@ -1988,7 +2067,7 @@ function rugTexture4(kit: Kit, style: string) {
     const acanthus = (len: number, curl: number) => {
       /* 굵은 S자 잎줄기 + 톱니 잎 */
       g.lineCap = "round";
-      g.strokeStyle = "#141d33";
+      g.strokeStyle = outlineC;
       g.lineWidth = 22;
       g.beginPath();
       g.moveTo(0, 0);
@@ -2059,7 +2138,7 @@ function rugTexture4(kit: Kit, style: string) {
       flower(320, 60, 14);
     });
     /* 가운데 꽃 다발 */
-    poly([[W / 2, H / 2 - 120], [W / 2 + 150, H / 2], [W / 2, H / 2 + 120], [W / 2 - 150, H / 2]], "#2a3b60", ochre, 3);
+    poly([[W / 2, H / 2 - 120], [W / 2 + 150, H / 2], [W / 2, H / 2 + 120], [W / 2 - 150, H / 2]], medC, ochre, 3);
     flower(W / 2, H / 2, 44);
     for (let k = 0; k < 4; k++) {
       const a = (k / 4) * Math.PI * 2 + Math.PI / 4;
@@ -2069,7 +2148,7 @@ function rugTexture4(kit: Kit, style: string) {
       g.fill();
     }
     /* 테두리: 황토 가드 / 꼭두서니 주 테두리 + 굽이치는 덩굴 / 남색 가드 */
-    bands([[8, indigo], [8, ochre], [70, madder], [8, ochre], [6, indigo]]);
+    bands([[8, indigo], [8, ochre], [70, borderC], [8, ochre], [6, indigo]]);
     const by = 16 + 35;
     g.strokeStyle = ochre;
     g.lineWidth = 5;
@@ -2956,7 +3035,8 @@ export function buildRoom(kit: Kit, room: Room, ctx: BuildCtx): BuiltRoom {
       p.lineTo(win.offset + win.w / 2, win.sill);
       p.closePath();
       shape.holes.push(p);
-      tallHoles.push([win.offset - win.w / 2 - 0.55, win.offset + win.w / 2 + 0.55]);
+      /* 5차: 징두리는 창 테두리(아키트레이브)까지 이어지고, 창턱 아래는 창 밑 판(window back)이 채웁니다. */
+      tallHoles.push([win.offset - win.w / 2 - 0.1, win.offset + win.w / 2 + 0.1]);
     }
     if (room.walls === "glass") {
       buildGlassWall(wall, doors);
@@ -3839,6 +3919,13 @@ export function buildRoom(kit: Kit, room: Room, ctx: BuildCtx): BuiltRoom {
     /* 창턱 판(안쪽으로 7cm 튀어나옴)과 그 밑 앞치마 판 */
     box(ww + 0.32, 0.045, D + 0.11, fm, wg, cx, sill - 0.0225, -D / 2 + 0.055);
     box(ww + 0.12, 0.12, 0.03, fm, wg, cx, sill - 0.105, 0.015);
+    /* 창 밑 판: 바닥에서 창턱까지 판 두 장(낮은 빅토리아 창턱 아래의 흔한 마감, 추정) */
+    if (sill > 0.25) {
+      const bh = sill - 0.045;
+      box(ww + 0.2, bh, 0.026, fm, wg, cx, bh / 2, 0.013);
+      const pw2 = (ww + 0.2) / 2 - 0.12;
+      for (const sx of [-1, 1]) box(pw2, Math.max(0.05, bh - 0.26), 0.016, fm, wg, cx + sx * (pw2 / 2 + 0.04), bh / 2 + 0.02, 0.032);
+    }
     /* 상자 틀: 도르래 기둥, 머리, 바깥 창턱 */
     const fz = -0.2;
     for (const sx of [-1, 1]) box(0.06, wh - 0.02, 0.11, sashPaint, wg, cx + sx * (ww / 2 - 0.05), sill + (wh - 0.02) / 2, fz);
@@ -4079,6 +4166,10 @@ export function buildRoom(kit: Kit, room: Room, ctx: BuildCtx): BuiltRoom {
   const charGroup = new THREE.Group();
   group.add(charGroup);
   const camPos = new THREE.Vector3(...room.camera.pos);
+  /* 5차: 그림자는 돌지 않는 바닥 묶음에, 그림 판(charGroup)만 매 프레임 카메라를 봅니다(Y축 빌보드). */
+  const groundG = new THREE.Group();
+  group.add(groundG);
+  const liveCam = camPos.clone();
   buildStandee(room.character);
   setHit(charGroup, { type: "character" });
 
@@ -4097,7 +4188,9 @@ export function buildRoom(kit: Kit, room: Room, ctx: BuildCtx): BuiltRoom {
     const W = Math.max(8, Math.round(H * c.aspect));
     const lightC = new THREE.Color(room.light.color);
     const skyC = new THREE.Color(room.ambient.sky);
-    const tintC = new THREE.Color(1, 1, 1).lerp(lightC.clone().lerp(skyC, 0.3), 0.55);
+    /* 빛을 그려 넣은 그림(bakedLight)은 색온도·옆 그늘을 약하게, 림은 살짝만. */
+    const baked = !!c.bakedLight;
+    const tintC = new THREE.Color(1, 1, 1).lerp(lightC.clone().lerp(skyC, 0.3), baked ? 0.18 : 0.55);
     const theta = Math.atan2(camPos.x - c.at[0], camPos.z - c.at[1]) + (c.rot ?? 0) * DEG;
     const lx = room.light.at[0] - c.at[0];
     const lz = room.light.at[2] - c.at[1];
@@ -4129,14 +4222,14 @@ export function buildRoom(kit: Kit, room: Room, ctx: BuildCtx): BuiltRoom {
       const [lC, l] = mk();
       const gx = l.createLinearGradient(side > 0 ? W : 0, 0, side > 0 ? 0 : W, 0);
       gx.addColorStop(0, "rgb(255,255,255)");
-      gx.addColorStop(0.55, "rgb(236,232,228)");
-      gx.addColorStop(1, "rgb(190,184,180)");
+      gx.addColorStop(0.55, baked ? "rgb(250,248,246)" : "rgb(236,232,228)");
+      gx.addColorStop(1, baked ? "rgb(232,228,224)" : "rgb(190,184,180)");
       l.fillStyle = gx;
       l.fillRect(0, 0, W, H);
       const gy = l.createLinearGradient(0, 0, 0, H);
       gy.addColorStop(0, "rgba(255,255,255,0)");
       gy.addColorStop(0.82, "rgba(255,255,255,0)");
-      gy.addColorStop(1, "rgba(70,60,54,1)");
+      gy.addColorStop(1, baked ? "rgba(120,108,100,1)" : "rgba(70,60,54,1)");
       l.globalCompositeOperation = "multiply";
       l.fillStyle = gy;
       l.fillRect(0, 0, W, H);
@@ -4155,7 +4248,7 @@ export function buildRoom(kit: Kit, room: Room, ctx: BuildCtx): BuiltRoom {
       r.drawImage(baseC, 0, 0);
       r.filter = "none";
       g.globalCompositeOperation = "source-atop";
-      g.globalAlpha = 0.5;
+      g.globalAlpha = baked ? 0.25 : 0.5;
       g.drawImage(rC, 0, 0);
       g.globalAlpha = 1;
       /* ⑥ 종이 결 */
@@ -4177,14 +4270,20 @@ export function buildRoom(kit: Kit, room: Room, ctx: BuildCtx): BuiltRoom {
     card.renderOrder = 4;
     charGroup.position.set(c.at[0], 0, c.at[1]);
     charGroup.rotation.y = theta;
+    groundG.position.set(c.at[0], 0, c.at[1]);
+    groundG.rotation.y = theta;
+    const rot0 = (c.rot ?? 0) * DEG;
+    animators.push(() => {
+      charGroup.rotation.y = Math.atan2(liveCam.x - c.at[0], liveCam.z - c.at[1]) + rot0;
+    });
     /* 발밑: 아주 진한 접지 그림자(신발 바로 아래) + 중간 + 넓고 옅은 바깥 */
-    blob(0, 0.014, pw * 0.55, 0.1, 1, charGroup);
-    blob(0, 0.015, pw * 0.75, 0.15, 1, charGroup);
-    blob(0, 0.02, pw * 1.25, 0.38, 0.8, charGroup);
-    blob(0, 0.04, pw * 2.2, 0.9, 0.35, charGroup);
+    blob(0, 0.014, pw * 0.55, 0.1, 1, groundG);
+    blob(0, 0.015, pw * 0.75, 0.15, 1, groundG);
+    blob(0, 0.02, pw * 1.25, 0.38, 0.8, groundG);
+    blob(0, 0.04, pw * 2.2, 0.9, 0.35, groundG);
     /* 빛 반대쪽으로 길게 늘어진 옅은 그림자(빛 방향과 맞춤) */
     const away = Math.atan2(-lx, -lz) - theta;
-    const sh = blob(Math.sin(away) * 0.35, Math.cos(away) * 0.35, pw * 1.1, 0.9, 0.35, charGroup);
+    const sh = blob(Math.sin(away) * 0.35, Math.cos(away) * 0.35, pw * 1.1, 0.9, 0.35, groundG);
     sh.rotation.z = away;
     const ph0 = rnd() * 6;
     animators.push(t => {
@@ -4234,7 +4333,10 @@ export function buildRoom(kit: Kit, room: Room, ctx: BuildCtx): BuiltRoom {
     hits,
     head,
     triangles: Math.round(triangles),
-    animate: t => animators.forEach(a => a(t)),
+    animate: (t, cam) => {
+      if (cam) liveCam.copy(cam);
+      animators.forEach(a => a(t));
+    },
     openSecret: hooks.openSecret,
     dispose: () => {
       geometries.forEach(g => g.dispose());
@@ -5928,20 +6030,127 @@ function makeProps(k: Tools) {
   };
 
   B.chesterfield = (g, p) => {
-    const leather = p.opts?.color ? std({ color: new THREE.Color(String(p.opts.color)), roughness: 0.45, clearcoat: 0.3, physical: true }) : leatherRed;
-    box(2.0, 0.3, 0.86, leather, g, 0, 0.27, 0, 0.6);
-    for (const x of [-0.5, 0.5]) box(0.92, 0.12, 0.66, leather, g, x, 0.48, 0.07, 0.6);
-    box(2.0, 0.52, 0.22, leather, g, 0, 0.66, -0.33, 0.6);
-    const roll = cyl(0.11, 0.11, 2.0, 12, leather, g, 0, 0.92, -0.33);
+    /* 5차: 1880~90년대 단추 박음(deep buttoning) 체스터필드.
+       등받이와 팔걸이 높이가 같고, 팔걸이 위가 바깥으로 말린 두루마리(rolled arm), 앞면 주름 부채.
+       등받이·좌판·팔걸이 안쪽은 실제로 오목하게 꺼진 다이아몬드 칸(정점 변위) + 박힌 단추,
+       돌린 짧은 다리 + 놋쇠 바퀴(castor). opts.velvet 이면 벨벳 + 바닥 둘레 불리언 술(fringe). */
+    const velvet = !!p.opts?.velvet;
+    const col = String(p.opts?.color ?? "#7a2420");
+    const cover = velvet
+      ? std({ color: new THREE.Color(col), roughness: 0.9, map: kit.texture(`${TEX}velour_velvet_diff.webp`), normalMap: kit.texture(`${TEX}velour_velvet_nor.webp`, false) })
+      : p.opts?.color ? std({ color: new THREE.Color(col), roughness: 0.48, map: kit.texture(`${TEX}leather_red_02_diff.webp`), normalMap: kit.texture(`${TEX}leather_red_02_nor.webp`, false) }) : leatherRed;
+    const btnMat = std({ color: new THREE.Color(col).multiplyScalar(0.55), roughness: 0.6 });
+    const W = 1.96;
+    const seatY = 0.44;
+    const topY = 0.76;
+    /* 단추 박은 판: 엇갈린 단추 격자, 단추 자리는 꺼지고 사이가 부풉니다. */
+    const tuft = (pw: number, ph: number, sx: number, sy: number, puff: number, parent: T.Object3D, x: number, y: number, z: number, rx: number, ry: number) => {
+      const nx = Math.max(4, Math.round(pw / sx) * 4);
+      const ny = Math.max(4, Math.round(ph / sy) * 4);
+      const geo = track(new THREE.PlaneGeometry(pw, ph, nx, ny));
+      const pos = geo.getAttribute("position") as T.BufferAttribute;
+      const btns: [number, number][] = [];
+      const cols = Math.round(pw / sx);
+      const rows = Math.round(ph / sy);
+      for (let j = 1; j < rows; j++) {
+        for (let i = 0; i <= cols; i++) {
+          const bx = -pw / 2 + (i + (j % 2 ? 0.5 : 0)) * (pw / cols);
+          if (bx <= -pw / 2 + 0.02 || bx >= pw / 2 - 0.02) continue;
+          btns.push([bx, -ph / 2 + j * (ph / rows)]);
+        }
+      }
+      for (let i = 0; i < pos.count; i++) {
+        const px = pos.getX(i);
+        const py = pos.getY(i);
+        let dmin = 9;
+        for (const [bx, by] of btns) dmin = Math.min(dmin, Math.hypot(px - bx, (py - by) * 1.15));
+        const edge = Math.min(pw / 2 - Math.abs(px), ph / 2 - Math.abs(py));
+        const e = Math.min(1, edge / 0.05);
+        pos.setZ(i, puff * (1 - Math.exp(-(dmin * dmin) / 0.0018)) * e);
+      }
+      pos.needsUpdate = true;
+      geo.computeVertexNormals();
+      uvx(geo, pw / 0.6, ph / 0.6);
+      const o = new THREE.Mesh(geo, cover);
+      o.position.set(x, y, z);
+      o.rotation.set(rx, ry, 0, "YXZ");
+      parent.add(o);
+      for (const [bx, by] of btns) sphere(0.014, btnMat, o, bx, by, 0.004, 6, 4);
+      return o;
+    };
+    /* 몸체 */
+    box(W, 0.3, 0.86, cover, g, 0, 0.27, 0, 0.6);
+    box(W - 0.44, 0.05, 0.62, cover, g, 0, seatY - 0.03, 0.08, 0.6);
+    tuft(W - 0.44, 0.62, 0.2, 0.17, 0.035, g, 0, seatY, 0.08, -Math.PI / 2, 0);
+    /* 등받이: 뒤판 + 앞면 단추판 + 위 두루마리 */
+    box(W, topY - seatY + 0.02, 0.2, cover, g, 0, seatY + (topY - seatY) / 2, -0.33, 0.6);
+    tuft(W - 0.44, topY - seatY - 0.04, 0.19, 0.11, 0.04, g, 0, seatY + (topY - seatY) / 2, -0.228, 0, 0);
+    const roll = cyl(0.1, 0.1, W - 0.1, 14, cover, g, 0, topY, -0.32);
     roll.rotation.z = Math.PI / 2;
+    /* 팔걸이: 등받이와 같은 높이, 위가 바깥으로 말림, 안쪽 단추판, 앞 주름 부채 */
+    const fan = kit.canvas("chesterfield:fan", 128, 128, cg => {
+      cg.fillStyle = "#808080";
+      cg.fillRect(0, 0, 128, 128);
+      for (let k2 = 0; k2 < 18; k2++) {
+        const a = (k2 / 18) * Math.PI * 2;
+        cg.strokeStyle = "rgba(0,0,0,0.55)";
+        cg.lineWidth = 3;
+        cg.beginPath();
+        cg.moveTo(64 + Math.cos(a) * 8, 64 + Math.sin(a) * 8);
+        cg.lineTo(64 + Math.cos(a) * 64, 64 + Math.sin(a) * 64);
+        cg.stroke();
+      }
+    }, { repeat: false, srgb: false });
+    const fanMat = velvet
+      ? std({ color: new THREE.Color(col), roughness: 0.9, bumpMap: fan, bumpScale: 3 })
+      : std({ color: new THREE.Color(col).multiplyScalar(1.1), roughness: 0.5, bumpMap: fan, bumpScale: 3 });
     for (const s of [-1, 1]) {
-      box(0.22, 0.48, 0.86, leather, g, s * 0.98, 0.48, 0, 0.6);
-      const arm = cyl(0.13, 0.13, 0.86, 12, leather, g, s * 0.98, 0.74, 0);
+      box(0.2, topY - 0.1, 0.86, cover, g, s * (W / 2 - 0.1), 0.08 + (topY - 0.1) / 2, 0, 0.6);
+      tuft(0.6, topY - seatY - 0.06, 0.2, 0.11, 0.03, g, s * (W / 2 - 0.205), seatY + (topY - seatY) / 2 - 0.02, 0.02, 0, -s * Math.PI / 2);
+      const arm = cyl(0.12, 0.12, 0.9, 14, cover, g, s * (W / 2 - 0.06), topY - 0.02, 0.01);
       arm.rotation.x = Math.PI / 2;
+      const f = cyl(0.118, 0.118, 0.012, 14, fanMat, g, s * (W / 2 - 0.06), topY - 0.02, 0.462);
+      f.rotation.x = Math.PI / 2;
+      sphere(0.022, btnMat, g, s * (W / 2 - 0.06), topY - 0.02, 0.47, 6, 4);
+      /* 팔걸이 앞면의 세로 판(말림 아래) */
+      box(0.24, topY - 0.14, 0.02, cover, g, s * (W / 2 - 0.1), 0.08 + (topY - 0.14) / 2, 0.43);
     }
-    const btn = std({ color: 0x4a0e0c, roughness: 0.5 });
-    for (let i = 0; i < 14; i++) sphere(0.016, btn, g, -0.84 + (i % 7) * 0.28, 0.6 + Math.floor(i / 7) * 0.18, -0.215, 6, 4);
-    for (const [x, z] of [[-0.9, -0.36], [0.9, -0.36], [-0.9, 0.36], [0.9, 0.36]]) lathe([[0, 0], [0.035, 0], [0.055, 0.04], [0.04, 0.08], [0.05, 0.11], [0, 0.12]], 8, walnut, g, x, 0, z);
+    /* 돌린 다리 + 놋쇠 바퀴 */
+    for (const [x, z] of [[-W / 2 + 0.1, -0.36], [W / 2 - 0.1, -0.36], [-W / 2 + 0.1, 0.36], [W / 2 - 0.1, 0.36]]) {
+      lathe([[0.022, 0.03], [0.045, 0.035], [0.05, 0.05], [0.032, 0.07], [0.05, 0.095], [0.04, 0.12], [0, 0.12]], 10, walnut, g, x, 0, z);
+      cyl(0.012, 0.012, 0.03, 6, brass, g, x, 0.02, z);
+      const wheel = cyl(0.02, 0.02, 0.018, 8, brass, g, x, 0.02, z + 0.012);
+      wheel.rotation.z = Math.PI / 2;
+    }
+    /* 불리언 술(벨벳일 때): 좌판 아래 둘레 */
+    if (velvet) {
+      const fr = kit.canvas(`chesterfield:fringe:${col}`, 256, 64, cg => {
+        cg.clearRect(0, 0, 256, 64);
+        const base = new THREE.Color(col);
+        cg.fillStyle = `#${base.clone().multiplyScalar(1.1).getHexString()}`;
+        cg.fillRect(0, 0, 256, 10);
+        for (let x = 1; x < 256; x += 5) {
+          cg.strokeStyle = `#${base.clone().multiplyScalar(0.7 + ((x * 13) % 7) * 0.08).getHexString()}`;
+          cg.lineWidth = 3.4;
+          cg.beginPath();
+          cg.moveTo(x, 8);
+          cg.bezierCurveTo(x + 2, 24, x - 2, 44, x + 1, 62);
+          cg.stroke();
+        }
+        cg.fillStyle = "#b8913f";
+        cg.fillRect(0, 2, 256, 3);
+      });
+      const fm = std({ map: fr, transparent: true, alphaTest: 0.35, roughness: 0.85, side: THREE.DoubleSide });
+      const fh = 0.13;
+      const fy = 0.125 + fh / 2 - 0.01;
+      const front = plane(W, fh, fm, g, 0, fy, 0.432);
+      uvx(front.geometry, W / 0.25, 1);
+      for (const s of [-1, 1]) {
+        const sd = plane(0.86, fh, fm, g, s * (W / 2 + 0.002), fy, 0);
+        sd.rotation.y = s * Math.PI / 2;
+        uvx(sd.geometry, 0.86 / 0.25, 1);
+      }
+    }
     k.blob(0, 0, 2.6, 1.4, 0.75, g);
   };
 

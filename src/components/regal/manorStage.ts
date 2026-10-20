@@ -272,7 +272,7 @@ export function createManorStage(opts: {
       events.onFade(fadeIn);
     }
     if (current) {
-      current.animate(t);
+      current.animate(t, camera.position);
       head.copy(current.head).project(camera);
       const visible = head.z < 1 && Math.abs(head.x) < 1.1 && Math.abs(head.y) < 1.1;
       events.onHead(((head.x + 1) / 2) * rect.w, ((1 - head.y) / 2) * rect.h, visible);
