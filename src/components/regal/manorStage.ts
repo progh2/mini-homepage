@@ -88,6 +88,15 @@ export function createManorStage(opts: {
 
   /* 비밀 책장이 열리는 동안(1.3초) 기다렸다가 걸어 들어갑니다. */
   let opening: { t: number; start: number; to: string; point: T.Vector3; yaw0: number; yaw1: number } | null = null;
+  /* 전환용 시계(ms). 실제 시간으로 흐르고, 시험용 슬로모션(timeScale)만 곱합니다. */
+  let clock = 0;
+  let clockAt = performance.now();
+  let timeScale = 1;
+  const tickClock = (now: number) => {
+    clock += Math.max(0, now - clockAt) * timeScale;
+    clockAt = now;
+    return clock;
+  };
   let fadeIn = 0;
   let fadeStart = 0;
   const busy = () => !!walk || !!opening || fadeIn > 0;
@@ -197,7 +206,7 @@ export function createManorStage(opts: {
       return;
     }
     const target = toward ? basePos.clone().lerp(new THREE.Vector3(toward.x, basePos.y, toward.z), 0.45) : basePos.clone().add(dir.clone().multiplyScalar(1.2));
-    walk = { from: camera.position.clone(), to: target, start: performance.now(), next: id };
+    walk = { from: camera.position.clone(), to: target, start: tickClock(performance.now()), next: id };
     markBusy();
   }
 
@@ -236,7 +245,7 @@ export function createManorStage(opts: {
         const baseYaw = Math.atan2(dir.x, dir.z);
         let want = Math.atan2(h.point.x - basePos.x, h.point.z - basePos.z) - baseYaw;
         want = Math.atan2(Math.sin(want), Math.cos(want));
-        opening = { t: 0, start: performance.now(), to: hit.to, point: h.point.clone(), yaw0: yaw, yaw1: Math.max(-28 * DEG, Math.min(28 * DEG, want * 0.7)) };
+        opening = { t: 0, start: tickClock(performance.now()), to: hit.to, point: h.point.clone(), yaw0: yaw, yaw1: Math.max(-28 * DEG, Math.min(28 * DEG, want * 0.7)) };
       }
       else if (hit.type === "door") goTo(hit.to, true, h.point);
       else events.onCharacter();
@@ -276,8 +285,9 @@ export function createManorStage(opts: {
     if (now - lastDraw < minFrame - 1) return;
     lastDraw = now;
     const t = (now - t0) / 1000;
+    const ck = tickClock(now);
     if (opening && current) {
-      opening.t = Math.min(1, (now - opening.start) / 1300);
+      opening.t = Math.min(1, (ck - opening.start) / 1300);
       const u = opening.t;
       current.openSecret?.(1 - Math.pow(1 - u, 3));
       const e = Math.min(1, u * 1.6);
@@ -290,7 +300,7 @@ export function createManorStage(opts: {
       }
     }
     if (walk) {
-      const wt = Math.min(1, (now - walk.start) / 600);
+      const wt = Math.min(1, (ck - walk.start) / 600);
       const u = wt * wt * (3 - 2 * wt);
       placeCamera(walk.from.clone().lerp(walk.to, u));
       events.onFade(u);
@@ -300,10 +310,10 @@ export function createManorStage(opts: {
         if (!current || current.room.id !== next) enter(next);
         else placeCamera();
         fadeIn = 1;
-        fadeStart = now;
+        fadeStart = ck;
       }
     } else if (fadeIn > 0) {
-      fadeIn = Math.max(0, 1 - (now - fadeStart) / 350);
+      fadeIn = Math.max(0, 1 - (ck - fadeStart) / 350);
       events.onFade(fadeIn);
     }
     markBusy();
@@ -324,6 +334,11 @@ export function createManorStage(opts: {
     const v = new THREE.Vector3();
     (window as unknown as Record<string, unknown>).__regalManorLog = trace;
     (window as unknown as Record<string, unknown>).__regalManor = {
+      /* 시험용 슬로모션: 소프트웨어 GL 처럼 한 장에 1초 넘게 걸려도 책장 중간 모습을 찍을 수 있게 합니다. */
+      timeScale: (k: number) => {
+        tickClock(performance.now());
+        timeScale = Math.max(0.01, Math.min(1, k));
+      },
       state: () => ({ room: current?.room.id, yaw: yaw / DEG, pitch: pitch / DEG, walking: !!walk, busy: busy(), opening: opening ? opening.t : null, tris: current?.triangles }),
       hits: () => {
         if (!current) return [];
