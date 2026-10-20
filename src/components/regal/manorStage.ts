@@ -245,9 +245,22 @@ export function createManorStage(opts: {
     down = null;
     if (moved > 6 || !current) return;
     const r = renderer.domElement.getBoundingClientRect();
-    ndc.set(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1);
-    ray.setFromCamera(ndc, camera);
-    const hitList = ray.intersectObjects(current.hits, true);
+    const cast = (px: number, py: number) => {
+      ndc.set(((px - r.left) / r.width) * 2 - 1, -((py - r.top) / r.height) * 2 + 1);
+      ray.setFromCamera(ndc, camera);
+      return ray.intersectObjects(current!.hits, true).filter(h => h.object.userData.hit);
+    };
+    let hitList = cast(e.clientX, e.clientY);
+    /* 손가락은 마우스보다 굵습니다. 터치가 아무것도 못 맞혔으면 둘레 몇 점을 더 찔러 봅니다. */
+    if (hitList.length === 0 && e.pointerType !== "mouse") {
+      for (const rad of [10, 20, 30]) {
+        for (let k = 0; k < 12 && hitList.length === 0; k++) {
+          const a = (k / 12) * Math.PI * 2;
+          hitList = cast(e.clientX + Math.cos(a) * rad, e.clientY + Math.sin(a) * rad);
+        }
+        if (hitList.length) break;
+      }
+    }
     for (const h of hitList) {
       const hit = h.object.userData.hit as Hit | undefined;
       if (!hit) continue;
@@ -375,6 +388,15 @@ export function createManorStage(opts: {
           if (best) out.push({ type: hit.type, to: hit.type === "door" ? hit.to : undefined, reveal: hit.type === "door" ? hit.reveal : undefined, ...best });
         }
         return out;
+      },
+      /* 점검용: 화면 좌표 한 점에 무엇이 맞는지(터치 보정 없이) */
+      pick: (x: number, y: number) => {
+        if (!current) return null;
+        const cr = renderer.domElement.getBoundingClientRect();
+        ndc.set(((x - cr.left) / cr.width) * 2 - 1, -((y - cr.top) / cr.height) * 2 + 1);
+        ray.setFromCamera(ndc, camera);
+        const f = ray.intersectObjects(current.hits, true).find(h => h.object.userData.hit);
+        return f ? (f.object.userData.hit as Hit).type + ((f.object.userData.hit as Hit & { reveal?: boolean }).reveal ? ":reveal" : "") : null;
       },
       secret: (u: number) => current?.openSecret?.(u),
       /* 점검용: 카메라를 임의 위치에 두고 가까이 봅니다(다음 시선 조작 전까지). */
