@@ -333,7 +333,7 @@ export const ROOMS: Room[] = [
       { kind: "globe", at: [-3.6, -1.6] },
       { kind: "vitrine", at: [-2.4, -2.0], rot: 35, opts: { item: "manuscript", title: "채색 필사본", sub: "Illuminated manuscript · 15th c." } },
       { kind: "electrolier", at: [0.2, -0.4], opts: { y: 2.75, size: 0.75 } },
-      { kind: "rug", at: [-0.6, 0.2], opts: { w: 5.2, d: 3.8, style: "heriz" } }
+      { kind: "rug", at: [-0.6, 0.2], opts: { w: 5.2, d: 3.8, style: "heriz-wine" } }
     ],
     paintings: [
       {

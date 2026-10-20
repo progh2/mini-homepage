@@ -1684,7 +1684,7 @@ function opusOverlay(kit: Kit) {
    savonnerie: 사보느리 소용돌이와 가운데 장미, gul: 투르크멘 굴(팔각) 줄무늬. */
 /* 4차 깔개: 헤리즈(페르시아 북서부), 우샤크(서부 아나톨리아 별 메달리온), 모리스 "해머스미스"(손매듭 영국제).
    모두 코드로 그린 무늬이며 실제 특정 작품의 복제가 아닙니다(출처는 PERIOD.md 23~27). */
-const RUGS4 = new Set(["heriz", "ushak", "hammersmith", "morris-olive", "morris-wine", "aubusson-wine"]);
+const RUGS4 = new Set(["heriz", "heriz-wine", "ushak", "hammersmith", "morris-olive", "morris-wine", "aubusson-wine"]);
 
 function rugTexture4(kit: Kit, style: string) {
   return kit.canvas(`rug4:${style}`, 1024, 768, g => {
@@ -1781,12 +1781,14 @@ function rugTexture4(kit: Kit, style: string) {
       }
     };
 
-    if (style === "heriz") {
-      const red = "#7a2a1c";
-      const navy = "#1a223a";
-      const ivory = "#b7a27c";
-      const sky = "#5f7c94";
-      const rust = "#a3582c";
+    if (style === "heriz" || style === "heriz-wine") {
+      /* heriz-wine: 오래 써서 바랜 헤리즈. 짙은 포도주 바탕, 먹빛 남색, 상아 대신 바랜 낙타색(대비를 낮춤, 추정) */
+      const muted = style === "heriz-wine";
+      const red = muted ? "#4a1b1c" : "#7a2a1c";
+      const navy = muted ? "#1b1d29" : "#1a223a";
+      const ivory = muted ? "#7d6a50" : "#b7a27c";
+      const sky = muted ? "#3e4a56" : "#5f7c94";
+      const rust = muted ? "#6a3522" : "#a3582c";
       abrash(red, 0);
       /* 바탕: 격자로 흩은 작은 계단 꽃(남색 + 상아 심) 과 각진 잎 */
       let row = 0;
