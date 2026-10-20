@@ -5478,7 +5478,8 @@ function makeProps(k: Tools) {
     inner.position.set(-sw / 2, 0, -dpt / 2);
     hinge.add(inner);
     shelfSection(inner, 0, sw, top, dpt, spineMaterial());
-    const red = std({ color: 0x9a1a22, roughness: 0.5 });
+    /* 빨간 책은 아주 옅게 숨을 쉬듯 빛납니다(자세히 봐야 보일 만큼). */
+    const red = std({ color: 0x9a1a22, roughness: 0.5, emissive: 0x7a1018, emissiveIntensity: 0 });
     const bookY = 0.74 + 0.38 * 2 + 0.17;
     const bookG = new THREE.Group();
     inner.add(bookG);
@@ -5486,14 +5487,15 @@ function makeProps(k: Tools) {
     b.rotation.x = -0.18;
     box(0.052, 0.02, 0.2, gold, bookG, 0.18, bookY + 0.07, 0.13);
     /* 누르기 쉽게 책 둘레에 보이지 않는 판 */
-    plane(0.34, 0.5, basic({ transparent: true, opacity: 0, depthWrite: false }), bookG, 0.18, bookY, dpt / 2 + 0.02);
+    plane(0.44, 0.6, basic({ transparent: true, opacity: 0, depthWrite: false }), bookG, 0.18, bookY, dpt / 2 + 0.02);
     const glowTex = radialTexture(kit, "violet", "rgba(220,170,255,0.85)", "rgba(220,170,255,0)");
     const glowM = basic({ map: glowTex, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, opacity: 0.5 });
     const gl = plane(0.35, top * 0.9, glowM, g, sw / 2 + 0.02, top / 2, 0.24);
     gl.renderOrder = 4;
     let open = 0;
     animators.push(t => {
-      glowM.opacity = 0.32 + Math.sin(t * 1.3) * 0.14 + open * 0.5;
+      glowM.opacity = 0.36 + Math.sin(t * 1.3) * 0.14 + open * 0.5;
+      red.emissiveIntensity = 0.12 + Math.max(0, Math.sin(t * 0.9)) * 0.28;
     });
     k.hooks.openSecret = u => {
       open = u;
