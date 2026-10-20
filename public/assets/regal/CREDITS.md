@@ -48,6 +48,46 @@
 | paintings/rose.webp | Rosa centifolia foliacea | Pierre-Joseph Redouté | 1824 | 퍼블릭 도메인 | https://commons.wikimedia.org/wiki/File:Redoute_-_Rosa_centifolia_foliacea.jpg |
 | paintings/airpump.webp | An Experiment on a Bird in the Air Pump | Joseph Wright of Derby | 1768 | 퍼블릭 도메인 | https://commons.wikimedia.org/wiki/File:An_Experiment_on_a_Bird_in_an_Air_Pump_by_Joseph_Wright_of_Derby,_1768.jpg |
 
+### 갤러리 살롱 걸기와 응접실 천장 (3차, 512px 이하 webp q80, lapaix만 960px)
+
+| 파일 | 작품 | 작가 | 연도 | 조건 | 주소 |
+|---|---|---|---|---|---|
+| paintings/battersea.webp | Nocturne: Blue and Gold – Old Battersea Bridge | James McNeill Whistler | c. 1872–1875 | 퍼블릭 도메인 | https://commons.wikimedia.org/wiki/File:James_Abbot_McNeill_Whistler_006.jpg |
+| paintings/carnation.webp | Carnation, Lily, Lily, Rose | John Singer Sargent | 1885–1886 | 퍼블릭 도메인 | https://commons.wikimedia.org/wiki/File:John_Singer_Sargent_-_Carnation,_Lily,_Lily,_Rose_-_Google_Art_Project.jpg |
+| paintings/derbyday.webp | The Derby Day | William Powell Frith | 1856–1858 | 퍼블릭 도메인 | https://commons.wikimedia.org/wiki/File:William_Powell_Frith_(1819-1909)_-_The_Derby_Day_-_N00615_-_Tate.jpg |
+| paintings/flamingjune.webp | Flaming June | Frederic Leighton | 1895 | 퍼블릭 도메인 | https://commons.wikimedia.org/wiki/File:Flaming_June,_by_Frederic_Lord_Leighton_(1830-1896).jpg |
+| paintings/goldenstairs.webp | The Golden Stairs | Edward Burne-Jones | 1880 | 퍼블릭 도메인 | https://commons.wikimedia.org/wiki/File:Edward_Burne-Jones_The_Golden_Stairs.jpg |
+| paintings/heliogabalus.webp | The Roses of Heliogabalus | Lawrence Alma-Tadema | 1888 | 퍼블릭 도메인 | https://commons.wikimedia.org/wiki/File:The_Roses_of_Heliogabalus.jpg |
+| paintings/lightworld.webp | The Light of the World (위 12% 잘라냄) | William Holman Hunt | 1851–1853 | 퍼블릭 도메인 | https://commons.wikimedia.org/wiki/File:Hunt-light-of-the-world.jpeg |
+| paintings/liverpoolquay.webp | Liverpool Quay by Moonlight | John Atkinson Grimshaw | 1887 | 퍼블릭 도메인 | https://commons.wikimedia.org/wiki/File:John_Atkinson_Grimshaw_(1836-1893)_-_Liverpool_Quay_by_Moonlight_-_T00902_-_Tate.jpg |
+| paintings/midsummer.webp | Midsummer | Albert Joseph Moore | 1887 | 퍼블릭 도메인 | https://commons.wikimedia.org/wiki/File:Moore_Albert_Midsummer.jpg |
+| paintings/ophelia.webp | Ophelia (가장자리 잘라냄) | John Everett Millais | 1851–1852 | 퍼블릭 도메인 | https://commons.wikimedia.org/wiki/File:John_Everett_Millais_-_Ophelia_-_Google_Art_Project.jpg |
+| paintings/proserpine.webp | Proserpine | Dante Gabriel Rossetti | 1874 | 퍼블릭 도메인 | https://commons.wikimedia.org/wiki/File:Dante_Gabriel_Rossetti_-_Proserpine_-_Google_Art_Project.jpg |
+| paintings/rainsteam.webp | Rain, Steam and Speed | J. M. W. Turner | 1844 | 퍼블릭 도메인 | https://commons.wikimedia.org/wiki/File:Turner_-_Rain,_Steam_and_Speed_-_National_Gallery_file.jpg |
+| paintings/shalott.webp | The Lady of Shalott | John William Waterhouse | 1888 | 퍼블릭 도메인 | https://commons.wikimedia.org/wiki/File:John_William_Waterhouse_-_The_Lady_of_Shalott_-_Google_Art_Project.jpg |
+| paintings/railway.webp | The Railway Station | William Powell Frith | 1862 | 퍼블릭 도메인 | https://commons.wikimedia.org/wiki/File:William_Powell_Frith_The_Railway_Station.jpg |
+| paintings/doctor.webp | The Doctor | Luke Fildes | 1891 | 퍼블릭 도메인 | https://commons.wikimedia.org/wiki/File:Luke_Fildes_(1891)_The_Doctor.png |
+| paintings/cophetua.webp | King Cophetua and the Beggar Maid | Edward Burne-Jones | 1884 | 퍼블릭 도메인 | https://commons.wikimedia.org/wiki/File:Edward_Burne-Jones_-_King_Cophetua_and_the_Beggar_Maid_-_Google_Art_Project.jpg |
+| paintings/agnew.webp | Lady Agnew of Lochnaw | John Singer Sargent | 1892 | 퍼블릭 도메인 | https://commons.wikimedia.org/wiki/File:John_Singer_Sargent_-_Lady_Agnew_of_Lochnaw.jpg |
+| paintings/awakening.webp | The Awakening Conscience (잘라냄) | William Holman Hunt | 1853 | 퍼블릭 도메인 | https://commons.wikimedia.org/wiki/File:William_Holman_Hunt_-_The_Awakening_Conscience_-_Google_Art_Project.jpg |
+| paintings/symphonywhite.webp | Symphony in White, No. 1: The White Girl | James McNeill Whistler | 1862 | 퍼블릭 도메인 | https://commons.wikimedia.org/wiki/File:Whistler_James_Symphony_in_White_no_1_(The_White_Girl)_1862.jpg |
+| paintings/reflections.webp | Reflections on the Thames, Westminster | John Atkinson Grimshaw | 1880 | 퍼블릭 도메인 | https://commons.wikimedia.org/wiki/File:Reflections_on_the_Thames,_Westminster_-_Grimshaw,_John_Atkinson.jpg |
+| paintings/hush.webp | Hush! (The Concert) | James Tissot | c. 1875 | 퍼블릭 도메인 | https://commons.wikimedia.org/wiki/File:James_Tissot_-_Hush!.jpg |
+| paintings/psyche.webp | The Bath of Psyche | Frederic Leighton | c. 1890 | 퍼블릭 도메인 | https://commons.wikimedia.org/wiki/File:Frederic_Lord,_Leighton_-_The_Bath_of_Psyche_-_Google_Art_Project.jpg |
+| paintings/lapaix.webp | La Paix vient consoler les hommes… (Delacroix 천장화의 모사, 응접실 천장 원형 그림) | Raimundo de Madrazo | 1871 이전 | CC0 | https://commons.wikimedia.org/wiki/File:Copia_de_La_Paix_vient_consoler_les_hommes_et_leur_ram%C3%A8ne_l'Abondance_de_Delacroix_por_Raimundo_de_Madrazo.jpg |
+
+작품 연도는 일반적인 미술사 기록을 따랐습니다. 조건(라이선스)은 각 Commons 파일 페이지에서 API로 확인했습니다.
+
+## 벽지 (tex/morris_*) — William Morris, Wikimedia Commons
+
+1024px 이하 webp로 줄였습니다. 한 장이 벽지 한 폭(약 53cm)이 되도록 반복합니다.
+
+| 파일 | 무늬 | 디자인 | 조건 | 주소 | 쓰는 방 |
+|---|---|---|---|---|---|
+| tex/morris_pimpernel.webp | Pimpernel | William Morris, 1876 | 퍼블릭 도메인 (Google Art Project) | https://commons.wikimedia.org/wiki/File:William_Morris_-_%22Pimpernel%22_-_Google_Art_Project.jpg | 접견실 |
+| tex/morris_pinkrose.webp | Pink and Rose | William Morris / Morris & Co., 1890년쯤 | CC0 (Metropolitan Museum of Art) | https://commons.wikimedia.org/wiki/File:Pink_and_Rose_MET_DT653.jpg | 응접실 |
+| tex/morris_willowbough.webp | Willow Bough | William Morris / Morris & Co., 1887 | CC0 (Metropolitan Museum of Art) | https://commons.wikimedia.org/wiki/File:Willow_Bough_MET_DP306734.jpg | 음악실 |
+
 ## 인물 (characters/)
 
 모든 인물은 이 사이트를 위해 새로 만든 원본 캐릭터입니다. 퍼블릭 도메인 그림을 오려 쓴 인물과 코드로 만든 저폴리곤 인물은 이번에 모두 지웠습니다.
@@ -55,12 +95,12 @@
 | 파일 | 방 | 인물 | 출처 |
 |---|---|---|---|
 | characters/butler.webp | 대홀 | 집사 | 자체 생성 (Grok Bot image generation, original character) |
-| characters/maid.webp | 접견실 | 하녀 | 자체 생성 (Grok Bot image generation, original character) |
-| characters/librarian.webp | 서재 | 사서 | 자체 생성 (Grok Bot image generation, original character) |
-| characters/lady.webp | 응접실 | 숙녀 손님 | 자체 생성 (Grok Bot image generation, original character) |
+| characters/maid.webp | 접견실 | 하녀 (3차 새 그림) | 자체 생성 (Grok Bot image generation, original character) |
+| characters/librarian.webp | 서재 | 사서 (3차 새 그림) | 자체 생성 (Grok Bot image generation, original character) |
+| characters/lady.webp | 응접실 | 숙녀 손님 (3차 새 그림) | 자체 생성 (Grok Bot image generation, original character) |
 | characters/pianist.webp | 음악실 | 피아니스트 | 자체 생성 (Grok Bot image generation, original character) |
 | characters/gardener.webp | 온실 | 정원사 | 자체 생성 (Grok Bot image generation, original character) |
-| characters/curator.webp | 갤러리 | 큐레이터 | 자체 생성 (Grok Bot image generation, original character) |
+| characters/curator.webp | 갤러리 | 큐레이터 (3차 새 그림) | 자체 생성 (Grok Bot image generation, original character) |
 | characters/zeta.webp | 비밀의 방 | 제타, 전신 | 자체 생성 (Grok Bot image generation, original character) |
 | characters/zeta-wink.webp, zeta-surprised.webp, zeta-tease.webp | 비밀의 방 | 제타의 표정 세 가지 | 자체 생성 (Grok Bot image generation, original character) |
 
@@ -70,8 +110,8 @@
 
 ## 코드로 만든 것
 
-- 가구(카브리올 다리, 돌린 다리), 계단과 난간, 나무 양문, 격자·돔 천장, 몰딩, 진열장, 벽 촛대, 샹들리에, 벽난로, 피아노, 온실 등 모든 모형: 이 저장소 코드(`src/components/regal/manorBuild.ts`)로 만들었습니다.
-- 다마스크, 친츠 벽지, 마룻바닥(베르사유, 큐브), 엔코스틱 타일, 바닥 상감 무늬, 양탄자 무늬, 밤하늘, 문패, 박물관 이름표, 불꽃·반짝임 스프라이트: 실행할 때 캔버스로 그립니다.
+- 가구(카브리올 다리, 돌린 다리), 계단과 난간, 나무 양문, 고딕 아치 문과 채광창 문, 가스 샹들리에(가솔리어)와 전기 샹들리에(일렉트롤리어), 가스 벽등, 꽃병 램프, 홀 스탠드, 우산꽂이, 흑단 탐미주의 장식장, 고딕 책장, 벽난로 위 거울장, 그랜드 피아노, 무쇠와 유리 온실, 엽란과 야자 화분, 화분대, 벤트우드 의자, 격자·돔 천장, 몰딩, 진열장, 벽 촛대, 샹들리에, 벽난로, 피아노, 온실 등 모든 모형: 이 저장소 코드(`src/components/regal/manorBuild.ts`)로 만들었습니다.
+- 다마스크, 친츠 벽지, 링크러스타·아나글립타 돋을무늬(해바라기, 격자), 홀 스텐실 벽지, 가죽 무늬 종이, 프리즈, 참나무 판벽, 민턴 바닥과 테두리, 스테인드글라스, 온실 밖 흐린 정원, 드 모건풍 타일과 러스터 타일, 마룻바닥(베르사유, 큐브), 엔코스틱 타일, 바닥 상감 무늬, 양탄자 무늬, 밤하늘, 문패, 박물관 이름표, 불꽃·반짝임 스프라이트: 실행할 때 캔버스로 그립니다.
 - 환경광: three.js `RoomEnvironment` (MIT License, https://github.com/mrdoob/three.js).
 
 ## 글꼴
