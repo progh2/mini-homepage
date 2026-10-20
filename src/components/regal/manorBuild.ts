@@ -4280,14 +4280,21 @@ export function buildRoom(kit: Kit, room: Room, ctx: BuildCtx): BuiltRoom {
     groundG.position.set(c.at[0], 0, c.at[1]);
     groundG.rotation.y = theta;
     const rot0 = (c.rot ?? 0) * DEG;
+    /* 진한 접지 그림자는 판과 함께 돌고, 신발 선 뒤쪽으로 조금 물려 둡니다.
+       납작한 판은 발바닥이 한 줄이라, 타원 한가운데에 두면 앞쪽 반이 발 아래 띠로 보여 떠 보입니다. */
+    const contactG = new THREE.Group();
+    contactG.position.set(c.at[0], 0, c.at[1]);
+    contactG.rotation.y = theta;
+    group.add(contactG);
     animators.push(() => {
       charGroup.rotation.y = Math.atan2(liveCam.x - c.at[0], liveCam.z - c.at[1]) + rot0;
+      contactG.rotation.y = charGroup.rotation.y;
     });
-    /* 발밑: 아주 진한 접지 그림자(신발 바로 아래) + 중간 + 넓고 옅은 바깥 */
-    blob(0, 0.014, pw * 0.55, 0.1, 1, groundG);
-    blob(0, 0.015, pw * 0.75, 0.15, 1, groundG);
-    blob(0, 0.02, pw * 1.25, 0.38, 0.8, groundG);
-    blob(0, 0.04, pw * 2.2, 0.9, 0.35, groundG);
+    /* 발밑: 아주 진한 접지 그림자(신발 바로 아래·뒤) + 중간, 그리고 바닥에 고정된 넓고 옅은 바깥 */
+    blob(0, -0.03, pw * 0.55, 0.08, 0.95, contactG);
+    blob(0, -0.04, pw * 0.75, 0.12, 0.9, contactG);
+    blob(0, -0.05, pw * 1.2, 0.3, 0.7, contactG);
+    blob(0, 0.0, pw * 2.2, 0.9, 0.35, groundG);
     /* 빛 반대쪽으로 길게 늘어진 옅은 그림자(빛 방향과 맞춤) */
     const away = Math.atan2(-lx, -lz) - theta;
     const sh = blob(Math.sin(away) * 0.35, Math.cos(away) * 0.35, pw * 1.1, 0.9, 0.35, groundG);
