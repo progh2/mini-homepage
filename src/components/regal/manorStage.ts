@@ -68,6 +68,12 @@ export function createManorStage(opts: {
 
   const camera = new THREE.PerspectiveCamera(50, 1, 0.05, 80);
   const built = new Map<string, BuiltRoom>();
+  /* 점검용 기록(?manorDebug=1 일 때만 window.__regalManorLog 로 보임) */
+  const trace: string[] = [];
+  const note = (m: string) => {
+    if (trace.length > 400) trace.shift();
+    trace.push(`${Math.round(performance.now())} ${m}`);
+  };
   let current: BuiltRoom | null = null;
   let alive = true;
 
@@ -84,8 +90,10 @@ export function createManorStage(opts: {
   function ensure(id: string) {
     let b = built.get(id);
     if (!b) {
+      const t0b = performance.now();
       b = buildRoom(kit, ROOM_BY_ID[id], opts.ctx);
       built.set(id, b);
+      note(`build ${id} ${Math.round(performance.now() - t0b)}ms`);
     }
     return b;
   }
@@ -121,6 +129,7 @@ export function createManorStage(opts: {
     yaw = 0;
     pitch = 0;
     placeCamera();
+    note(`enter ${id}`);
     host.dataset.manorRoom = id;
     host.dataset.manorTris = String(b.triangles);
     events.onRoom(id);
@@ -153,8 +162,12 @@ export function createManorStage(opts: {
   }
 
   function goTo(id: string, animate: boolean, toward?: T.Vector3) {
-    if (!ROOM_BY_ID[id] || walk) return;
+    if (!ROOM_BY_ID[id] || walk) {
+      note(`goTo ${id} ignored (${walk ? "walking to " + walk.next : "unknown"})`);
+      return;
+    }
     if (current && current.room.id === id) return;
+    note(`goTo ${id}`);
     if (!animate || !current) {
       enter(id);
       events.onFade(0);
@@ -286,6 +299,7 @@ export function createManorStage(opts: {
   if (debug) {
     const box3 = new THREE.Box3();
     const v = new THREE.Vector3();
+    (window as unknown as Record<string, unknown>).__regalManorLog = trace;
     (window as unknown as Record<string, unknown>).__regalManor = {
       state: () => ({ room: current?.room.id, yaw: yaw / DEG, pitch: pitch / DEG, walking: !!walk, opening: opening ? opening.t : null, tris: current?.triangles }),
       hits: () => {

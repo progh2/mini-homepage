@@ -2138,7 +2138,7 @@ function rugTexture4(kit: Kit, style: string) {
       flower(320, 60, 14);
     });
     /* 가운데 꽃 다발 */
-    poly([[W / 2, H / 2 - 120], [W / 2 + 150, H / 2], [W / 2, H / 2 + 120], [W / 2 - 150, H / 2]], medC, ochre, 3);
+    poly([[W / 2, H / 2 - 120], [W / 2 + 150, H / 2], [W / 2, H / 2 + 120], [W / 2 - 150, H / 2]], medC, style === "hammersmith" ? ochre : mid, style === "hammersmith" ? 3 : 2);
     flower(W / 2, H / 2, 44);
     for (let k = 0; k < 4; k++) {
       const a = (k / 4) * Math.PI * 2 + Math.PI / 4;
@@ -3037,6 +3037,8 @@ export function buildRoom(kit: Kit, room: Room, ctx: BuildCtx): BuiltRoom {
       shape.holes.push(p);
       /* 5차: 징두리는 창 테두리(아키트레이브)까지 이어지고, 창턱 아래는 창 밑 판(window back)이 채웁니다. */
       tallHoles.push([win.offset - win.w / 2 - 0.1, win.offset + win.w / 2 + 0.1]);
+      /* 5차 수정: 징두리(lowHoles 로 나뉨)가 낮은 창턱의 창을 가로질러 막던 문제. 창턱이 징두리보다 낮으면 창 폭만큼 비웁니다. */
+      if (win.sill < 1.3) lowHoles.push([win.offset - win.w / 2 - 0.1, win.offset + win.w / 2 + 0.1]);
     }
     if (room.walls === "glass") {
       buildGlassWall(wall, doors);

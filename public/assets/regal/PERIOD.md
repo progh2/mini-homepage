@@ -96,6 +96,17 @@
 | 서재 책상 | 이스트레이크식 양수 책상: 굽 받침, 곧은 몸체, 금박 음각선(서랍 안쪽 사각, 모서리 꺾임, 해바라기), 음각선 든 모서리 기둥, 위에서 아래로 커지는 서랍 셋(14·18·22cm), 놋쇠 고리 손잡이와 열쇠 판, 두 단 몰딩 상판과 금박 압형 가죽, 가운데 얕은 서랍, 뒤판 | 이스트레이크 『Hints on Household Taste』(1868)와 그 이름을 딴 직선적 가구 양식 [18] | 음각선 도안과 비례 (**추정**) |
 | 인물 | 방 빛 색온도 곱하기, 등 쪽 밝게/반대쪽 어둡게, 발 AO, 윤곽 안쪽 어둡게, 부드러운 알파, 종이 결, 진한 접지 그림자 + 빛 반대쪽 그림자, 흔들림 절반 이하 | — | 그림 자체는 평면 판이라 실제 조명을 받지 않음(한계) |
 
+## 5차 고증 (어두운 깔개, 체스터필드, 접견실 창, 인물 그림)
+
+| 항목 | 넣은 것 | 근거 | 추정 |
+|---|---|---|---|
+| 접견실 깔개 | 모리스 "해머스미스"풍 도안을 올리브 바탕(#3b3c24)·짙은 와인 테두리로, 무늬와 바탕의 명도 차를 줄임 | 모리스 & 코 손매듭 카펫 [27], [28] | 올리브 배색 (**추정**) |
+| 응접실 깔개 | 오뷔송풍: 짙은 와인 바탕, 바랜 상아(크림·흰색 아님) 타원 테, 흐린 장미 다발과 화환, 올리브갈색 테두리 | 19세기 오뷔송은 앞 세기 작품의 복제, 가구 덮개와 **꽃무늬 태피스트리 카펫**으로 명맥을 이음 [32] | 와인 바탕 배색과 도안 (**추정**) |
+| 비밀의 방 깔개 | 모리스풍 도안을 와인 바탕(#45161e)·짙은 자주남색 테두리로 (빨간 원 무늬 굴 깔개 대체) | [27], [28] | 배색 (**추정**) |
+| 비밀의 방 소파 | 단추를 깊게 박은(deep-buttoned) 체스터필드: 등받이와 같은 높이의 팔걸이, 바깥으로 말린 팔걸이와 앞면 주름 부채, 실제로 오목한 다이아몬드 칸과 단추, 돌린 짧은 다리와 놋쇠 바퀴, 벨벳 + 불리언 술. 응접실 가죽 소파도 같은 모형 | 19세기 후반 하워드 & 선즈의 체스터필드 한 쌍: 단추 박은 등받이, 말린 팔걸이, 고리 무늬로 돌린 다리, 놋쇠 바퀴 [30]. 길로우 사 체스터필드: 깊은 단추 등받이, 바깥으로 젖힌 팔걸이, 돌린 다리와 도자기 바퀴 [31] | 벨벳 커버와 술 (**추정**: 가죽이 더 흔함) |
+| 접견실 창 | 폭 1.5m × 높이 3.6m(약 1:2.4), 창턱 0.5m, 창 머리 4.1m(코니스 바로 아래). 2-over-2, 레이스, 창밖 그대로. 창턱 아래는 판 두 장의 창 밑 판(window back), 징두리는 창에서 끊김 | 상자형 내리닫이창 [23] | 비례와 높이 (**추정**) |
+| 인물 그림 4점 | 하녀·사서·응접실 부인·큐레이터를 방의 빛을 직접 그려 넣은 그림으로 교체(부인: 왼쪽 위 따뜻한 가스등, 큐레이터: 위에서 따뜻한 빛, 사서: 오른쪽 램프 + 왼쪽 차가운 그늘, 하녀: 왼쪽 따뜻한 빛 + 오른쪽 차가운 창빛). 캔버스 후처리는 약하게 | — | — |
+
 ## 출처
 
 1. Fashion History Timeline, Fashion Institute of Technology (SUNY FIT), “1890-1899”. https://fashionhistory.fitnyc.edu/1890-1899/
@@ -129,4 +140,8 @@
 28. Arts & Crafts Hammersmith (Emery Walker Trust), “Hammersmith Rug Designed by William Morris, 1879”, T35. https://artsandcraftshammersmith.org.uk/Collection/Detail/18843/
 29. Wikipedia, “Yorkstone”. https://en.wikipedia.org/wiki/Yorkstone
 
-출처 5~29는 2026년 10월 19일에 직접 열어 확인했습니다. 벽지와 그림의 출처(라이선스)는 [CREDITS.md](./CREDITS.md)에 있습니다.
+30. Sotheby's, Arts of Europe (L13301), lot 229, “A pair of Victorian mahogany Chesterfield sofas, late 19th century, by Howard & Sons”. https://www.sothebys.com/en/auctions/ecatalogue/2013/arts-of-europe-l13301/lot.229.html
+31. Christie's, “A Victorian Chesterfield sofa” (stamped Gillow & Co), lot 2066452. https://www.christies.com/en/lot/lot-2066452
+32. Wikipedia, “Aubusson tapestry”. https://en.wikipedia.org/wiki/Aubusson_tapestry
+
+출처 5~32는 2026년 10월 19일에 직접 열어 확인했습니다. 벽지와 그림의 출처(라이선스)는 [CREDITS.md](./CREDITS.md)에 있습니다.
