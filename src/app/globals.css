@@ -5312,15 +5312,30 @@ body.lt-skin-regal {
   overflow: hidden;
 }
 
+/* 가로 화면: 좁고 반투명한 카드. 방이 주인공이 되도록 처음엔 접혀 있습니다. */
 .cy-manor.is-wide .cy-manor-card {
-  top: 128px;
+  top: 156px;
   right: 16px;
   bottom: 16px;
-  width: min(404px, 36vw);
+  width: min(340px, 30vw);
+  background: rgba(245, 239, 227, 0.86);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
 }
 
 .cy-manor.is-wide .cy-manor-card.is-closed {
   bottom: auto;
+  width: min(260px, 30vw);
+  background: rgba(245, 239, 227, 0.78);
+}
+
+/* 가장자리를 어둡게(비네트): 방 한가운데에 빛이 모이게 */
+.cy-manor-gl::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(ellipse 75% 70% at 50% 46%, rgba(0, 0, 0, 0) 52%, rgba(12, 6, 2, 0.28) 78%, rgba(8, 4, 2, 0.55) 100%);
 }
 
 .cy-manor.is-portrait .cy-manor-card {

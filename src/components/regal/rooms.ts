@@ -25,7 +25,14 @@ export type PropKind =
   | "grandPiano" | "gramophone" | "harp" | "musicStand"
   | "glassHouse" | "pottedPalm" | "fern" | "wickerBench" | "planter"
   | "chaise" | "vanity" | "jewelCase" | "candelabra"
-  | "rug" | "runner";
+  | "rug" | "runner"
+  /* 박물관 유리 진열장. opts: item, title, sub */
+  | "vitrine"
+  /* 벽 촛대. at 은 벽 앞 바닥 좌표, rot 은 벽에서 방 쪽을 보는 방향 */
+  | "sconce"
+  /* 낮은 차 탁자와 찻잔 */
+  | "teaTable"
+  | "candlestick";
 
 export type Prop = {
   kind: PropKind;
@@ -70,51 +77,39 @@ export type Door = {
 
 export type Window = { wall: Side; offset: number; w: number; h: number; sill: number };
 
-/* 직접 만든 저폴리곤 인물입니다(외부 모델 없음). */
-export type FigureLook = {
-  skin: string;
-  hair: string;
-  hairStyle: "short" | "bun" | "updo" | "bald" | "cap";
-  /* 상의/코트 */
-  coat: string;
-  coatStyle: "tailcoat" | "jacket" | "waistcoat" | "dress" | "gown";
-  /* 하의(바지) 또는 치마 */
-  lower: string;
-  shirt: string;
-  accent: string;
-  gloves?: string;
-  glasses?: boolean;
-  moustache?: boolean;
-  bowTie?: boolean;
-  sleeves?: "rolled" | "long";
-  pose: "bowHandsBehind" | "holdAlbum" | "readBook" | "sitTeacup" | "point" | "sitPiano" | "holdCan";
-  /* 키 m */
-  height?: number;
+/* 방마다 서 있는 인물 판(스탠디)입니다. 배경을 오린 전신 그림 한 장을
+   카메라 쪽으로 세워 둡니다. 그림을 바꾸려면 같은 이름의 webp 만 바꾸면 됩니다.
+   height 는 실제 키(m)입니다. 어른은 1.6~1.8m 로 맞춥니다. */
+export type Character = {
+  name: string;
+  role: string;
+  /* 전신 그림 */
+  src: string;
+  /* 그림 원본 비율 w/h */
+  aspect: number;
+  height: number;
+  at: [number, number];
+  /* 카메라를 바라보는 방향에서 더 돌릴 각도(°). 판 그림이라 작게만 씁니다. */
+  rot?: number;
+  /* 눌렀을 때 말풍선 한 줄 */
+  line: string;
+  /* 방에 들어오자마자 띄우는 말풍선(비밀의 방) */
+  enterLine?: string;
+  /* 말풍선에 띄우는 표정 그림들. 얼굴을 바꾸려면 파일만 바꾸면 됩니다. */
+  expressions?: Record<string, string>;
+  tapExpression?: string;
 };
 
-export type Character =
-  | { kind: "figure"; name: string; role: string; look: FigureLook; at: [number, number]; rot: number; line: string }
-  | {
-      kind: "cutout";
-      name: string;
-      role: string;
-      /* 기본 전신 그림 */
-      src: string;
-      /* 말풍선에 띄우는 표정들. 얼굴을 바꾸려면 파일만 바꾸면 됩니다. */
-      expressions: Record<string, string>;
-      /* 눌렀을 때 쓰는 표정 */
-      tapExpression: string;
-      /* 그림 원본 비율 w/h */
-      aspect: number;
-      height: number;
-      at: [number, number];
-      rot: number;
-      line: string;
-    };
+/* 방마다 다른 나무 양문. */
+export type DoorStyle = {
+  wood: "mahogany" | "oak" | "walnut" | "ebony" | "painted";
+  surround: "stone" | "marble" | "wood" | "iron";
+  head: "pediment" | "segmental" | "fanlight" | "cornice";
+};
 
-export type FloorKind = "marbleChecker" | "oak" | "walnut" | "parquet" | "mosaic" | "gallery" | "terracotta" | "darkParquet";
+export type FloorKind = "opusMosaic" | "oakBoards" | "herringbone" | "versailles" | "cubeParquet" | "terracotta" | "encaustic" | "walnutBoards";
 export type WallKind = "panelledStone" | "chintz" | "velvet" | "damask" | "redDamask" | "wedgwood" | "glass" | "plumVelvet";
-export type CeilingKind = "coffered" | "beamed" | "moulded" | "barrelVault" | "glassDome" | "panelled";
+export type CeilingKind = "coffered" | "coved" | "cofferedWood" | "saucerDome" | "ovalDome" | "barrelVault" | "glassDome" | "starCove";
 
 export type Room = {
   id: string;
@@ -137,6 +132,7 @@ export type Room = {
   /* 고정 카메라. 문 쪽에서 본 3/4 시점입니다. */
   camera: { pos: [number, number, number]; look: [number, number, number] };
   doors: Door[];
+  doorStyle: DoorStyle;
   windows: Window[];
   /* 창으로 들어오는 빛 색 */
   daylight: string;
@@ -157,7 +153,7 @@ export const ROOMS: Room[] = [
     grid: [2, 1],
     size: { w: 12, d: 12, h: 8 },
     palette: { main: "#6B4A2E", second: "#EDE8DE", trim: "#C2A15A" },
-    floor: "marbleChecker",
+    floor: "opusMosaic",
     walls: "panelledStone",
     ceiling: "coffered",
     light: { color: "#FFE2B0", intensity: 70, at: [0, 5.6, -0.5], distance: 26 },
@@ -171,6 +167,7 @@ export const ROOMS: Room[] = [
       { wall: "W", to: "reception" },
       { wall: "E", to: "drawing" }
     ],
+    doorStyle: { wood: "mahogany", surround: "stone", head: "pediment" },
     windows: [],
     daylight: "#fff1d8",
     props: [
@@ -178,11 +175,15 @@ export const ROOMS: Room[] = [
       { kind: "chandelier", at: [0, -0.5], opts: { y: 5.6, size: 1.3 } },
       { kind: "crest", at: [0, -5.96], opts: { y: 6.15 } },
       { kind: "longcaseClock", at: [-5.62, 3.4], rot: 90 },
-      { kind: "bust", at: [-1.75, -5.35] },
-      { kind: "bust", at: [1.75, -5.35] },
-      { kind: "niche", at: [-5.96, -3.4], rot: 90 },
+      { kind: "bust", at: [-0.95, -2.9] },
+      { kind: "bust", at: [0.95, -2.9] },
+      { kind: "niche", at: [5.96, 2.6], rot: -90 },
       { kind: "consoleTable", at: [-5.55, 1.9], rot: 90 },
-      { kind: "rug", at: [0, 1.4], opts: { w: 4.2, d: 6.2, style: "hall" } }
+      { kind: "vitrine", at: [-3.3, 2.5], rot: 55, opts: { item: "keys", title: "대저택 열쇠 꾸러미", sub: "Keys of the House · c. 1840" } },
+      { kind: "sconce", at: [-5.97, -0.6], rot: 90, opts: { y: 2.7 } },
+      { kind: "sconce", at: [-5.97, 4.6], rot: 90, opts: { y: 2.7 } },
+      { kind: "sconce", at: [5.97, -0.6], rot: -90, opts: { y: 2.7 } },
+      { kind: "sconce", at: [5.97, 4.6], rot: -90, opts: { y: 2.7 } }
     ],
     paintings: [
       {
@@ -195,16 +196,12 @@ export const ROOMS: Room[] = [
       }
     ],
     character: {
-      kind: "figure",
       name: "집사",
       role: "Butler",
-      look: {
-        skin: "#e8c4a6", hair: "#d8d6d2", hairStyle: "short", coat: "#16161a", coatStyle: "tailcoat",
-        lower: "#1c1c22", shirt: "#f4f1ea", accent: "#16161a", gloves: "#fbfaf6", moustache: true,
-        bowTie: true, pose: "bowHandsBehind", height: 1.8
-      },
-      at: [0.6, 0.9],
-      rot: 0,
+      src: `${R}/characters/butler.webp`,
+      aspect: 208 / 691,
+      height: 1.74,
+      at: [0.5, 0.9],
       line: "어서 오세요. 어느 방으로 모실까요?"
     }
   },
@@ -216,9 +213,9 @@ export const ROOMS: Room[] = [
     grid: [1, 1],
     size: { w: 10, d: 8, h: 4.8 },
     palette: { main: "#A8B59A", second: "#F4EFE2", trim: "#C2A15A" },
-    floor: "oak",
+    floor: "oakBoards",
     walls: "chintz",
-    ceiling: "moulded",
+    ceiling: "coved",
     light: { color: "#FFF4DD", intensity: 34, at: [-1.6, 3.6, -2.2], distance: 16 },
     ambient: { sky: "#fff6e4", ground: "#6e5a44", intensity: 1.05 },
     fog: { color: "#d9d4c4", near: 12, far: 30 },
@@ -228,6 +225,7 @@ export const ROOMS: Room[] = [
       { wall: "E", to: "hall" },
       { wall: "W", to: "library" }
     ],
+    doorStyle: { wood: "oak", surround: "wood", head: "cornice" },
     windows: [
       { wall: "N", offset: -3.4, w: 1.4, h: 2.7, sill: 0.7 },
       { wall: "N", offset: 3.0, w: 1.4, h: 2.7, sill: 0.7 }
@@ -237,7 +235,11 @@ export const ROOMS: Room[] = [
       { kind: "smallDesk", at: [1.4, -3.4] },
       { kind: "windowChair", at: [-3.4, -3.1], rot: 20 },
       { kind: "sideTable", at: [-4.3, 2.2] },
-      { kind: "rug", at: [-0.5, -0.4], opts: { w: 4.6, d: 3.4, style: "sage" } }
+      { kind: "candlestick", at: [-4.3, 2.2], opts: { y: 0.68 } },
+      { kind: "vitrine", at: [-3.7, 0.4], rot: 75, opts: { item: "album", title: "명함 앨범과 봉랍 도장", sub: "Calling-card album · 홍길동 기증" } },
+      { kind: "sconce", at: [-1.55, -3.97], rot: 0, opts: { y: 2.5 } },
+      { kind: "sconce", at: [1.15, -3.97], rot: 0, opts: { y: 2.5 } },
+      { kind: "rug", at: [-0.5, -0.4], opts: { w: 4.6, d: 3.4, style: "aubusson-sage" } }
     ],
     paintings: [
       {
@@ -254,16 +256,13 @@ export const ROOMS: Room[] = [
       }
     ],
     character: {
-      kind: "figure",
-      name: "가정부",
-      role: "Housekeeper",
-      look: {
-        skin: "#f0cdb2", hair: "#5a3a28", hairStyle: "bun", coat: "#1f2a44", coatStyle: "dress",
-        lower: "#1f2a44", shirt: "#ece6da", accent: "#c2a15a", pose: "holdAlbum", height: 1.64
-      },
+      name: "하녀",
+      role: "Maid",
+      src: `${R}/characters/maid.webp`,
+      aspect: 285 / 709,
+      height: 1.62,
       at: [-0.6, -0.9],
-      rot: 0,
-      line: "주인장 소개는 이 앨범에 정리해 두었답니다."
+      line: "주인장 소개는 제가 앨범에 정리해 두었어요."
     }
   },
   {
@@ -274,9 +273,9 @@ export const ROOMS: Room[] = [
     grid: [0, 1],
     size: { w: 10, d: 8, h: 3.6 },
     palette: { main: "#2F4A3A", second: "#4A3222", trim: "#C2A15A" },
-    floor: "walnut",
+    floor: "herringbone",
     walls: "velvet",
-    ceiling: "beamed",
+    ceiling: "cofferedWood",
     light: { color: "#FFC98A", intensity: 42, at: [0.6, 2.7, -1.2], distance: 16 },
     ambient: { sky: "#f0d4ac", ground: "#3a2a1c", intensity: 1.0 },
     fog: { color: "#1a140e", near: 12, far: 30 },
@@ -286,6 +285,7 @@ export const ROOMS: Room[] = [
       { wall: "E", to: "reception" },
       { wall: "W", to: "secret", secret: true, offset: 1.0 }
     ],
+    doorStyle: { wood: "walnut", surround: "wood", head: "segmental" },
     windows: [],
     daylight: "#ffc98a",
     props: [
@@ -295,7 +295,10 @@ export const ROOMS: Room[] = [
       { kind: "ladder", at: [-2.4, -3.3] },
       { kind: "wingback", at: [-2.6, 0.9], rot: 125 },
       { kind: "libraryDesk", at: [1.4, -2.7] },
+      { kind: "candlestick", at: [0.75, -2.85], opts: { y: 0.81 } },
       { kind: "globe", at: [-3.6, -1.6] },
+      { kind: "vitrine", at: [-2.4, -2.0], rot: 35, opts: { item: "manuscript", title: "채색 필사본", sub: "Illuminated manuscript · 15th c." } },
+      { kind: "chandelier", at: [0.2, -0.4], opts: { y: 2.9, size: 0.7 } },
       { kind: "rug", at: [-0.6, 0.2], opts: { w: 5.2, d: 3.8, style: "persian" } }
     ],
     paintings: [
@@ -305,15 +308,12 @@ export const ROOMS: Room[] = [
       }
     ],
     character: {
-      kind: "figure",
       name: "사서",
       role: "Librarian",
-      look: {
-        skin: "#e9c3a0", hair: "#7a6a5a", hairStyle: "short", coat: "#6b5a3e", coatStyle: "jacket",
-        lower: "#4a4034", shirt: "#e9e3d4", accent: "#3d5a44", glasses: true, pose: "readBook", height: 1.75
-      },
+      src: `${R}/characters/librarian.webp`,
+      aspect: 231 / 708,
+      height: 1.78,
       at: [-0.4, -0.7],
-      rot: 20,
       line: "쉿, 여기 기록들은 천천히 읽어 보세요."
     }
   },
@@ -325,9 +325,9 @@ export const ROOMS: Room[] = [
     grid: [3, 1],
     size: { w: 10, d: 8, h: 4.8 },
     palette: { main: "#C98E8E", second: "#F7F1EA", trim: "#C2A15A" },
-    floor: "mosaic",
+    floor: "versailles",
     walls: "damask",
-    ceiling: "moulded",
+    ceiling: "saucerDome",
     light: { color: "#FFB070", intensity: 22, at: [0, 0.6, -3.4], distance: 12 },
     ambient: { sky: "#ffe8d8", ground: "#5a3a34", intensity: 0.95 },
     fog: { color: "#3a2626", near: 11, far: 28 },
@@ -337,6 +337,7 @@ export const ROOMS: Room[] = [
       { wall: "W", to: "hall" },
       { wall: "E", to: "music" }
     ],
+    doorStyle: { wood: "mahogany", surround: "marble", head: "fanlight" },
     windows: [
       { wall: "N", offset: -3.2, w: 1.3, h: 2.6, sill: 0.75 },
       { wall: "N", offset: 3.2, w: 1.3, h: 2.6, sill: 0.75 }
@@ -348,8 +349,11 @@ export const ROOMS: Room[] = [
       { kind: "chesterfield", at: [1.7, -0.7], rot: -57 },
       { kind: "teaTrolley", at: [0.3, 0.1], rot: 30 },
       { kind: "guestbookStand", at: [3.6, 1.8], rot: -60 },
-      { kind: "sideTable", at: [3.2, -2.9] },
-      { kind: "rug", at: [0.4, -0.8], opts: { w: 4.8, d: 3.6, style: "rose" } }
+      { kind: "vitrine", at: [3.4, -2.8], rot: -40, opts: { item: "teaset", title: "웨지우드 찻잔 한 벌", sub: "Jasperware tea service · c. 1790" } },
+      { kind: "sconce", at: [-1.75, -3.97], rot: 0, opts: { y: 2.25 } },
+      { kind: "sconce", at: [1.75, -3.97], rot: 0, opts: { y: 2.25 } },
+      { kind: "sconce", at: [4.97, 0.9], rot: -90, opts: { y: 2.3 } },
+      { kind: "rug", at: [0.4, -0.8], opts: { w: 4.8, d: 3.6, style: "aubusson-rose" } }
     ],
     paintings: [
       {
@@ -362,16 +366,13 @@ export const ROOMS: Room[] = [
       }
     ],
     character: {
-      kind: "figure",
       name: "숙녀 손님",
-      role: "Lady guest",
-      look: {
-        skin: "#f3d3bd", hair: "#3b2418", hairStyle: "updo", coat: "#d9c3c8", coatStyle: "gown",
-        lower: "#d9c3c8", shirt: "#f6eee8", accent: "#a85a6a", gloves: "#f8f4ee", pose: "sitTeacup", height: 1.66
-      },
-      at: [1.7, -0.7],
-      rot: -57,
-      line: "차 한 잔 하시겠어요? 방명록에 한마디 남겨 주세요."
+      role: "Lady",
+      src: `${R}/characters/lady.webp`,
+      aspect: 239 / 708,
+      height: 1.66,
+      at: [0.5, -1.2],
+      line: "차 한 잔 어떠세요? 방명록에 한마디 남겨 주세요."
     }
   },
   {
@@ -382,15 +383,16 @@ export const ROOMS: Room[] = [
     grid: [4, 1],
     size: { w: 10, d: 8, h: 5 },
     palette: { main: "#EFE6D2", second: "#6E8FB5", trim: "#FFFFFF" },
-    floor: "parquet",
+    floor: "cubeParquet",
     walls: "wedgwood",
-    ceiling: "panelled",
+    ceiling: "ovalDome",
     light: { color: "#FFE8C4", intensity: 30, at: [2.6, 3.4, 1.2], distance: 16 },
     ambient: { sky: "#fff0dc", ground: "#5c4a3a", intensity: 0.95 },
     fog: { color: "#c8bca8", near: 12, far: 30 },
     exposure: 1.06,
     camera: { pos: [-4.1, 1.6, 2.4], look: [1.8, 1.25, -1.4] },
     doors: [{ wall: "W", to: "drawing" }],
+    doorStyle: { wood: "oak", surround: "marble", head: "pediment" },
     windows: [
       { wall: "E", offset: -1.4, w: 1.5, h: 3.0, sill: 0.6 },
       { wall: "E", offset: 1.8, w: 1.5, h: 3.0, sill: 0.6 }
@@ -400,9 +402,12 @@ export const ROOMS: Room[] = [
       { kind: "grandPiano", at: [1.6, -0.6], rot: 33 },
       { kind: "harp", at: [3.7, -2.7], rot: -40 },
       { kind: "gramophone", at: [-2.4, -3.3] },
-      { kind: "musicStand", at: [-2.6, -1.6], rot: 150 },
+      { kind: "musicStand", at: [0.9, 1.5], rot: -30 },
+      { kind: "vitrine", at: [-3.1, -1.2], rot: 60, opts: { item: "violin", title: "바이올린", sub: "Violin · London, c. 1760" } },
       { kind: "chandelier", at: [0.4, -0.4], opts: { y: 3.9, size: 0.8 } },
-      { kind: "rug", at: [0.8, -0.6], opts: { w: 5, d: 3.6, style: "blue" } }
+      { kind: "sconce", at: [1.0, -3.97], rot: 0, opts: { y: 2.5 } },
+      { kind: "sconce", at: [3.4, -3.97], rot: 0, opts: { y: 2.5 } },
+      { kind: "rug", at: [0.8, -0.6], opts: { w: 5, d: 3.6, style: "savonnerie" } }
     ],
     paintings: [
       {
@@ -411,16 +416,13 @@ export const ROOMS: Room[] = [
       }
     ],
     character: {
-      kind: "figure",
       name: "피아니스트",
       role: "Pianist",
-      look: {
-        skin: "#e6bf9e", hair: "#1e1a18", hairStyle: "short", coat: "#121216", coatStyle: "tailcoat",
-        lower: "#141418", shirt: "#f7f5f0", accent: "#121216", bowTie: true, pose: "sitPiano", height: 1.78
-      },
-      at: [0, 0],
-      rot: 0,
-      line: "좋아하는 곡을 골라 주시면 연주해 드리죠."
+      src: `${R}/characters/pianist.webp`,
+      aspect: 203 / 713,
+      height: 1.8,
+      at: [-0.4, -0.6],
+      line: "듣고 싶은 곡을 고르시면 바로 연주해 드리죠."
     }
   },
   {
@@ -440,6 +442,7 @@ export const ROOMS: Room[] = [
     exposure: 1.0,
     camera: { pos: [2.3, 1.6, 4.3], look: [-1.0, 1.7, -2.2] },
     doors: [{ wall: "S", to: "hall" }],
+    doorStyle: { wood: "oak", surround: "iron", head: "fanlight" },
     windows: [],
     daylight: "#ffffff",
     props: [
@@ -451,7 +454,10 @@ export const ROOMS: Room[] = [
       { kind: "fern", at: [-1.4, -4.2] },
       { kind: "planter", at: [3.2, -0.6], rot: 90 },
       { kind: "wickerBench", at: [-2.9, -0.6], rot: 90 },
-      { kind: "sideTable", at: [-2.9, 1.0] }
+      { kind: "sideTable", at: [-2.9, 1.0] },
+      { kind: "candlestick", at: [-2.9, 1.0], opts: { y: 0.68, lantern: true } },
+      { kind: "vitrine", at: [1.5, -2.5], rot: -20, opts: { item: "fern", title: "워디언 케이스의 고사리", sub: "Wardian case · c. 1850" } },
+      { kind: "chandelier", at: [0, -0.6], opts: { y: 3.9, size: 0.7 } }
     ],
     paintings: [
       {
@@ -460,16 +466,13 @@ export const ROOMS: Room[] = [
       }
     ],
     character: {
-      kind: "figure",
       name: "정원사",
       role: "Gardener",
-      look: {
-        skin: "#d9a882", hair: "#8a5a32", hairStyle: "cap", coat: "#6a5838", coatStyle: "waistcoat",
-        lower: "#3e3a2e", shirt: "#ece4d2", accent: "#4F7A4A", sleeves: "rolled", pose: "holdCan", height: 1.74
-      },
+      src: `${R}/characters/gardener.webp`,
+      aspect: 213 / 706,
+      height: 1.72,
       at: [-0.4, -1.4],
-      rot: 0,
-      line: "온실 밖으로 이어지는 길들이에요. 마음껏 둘러보세요."
+      line: "온실 밖으로 이어진 길들이에요. 천천히 둘러보세요."
     }
   },
   {
@@ -480,7 +483,7 @@ export const ROOMS: Room[] = [
     grid: [2, 2],
     size: { w: 6, d: 16, h: 6 },
     palette: { main: "#7A1F2B", second: "#C2A15A", trim: "#C2A15A" },
-    floor: "gallery",
+    floor: "encaustic",
     walls: "redDamask",
     ceiling: "barrelVault",
     light: { color: "#ffe6c0", intensity: 26, at: [0, 4.6, 0], distance: 18 },
@@ -492,13 +495,16 @@ export const ROOMS: Room[] = [
       { wall: "N", to: "hall" },
       { wall: "S", to: "hall", plaque: "현관" }
     ],
+    doorStyle: { wood: "ebony", surround: "stone", head: "segmental" },
     windows: [],
     daylight: "#ffe6c0",
     props: [
       { kind: "runner", at: [0, 0], opts: { w: 1.5, d: 14.4 } },
       { kind: "bust", at: [1.9, -1.6] },
-      { kind: "displayCase", at: [0, 2.8], rot: 90 },
-      { kind: "bench", at: [0, -2.8], rot: 90 }
+      { kind: "vitrine", at: [0, 2.8], rot: 90, opts: { item: "vase", title: "청화 백자 항아리", sub: "Blue-and-white vase · 18th c.", wide: true } },
+      { kind: "bench", at: [0, -2.8], rot: 90 },
+      { kind: "chandelier", at: [0, -3.4], opts: { y: 4.6, size: 0.7 } },
+      { kind: "chandelier", at: [0, 3.6], opts: { y: 4.6, size: 0.7 } }
     ],
     paintings: [
       { src: "", wall: "W", offset: 5.2, y: 1.9, h: 1.0, aspect: 1, title: "", artist: "", date: "", credit: "", album: 0 },
@@ -518,16 +524,13 @@ export const ROOMS: Room[] = [
       { src: "", wall: "E", offset: 4.2, y: 1.9, h: 1.0, aspect: 1, title: "", artist: "", date: "", credit: "", album: 6 }
     ],
     character: {
-      kind: "figure",
       name: "큐레이터",
       role: "Curator",
-      look: {
-        skin: "#efc9ab", hair: "#4a3020", hairStyle: "short", coat: "#5a4632", coatStyle: "waistcoat",
-        lower: "#2a2620", shirt: "#f2eee4", accent: "#7A1F2B", bowTie: true, glasses: false, pose: "point", height: 1.74
-      },
+      src: `${R}/characters/curator.webp`,
+      aspect: 318 / 707,
+      height: 1.76,
       at: [-1.0, -2.6],
-      rot: -35,
-      line: "이쪽 액자부터 보시지요. 모두 주인장이 고른 사진입니다."
+      line: "이쪽 액자부터 보시지요. 홍길동 님도 즐겨 보시는 작품들입니다."
     }
   },
   {
@@ -539,36 +542,39 @@ export const ROOMS: Room[] = [
     hidden: true,
     size: { w: 8, d: 8, h: 4.2 },
     palette: { main: "#4B2340", second: "#C2A15A", trim: "#C2A15A" },
-    floor: "darkParquet",
+    floor: "walnutBoards",
     walls: "plumVelvet",
-    ceiling: "moulded",
+    ceiling: "starCove",
     light: { color: "#FFD8A0", intensity: 18, at: [-0.4, 2.6, -1.0], distance: 12 },
     ambient: { sky: "#f0d8e8", ground: "#2a1426", intensity: 0.7 },
     fog: { color: "#1e0e1a", near: 9, far: 24 },
     exposure: 1.16,
     camera: { pos: [2.5, 1.6, 3.0], look: [-0.8, 1.5, -1.6] },
     doors: [{ wall: "S", to: "library", secret: true, plaque: "서재" }],
+    doorStyle: { wood: "walnut", surround: "wood", head: "cornice" },
     windows: [{ wall: "W", offset: -1.4, w: 1.2, h: 2.2, sill: 0.9 }],
     daylight: "#e8d0ff",
     props: [
-      { kind: "jewelCase", at: [1.9, -2.9] },
-      { kind: "chaise", at: [-2.4, 0.6], rot: 70 },
-      { kind: "vanity", at: [-1.2, -3.55] },
-      { kind: "candelabra", at: [2.9, -1.0] },
+      { kind: "marbleFireplace", at: [0, -3.82] },
+      { kind: "bookshelves", at: [3.75, 0.3], rot: -90, opts: { len: 6.6, gap: 0 } },
+      { kind: "chesterfield", at: [-2.3, -0.5], rot: 90, opts: { color: "#5a2348" } },
+      { kind: "teaTable", at: [-0.9, -0.5] },
+      { kind: "chaise", at: [1.9, -2.2], rot: -130 },
+      { kind: "vitrine", at: [-2.9, -2.9], rot: 35, opts: { item: "crown", title: "왕관과 별 목걸이", sub: "제타의 보물 · Crown & Star" } },
+      { kind: "candlestick", at: [-0.9, -0.5], opts: { y: 0.5 } },
       { kind: "crystalChandelier", at: [0, -0.6], opts: { y: 3.3 } },
-      { kind: "rug", at: [-0.4, -0.4], opts: { w: 4.2, d: 3.4, style: "plum" } }
+      { kind: "rug", at: [-0.6, -0.6], opts: { w: 4.4, d: 3.2, style: "gul" } }
     ],
     paintings: [
       {
-        src: `${R}/paintings/carolinehoward.webp`, wall: "N", offset: 1.6, y: 2.3, h: 1.35, aspect: 608 / 768,
+        src: `${R}/paintings/carolinehoward.webp`, wall: "N", offset: 0, y: 2.55, h: 1.1, aspect: 608 / 768,
         title: "Lady Caroline Howard", artist: "Joshua Reynolds", date: "1778",
         credit: "CC0 · National Gallery of Art"
       }
     ],
     character: {
-      kind: "cutout",
       name: "제타",
-      role: "Keeper of the hidden room",
+      role: "Keeper of the hidden study",
       src: `${R}/characters/zeta.webp`,
       expressions: {
         default: `${R}/characters/zeta-tease.webp`,
@@ -577,11 +583,11 @@ export const ROOMS: Room[] = [
         tease: `${R}/characters/zeta-tease.webp`
       },
       tapExpression: "wink",
-      aspect: 321 / 703,
-      height: 1.68,
-      at: [-0.5, -1.1],
-      rot: 25,
-      line: "어머, 이 방을 찾으셨네요? 우리 둘만의 비밀이에요."
+      aspect: 325 / 703,
+      height: 1.66,
+      at: [0.5, -1.3],
+      enterLine: "찾았네? 여긴 제타의 비밀 서재야",
+      line: "책장 뒤에서 차 한 잔 할래? 홍길동 님한텐 비밀이야."
     }
   }
 ];

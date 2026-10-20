@@ -60,7 +60,7 @@ function useLayout() {
   return lay;
 }
 
-const CARD_W = 420;
+const CARD_W = 340;
 
 export default function RegalStage({
   tabs,
@@ -88,7 +88,8 @@ export default function RegalStage({
   const [room, setRoom] = useState(() => initialRoom(active, tabs));
   const [found, setFound] = useState(false);
   const [bubble, setBubble] = useState<{ text: string; img?: string } | null>(null);
-  const [cardOpen, setCardOpen] = useState(true);
+  /* 가로 화면에서는 방이 주인공이 되도록 메뉴 카드를 접은 채로 시작합니다. */
+  const [cardOpen, setCardOpen] = useState(false);
   const [still, setStill] = useState(false);
   const [webglReady, setWebglReady] = useState(false);
   const lay = useLayout();
@@ -104,7 +105,7 @@ export default function RegalStage({
 
   const rect = useMemo(() => {
     if (lay.portrait) return { w: lay.w, h: Math.round(lay.h * 0.6), offsetX: 0 };
-    return { w: lay.w, h: lay.h, offsetX: cardOpen ? Math.min(CARD_W, lay.w * 0.38) : 0 };
+    return { w: lay.w, h: lay.h, offsetX: cardOpen ? Math.min(CARD_W, lay.w * 0.3) : 0 };
   }, [lay, cardOpen]);
   const rectRef = useRef(rect);
   /* 무대 쪽 콜백이 늘 최신 값을 읽도록 그린 뒤에 맞춥니다. */
@@ -145,8 +146,10 @@ export default function RegalStage({
       lastTab.current = tab;
       onSelect(tab);
     }
+    /* 비밀의 방처럼 들어오자마자 말을 거는 인물이 있으면 그 말풍선을 띄웁니다. */
+    const c = r.character;
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    setBubble(null);
+    setBubble(c.enterLine ? { text: c.enterLine, img: c.expressions?.surprised ?? c.expressions?.default } : null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [room]);
 
@@ -223,7 +226,7 @@ export default function RegalStage({
               const ch = r.character;
               setBubble({
                 text: ch.line,
-                img: ch.kind === "cutout" ? ch.expressions[ch.tapExpression] : undefined
+                img: ch.expressions && ch.tapExpression ? ch.expressions[ch.tapExpression] : undefined
               });
               setCardOpen(true);
             },

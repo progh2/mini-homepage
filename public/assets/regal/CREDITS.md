@@ -50,19 +50,28 @@
 
 ## 인물 (characters/)
 
-| 파일 | 설명 | 출처 |
-|---|---|---|
-| characters/zeta.webp | 비밀의 방 인물 제타, 전신 | 자체 생성 (Grok Bot image generation, original character) |
-| characters/zeta-wink.webp, zeta-surprised.webp, zeta-tease.webp | 같은 인물의 표정 세 가지 | 자체 생성 (Grok Bot image generation, original character) |
+모든 인물은 이 사이트를 위해 새로 만든 원본 캐릭터입니다. 퍼블릭 도메인 그림을 오려 쓴 인물과 코드로 만든 저폴리곤 인물은 이번에 모두 지웠습니다.
 
-크림색 배경을 투명하게 오려 webp로 저장했습니다. 얼굴을 바꾸려면 같은 이름의 파일만 바꾸면 됩니다. 위치와 표정 이름은 `src/components/regal/rooms.ts`의 `secret` 방에 있습니다.
+| 파일 | 방 | 인물 | 출처 |
+|---|---|---|---|
+| characters/butler.webp | 대홀 | 집사 | 자체 생성 (Grok Bot image generation, original character) |
+| characters/maid.webp | 접견실 | 하녀 | 자체 생성 (Grok Bot image generation, original character) |
+| characters/librarian.webp | 서재 | 사서 | 자체 생성 (Grok Bot image generation, original character) |
+| characters/lady.webp | 응접실 | 숙녀 손님 | 자체 생성 (Grok Bot image generation, original character) |
+| characters/pianist.webp | 음악실 | 피아니스트 | 자체 생성 (Grok Bot image generation, original character) |
+| characters/gardener.webp | 온실 | 정원사 | 자체 생성 (Grok Bot image generation, original character) |
+| characters/curator.webp | 갤러리 | 큐레이터 | 자체 생성 (Grok Bot image generation, original character) |
+| characters/zeta.webp | 비밀의 방 | 제타, 전신 | 자체 생성 (Grok Bot image generation, original character) |
+| characters/zeta-wink.webp, zeta-surprised.webp, zeta-tease.webp | 비밀의 방 | 제타의 표정 세 가지 | 자체 생성 (Grok Bot image generation, original character) |
 
-나머지 방 인물(집사, 가정부, 사서, 귀부인, 피아니스트, 정원사, 큐레이터)은 그림 파일 없이 코드로 만든 저폴리곤 모형입니다.
+배경을 지운 PNG를 높이 약 700px의 webp로 줄였습니다. 가장자리의 크림색 번짐은 배경색을 빼는 방식으로 씻고 알파를 1px 줄였습니다.
+3D 안에서는 그림 판(스탠디)으로 세우고, 키는 방마다 실제 사람 키(약 1.6~1.8m)로 맞춥니다. 위치, 키, 대사는 `src/components/regal/rooms.ts`의 각 방 `character`에 있습니다.
+옷차림의 시대 메모는 [PERIOD.md](./PERIOD.md)에 있습니다.
 
 ## 코드로 만든 것
 
-- 가구, 계단, 샹들리에, 벽난로, 피아노, 온실 등 모든 모형: 이 저장소 코드(`src/components/regal/manorBuild.ts`)로 만들었습니다.
-- 다마스크, 친츠 벽지, 양탄자 무늬, 문패, 박물관 이름표, 불꽃·반짝임 스프라이트: 실행할 때 캔버스로 그립니다.
+- 가구(카브리올 다리, 돌린 다리), 계단과 난간, 나무 양문, 격자·돔 천장, 몰딩, 진열장, 벽 촛대, 샹들리에, 벽난로, 피아노, 온실 등 모든 모형: 이 저장소 코드(`src/components/regal/manorBuild.ts`)로 만들었습니다.
+- 다마스크, 친츠 벽지, 마룻바닥(베르사유, 큐브), 엔코스틱 타일, 바닥 상감 무늬, 양탄자 무늬, 밤하늘, 문패, 박물관 이름표, 불꽃·반짝임 스프라이트: 실행할 때 캔버스로 그립니다.
 - 환경광: three.js `RoomEnvironment` (MIT License, https://github.com/mrdoob/three.js).
 
 ## 글꼴
