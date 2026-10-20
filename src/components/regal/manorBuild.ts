@@ -1044,8 +1044,8 @@ function hallTileDraw(g: CanvasRenderingContext2D, bump: boolean) {
   const cut = S * 0.29;
   const grout = bump ? "#000" : "#b6ab95";
   const r = mulberry(41);
-  const red = "#983a26";
-  const cream = "#dccaa2";
+  const red = "#86301f";
+  const cream = "#d6c49c";
   const black = "#1d1916";
   const blue = "#33465f";
   g.fillStyle = grout;
@@ -1240,6 +1240,187 @@ function yorkFloor(kit: Kit) {
 }
 function yorkBump(kit: Kit) {
   return kit.canvas("floor:yorkb", 1024, 1024, g => yorkDraw(g, true), { srgb: false });
+}
+
+/* 4차 창밖 풍경: 안개 낀 런던 거리(테라스 하우스·플라타너스·철 난간) 또는 정원. 흐리게 처리해 초점 밖으로 보이게 합니다. */
+function outsideView(kit: Kit, kind: "street" | "garden") {
+  return kit.canvas(`view:${kind}`, 512, 768, g => {
+    const W = 512;
+    const H = 768;
+    const r = mulberry(kind === "street" ? 9 : 19);
+    const c = document.createElement("canvas");
+    c.width = W;
+    c.height = H;
+    const s = c.getContext("2d")!;
+    const sky = s.createLinearGradient(0, 0, 0, H);
+    sky.addColorStop(0, "#d9dcd8");
+    sky.addColorStop(0.6, "#c9ccc4");
+    sky.addColorStop(1, "#b9b8ac");
+    s.fillStyle = sky;
+    s.fillRect(0, 0, W, H);
+    if (kind === "street") {
+      /* 길 건너 테라스 하우스(벽돌·스투코), 굴뚝, 창 줄 */
+      let x = -20;
+      while (x < W) {
+        const bw = 120 + r() * 50;
+        const top = 150 + r() * 40;
+        s.fillStyle = r() > 0.5 ? "#9a948a" : "#a8a49a";
+        s.fillRect(x, top, bw, H);
+        s.fillStyle = "#8a857c";
+        s.fillRect(x + bw * 0.2, top - 50, 18, 50);
+        s.fillRect(x + bw * 0.7, top - 44, 18, 44);
+        for (let fy = top + 40; fy < 620; fy += 110) {
+          for (let fx = x + 20; fx < x + bw - 30; fx += 48) {
+            s.fillStyle = "#6c6a66";
+            s.fillRect(fx, fy, 24, 56);
+            s.fillStyle = "#c9c2a8";
+            s.fillRect(fx + 3, fy + 3, 18, 22);
+          }
+        }
+        s.fillStyle = "#b8b4aa";
+        s.fillRect(x, top + 20, bw, 6);
+        x += bw + 2;
+      }
+      /* 앞쪽 플라타너스 잎 덩어리 */
+      for (let k = 0; k < 60; k++) {
+        s.fillStyle = `rgba(${96 + r() * 20},${108 + r() * 20},${86 + r() * 16},0.55)`;
+        s.beginPath();
+        s.arc(330 + (r() - 0.5) * 300, 140 + r() * 220, 20 + r() * 40, 0, Math.PI * 2);
+        s.fill();
+      }
+      s.fillStyle = "rgba(80,76,68,0.7)";
+      s.fillRect(380, 300, 16, 468);
+      /* 보도와 철 난간 */
+      s.fillStyle = "#a7a297";
+      s.fillRect(0, 650, W, 118);
+      s.fillStyle = "rgba(40,42,42,0.75)";
+      s.fillRect(0, 600, W, 6);
+      s.fillRect(0, 700, W, 5);
+      for (let fx = 4; fx < W; fx += 16) s.fillRect(fx, 590, 4, 120);
+    } else {
+      /* 정원: 먼 나무 줄, 잔디, 돌 난간과 꽃밭 */
+      for (let k = 0; k < 90; k++) {
+        s.fillStyle = `rgba(${104 + r() * 24},${118 + r() * 22},${96 + r() * 18},0.6)`;
+        s.beginPath();
+        s.arc(r() * W, 230 + r() * 160, 30 + r() * 50, 0, Math.PI * 2);
+        s.fill();
+      }
+      s.fillStyle = "#93a07e";
+      s.fillRect(0, 420, W, H);
+      s.fillStyle = "#88956f";
+      s.fillRect(0, 520, W, 60);
+      for (let k = 0; k < 40; k++) {
+        s.fillStyle = r() > 0.5 ? "rgba(170,90,90,0.6)" : "rgba(210,190,140,0.6)";
+        s.beginPath();
+        s.arc(r() * W, 560 + r() * 40, 6 + r() * 8, 0, Math.PI * 2);
+        s.fill();
+      }
+      s.fillStyle = "#bdb6a4";
+      s.fillRect(0, 620, W, 18);
+      for (let fx = 10; fx < W; fx += 34) {
+        s.beginPath();
+        s.ellipse(fx, 670, 9, 32, 0, 0, Math.PI * 2);
+        s.fill();
+      }
+      s.fillRect(0, 700, W, 68);
+    }
+    /* 초점 밖 흐림 + 런던 안개 */
+    g.filter = "blur(7px)";
+    g.drawImage(c, 0, 0);
+    g.filter = "none";
+    const fog = g.createLinearGradient(0, 0, 0, H);
+    fog.addColorStop(0, "rgba(226,226,220,0.55)");
+    fog.addColorStop(0.7, "rgba(214,214,206,0.35)");
+    fog.addColorStop(1, "rgba(200,198,188,0.25)");
+    g.fillStyle = fog;
+    g.fillRect(0, 0, W, H);
+  }, { repeat: false });
+}
+
+/* 4차 레이스 망사 커튼(노팅엄 레이스 커튼 기계식 정사각 망 + 장미 무늬 + 물결 밑단). 투명 바탕 RGBA. */
+function laceTexture(kit: Kit) {
+  return kit.canvas("lace4", 512, 1024, g => {
+    const W = 512;
+    const H = 1024;
+    g.clearRect(0, 0, W, H);
+    const ink = (a: number) => `rgba(252,249,240,${a})`;
+    /* 정사각 망 */
+    g.strokeStyle = ink(0.17);
+    g.lineWidth = 1;
+    for (let x = 0.5; x < W; x += 6) {
+      g.beginPath();
+      g.moveTo(x, 0);
+      g.lineTo(x, H);
+      g.stroke();
+    }
+    for (let y = 0.5; y < H; y += 6) {
+      g.beginPath();
+      g.moveTo(0, y);
+      g.lineTo(W, y);
+      g.stroke();
+    }
+    const rose = (x: number, y: number, rr: number) => {
+      g.fillStyle = ink(0.72);
+      for (let k = 0; k < 5; k++) {
+        const a = (k / 5) * Math.PI * 2;
+        g.beginPath();
+        g.ellipse(x + Math.cos(a) * rr * 0.5, y + Math.sin(a) * rr * 0.5, rr * 0.48, rr * 0.3, a, 0, Math.PI * 2);
+        g.fill();
+      }
+      g.clearRect(x - rr * 0.14, y - rr * 0.14, rr * 0.28, rr * 0.28);
+      g.fillStyle = ink(0.6);
+      for (const a of [0.8, 2.4, 4.0, 5.5]) {
+        g.beginPath();
+        g.ellipse(x + Math.cos(a) * rr * 1.3, y + Math.sin(a) * rr * 1.3, rr * 0.5, rr * 0.18, a + 0.6, 0, Math.PI * 2);
+        g.fill();
+      }
+    };
+    /* 몸판: 엇갈린 장미 꽃다발 */
+    let row = 0;
+    for (let y = 70; y < H - 220; y += 120) {
+      for (let x = (row % 2 ? 128 : 0) + 64; x < W; x += 256) {
+        rose(x, y, 24);
+        g.strokeStyle = ink(0.55);
+        g.lineWidth = 2.5;
+        g.beginPath();
+        g.moveTo(x, y + 24);
+        g.bezierCurveTo(x - 30, y + 60, x + 30, y + 80, x, y + 100);
+        g.stroke();
+      }
+      row++;
+    }
+    /* 옆 가장자리 띠 */
+    for (const x0 of [0, W - 26]) {
+      g.fillStyle = ink(0.35);
+      g.fillRect(x0, 0, 26, H);
+      for (let y = 10; y < H; y += 26) rose(x0 + 13, y, 8);
+    }
+    /* 밑단 꽃 띠 */
+    g.fillStyle = ink(0.3);
+    g.fillRect(0, H - 210, W, 150);
+    for (let x = 32; x < W; x += 64) rose(x, H - 140, 20);
+    g.fillStyle = ink(0.8);
+    g.fillRect(0, H - 214, W, 4);
+    /* 물결(스캘럽) 밑단: 반원 아래는 비웁니다 */
+    g.clearRect(0, H - 62, W, 62);
+    for (let x = 32; x < W; x += 64) {
+      g.beginPath();
+      g.arc(x, H - 62, 30, 0, Math.PI);
+      g.closePath();
+      g.fillStyle = ink(0.42);
+      g.fill();
+      g.strokeStyle = ink(0.9);
+      g.lineWidth = 3;
+      g.stroke();
+      g.fillStyle = ink(0.8);
+      g.beginPath();
+      g.arc(x, H - 50, 7, 0, Math.PI * 2);
+      g.fill();
+    }
+    /* 윗단 주머니(막대가 지나가는 곳) */
+    g.fillStyle = ink(0.85);
+    g.fillRect(0, 0, W, 18);
+  });
 }
 
 /* 민턴 바닥 테두리(검정 바탕 + 빨강/담황 톱니). 정사각 반복이라 어느 방향으로 깔아도 됩니다. */
@@ -1689,7 +1870,7 @@ function rugTexture4(kit: Kit, style: string) {
     }
 
     if (style === "ushak") {
-      const red = "#a33221";
+      const red = "#8e2b1f";
       const navy = "#1e2b52";
       const gold = "#d6ae4c";
       const green = "#4d6a4a";
@@ -3638,25 +3819,77 @@ export function buildRoom(kit: Kit, room: Room, ctx: BuildCtx): BuiltRoom {
   function buildWindow(wall: Wall, win: Window) {
     const wg = wall.group;
     const { offset: cx, w: ww, h: wh, sill } = win;
-    const skyTex = kit.canvas(`sky:${room.daylight}`, 64, 128, g => {
-      const grd = g.createLinearGradient(0, 0, 0, 128);
-      grd.addColorStop(0, "#ffffff");
-      grd.addColorStop(0.55, room.daylight);
-      grd.addColorStop(1, "#cfd8c8");
-      g.fillStyle = grd;
-      g.fillRect(0, 0, 64, 128);
-    }, { repeat: false });
-    /* 비밀 서재 창문은 별이 뜬 밤하늘 */
-    const pane = plane(ww, wh, basic({ map: room.id === "secret" ? starSky(kit) : skyTex }), wg, cx, sill + wh / 2, -0.08);
-    void pane;
-    /* 창틀, 창살(빅토리아 후기 2-over-2 내리닫이창: 큰 판유리 넉 장) */
+    /* 4차: 1880년대 상자형 내리닫이창(2-over-2). 깊은 창 안쪽 벽(reveal), 위·아래 두 짝 창(아래짝이 안쪽),
+       굵은 만남 가로대, 짝마다 세로 창살 하나, 위짝 뿔(horn), 놋쇠 걸쇠, 튀어나온 창턱 판과 앞치마 판.
+       창밖은 흐릿한 안개 거리/정원, 그 앞에 정사각 망 레이스 커튼. */
+    const D = 0.3;
     const fm = room.walls === "velvet" || room.walls === "plumVelvet" ? walnut : paintWhite;
-    for (const [bw, bh, x, y] of [[ww + 0.2, 0.12, cx, sill + wh + 0.06], [ww + 0.3, 0.1, cx, sill - 0.05], [0.1, wh, cx - ww / 2 - 0.05, sill + wh / 2], [0.1, wh, cx + ww / 2 + 0.05, sill + wh / 2]] as [number, number, number, number][]) {
+    /* 1870~80년대에는 창짝을 짙은 갈색·녹색으로 칠하는 일이 흔했습니다(추정, PERIOD.md). */
+    const sashPaint = fm === walnut ? walnut : std({ color: 0x3e2c20, roughness: 0.42 });
+    const view = room.id === "secret" ? starSky(kit) : outsideView(kit, room.id === "music" ? "garden" : "street");
+    plane(ww + 0.2, wh + 0.2, basic({ map: view, color: room.id === "secret" ? 0xffffff : 0xd2cec4 }), wg, cx, sill + wh / 2, -D - 0.06);
+    /* 안쪽 벽 두께(reveal) */
+    const revealMat = std({ color: 0xd8cfbd, roughness: 0.85 });
+    for (const sx of [-1, 1]) box(0.02, wh, D, revealMat, wg, cx + sx * (ww / 2 - 0.01), sill + wh / 2, -D / 2);
+    box(ww, 0.02, D, revealMat, wg, cx, sill + wh - 0.01, -D / 2);
+    /* 바깥 테두리(아키트레이브) */
+    for (const [bw, bh, x, y] of [[ww + 0.2, 0.12, cx, sill + wh + 0.06], [0.1, wh, cx - ww / 2 - 0.05, sill + wh / 2], [0.1, wh, cx + ww / 2 + 0.05, sill + wh / 2]] as [number, number, number, number][]) {
       box(bw, bh, 0.16, fm, wg, x, y, 0.0);
     }
-    box(ww + 0.4, 0.06, 0.28, fm, wg, cx, sill - 0.02, 0.1);
-    box(0.035, wh, 0.04, fm, wg, cx, sill + wh / 2, -0.05);
-    box(ww, 0.07, 0.07, fm, wg, cx, sill + wh / 2, -0.04);
+    /* 창턱 판(안쪽으로 7cm 튀어나옴)과 그 밑 앞치마 판 */
+    box(ww + 0.32, 0.045, D + 0.11, fm, wg, cx, sill - 0.0225, -D / 2 + 0.055);
+    box(ww + 0.12, 0.12, 0.03, fm, wg, cx, sill - 0.105, 0.015);
+    /* 상자 틀: 도르래 기둥, 머리, 바깥 창턱 */
+    const fz = -0.2;
+    for (const sx of [-1, 1]) box(0.06, wh - 0.02, 0.11, sashPaint, wg, cx + sx * (ww / 2 - 0.05), sill + (wh - 0.02) / 2, fz);
+    box(ww - 0.04, 0.06, 0.11, sashPaint, wg, cx, sill + wh - 0.05, fz);
+    box(ww - 0.04, 0.05, 0.12, sashPaint, wg, cx, sill + 0.025, fz - 0.01);
+    const iw = ww - 0.16;
+    const yb = sill + 0.05;
+    const yt = sill + wh - 0.08;
+    const sh = (yt - yb) / 2 + 0.018;
+    const glass = std({ color: 0xd4dedf, roughness: 0.04, metalness: 0, transparent: true, opacity: 0.1, depthWrite: false });
+    const sash = (y0: number, y1: number, z: number, lower: boolean) => {
+      const st = 0.05;
+      const tr = lower ? 0.034 : 0.05;
+      const br = lower ? 0.085 : 0.034;
+      for (const sx of [-1, 1]) box(st, y1 - y0, 0.04, sashPaint, wg, cx + sx * (iw / 2 - st / 2), (y0 + y1) / 2, z);
+      box(iw - st * 2, tr, lower ? 0.05 : 0.04, sashPaint, wg, cx, y1 - tr / 2, z);
+      box(iw - st * 2, br, lower ? 0.04 : 0.05, sashPaint, wg, cx, y0 + br / 2, z);
+      const gh = y1 - y0 - tr - br;
+      const gy = y0 + br + gh / 2;
+      box(0.022, gh, 0.028, sashPaint, wg, cx, gy, z);
+      const gp = plane(iw - st * 2, gh, glass, wg, cx, gy, z);
+      gp.renderOrder = 2;
+      /* 위짝 뿔(1850년대 이후 무거운 판유리를 받치려 붙인 짧은 돌기) */
+      if (!lower) for (const sx of [-1, 1]) box(st * 0.8, 0.07, 0.034, sashPaint, wg, cx + sx * (iw / 2 - st / 2), y0 - 0.035, z);
+    };
+    sash(yt - sh, yt, fz - 0.03, false);
+    sash(yb, yb + sh, fz + 0.035, true);
+    /* 놋쇠 걸쇠(만남 가로대 가운데)와 아래짝 손잡이 둘 */
+    box(0.07, 0.014, 0.03, brass, wg, cx, yb + sh + 0.006, fz + 0.07);
+    for (const sx of [-1, 1]) box(0.03, 0.03, 0.02, brass, wg, cx + sx * iw * 0.3, yb + 0.05, fz + 0.065);
+    /* 레이스 커튼: 놋쇠 막대에 주름져 걸린 두 폭 */
+    const laceTex = laceTexture(kit);
+    const lace = std({ map: laceTex, color: 0xfffaf0, roughness: 0.95, transparent: true, depthWrite: false, side: THREE.DoubleSide, emissive: 0x7a7468, emissiveMap: laceTex, emissiveIntensity: 0.45, alphaTest: 0.02 });
+    const rodY = yt + 0.02;
+    const rz = -0.09;
+    const rod = cyl(0.007, 0.007, ww - 0.06, 6, brass, wg, cx, rodY, rz);
+    rod.rotation.z = Math.PI / 2;
+    const lh = rodY - (sill + 0.06);
+    for (const sx of [-1, 1]) {
+      const pw = iw * 0.46;
+      const lg = track(new THREE.PlaneGeometry(pw, lh, 20, 1));
+      const pos = lg.getAttribute("position") as T.BufferAttribute;
+      for (let i = 0; i < pos.count; i++) {
+        const u = pos.getX(i) / pw + 0.5;
+        pos.setZ(i, Math.sin(u * Math.PI * 10) * 0.012);
+      }
+      pos.needsUpdate = true;
+      lg.computeVertexNormals();
+      const lm = mesh(lg, lace, wg, cx + sx * iw * 0.29, rodY - lh / 2, rz + sx * 0.006);
+      lm.renderOrder = 3;
+    }
     /* 커튼: 주름진 천(사인파 주름, 끈으로 묶은 허리), 레이스 속커튼, 물결 밸런스 */
     const curtain = velvetMat(room.walls === "chintz" ? "#c7a888" : room.walls === "wedgwood" ? "#8aa2c4" : room.id === "drawing" ? "#7a2a34" : room.id === "reception" ? "#4a5a3a" : room.id === "music" ? "#5a3a2a" : room.palette.main);
     (curtain as T.MeshStandardMaterial).side = THREE.DoubleSide;
@@ -3686,10 +3919,6 @@ export function buildRoom(kit: Kit, room: Room, ctx: BuildCtx): BuiltRoom {
       tb.scale.set(1.1, 0.5, 1);
       sphere(0.03, gold, wg, edgeX + s * 0.22, sill - 0.24 + ch * tie, 0.2, 6, 5);
     }
-    /* 레이스 속커튼 */
-    const lace = std({ color: 0xf6f0e2, roughness: 0.9, transparent: true, opacity: 0.35, depthWrite: false, side: THREE.DoubleSide });
-    const lp = plane(ww, wh, lace, wg, cx, sill + wh / 2, 0.03);
-    lp.renderOrder = 3;
     /* 밸런스: 아래 가장자리가 물결(스캘럽)인 판 + 금빛 술 띠 */
     const val = new THREE.Shape();
     const vw = ww + 0.9;
@@ -4632,82 +4861,187 @@ function makeProps(k: Tools) {
   };
 
   B.crest = (g, p) => {
+    /* 4차: 납작한 로고처럼 보이던 그림 판을 걷어내고 실제로 깎아 낸 부조로 바꿉니다.
+       - 방패: 모서리를 둥글게 깎은(bevel) 입체 판. 가장자리 경사면은 금박.
+       - 바탕색은 바랜 유채(빨강·남색) + 문장 해칭(빨강=세로줄, 파랑=가로줄, 페트라 산크타 방식)을 bump 로 새김.
+       - 셰브런과 별 셋은 따로 도드라지게 붙인 금박 조각.
+       - 참나무 카르투슈 틀(방패보다 큰 윤곽에서 방패 모양을 파냄), 아래 받침 까치발, 위 관(coronet), 표어 두루마리. */
     const y = Number(p.opts?.y ?? 5);
-    const tex = kit.canvas("crest", 512, 640, cg => {
-      cg.translate(256, 300);
-      const shield = () => {
-        cg.beginPath();
-        cg.moveTo(-180, -200);
-        cg.lineTo(180, -200);
-        cg.lineTo(180, 20);
-        cg.quadraticCurveTo(170, 180, 0, 260);
-        cg.quadraticCurveTo(-170, 180, -180, 20);
-        cg.closePath();
-      };
-      shield();
-      cg.save();
-      cg.clip();
-      cg.fillStyle = "#7a1f2b";
-      cg.fillRect(-200, -220, 200, 240);
-      cg.fillRect(0, 20, 200, 260);
-      cg.fillStyle = "#1f2a44";
-      cg.fillRect(0, -220, 200, 240);
-      cg.fillRect(-200, 20, 200, 260);
-      cg.fillStyle = "#c2a15a";
-      cg.beginPath();
-      cg.moveTo(-200, 120);
-      cg.lineTo(0, -40);
-      cg.lineTo(200, 120);
-      cg.lineTo(200, 170);
-      cg.lineTo(0, 10);
-      cg.lineTo(-200, 170);
-      cg.fill();
-      const star = (sx: number, sy: number, r: number) => {
-        cg.beginPath();
-        for (let i = 0; i < 10; i++) {
-          const a = -Math.PI / 2 + (i / 10) * Math.PI * 2;
-          const rr = i % 2 === 0 ? r : r * 0.45;
-          cg.lineTo(sx + Math.cos(a) * rr, sy + Math.sin(a) * rr);
-        }
-        cg.fill();
-      };
-      cg.fillStyle = "#e9d69a";
-      star(-90, -110, 38);
-      star(90, -110, 38);
-      star(0, 150, 42);
-      cg.restore();
-      shield();
-      cg.lineWidth = 12;
-      cg.strokeStyle = "#c2a15a";
-      cg.stroke();
-      cg.fillStyle = "#c2a15a";
-      cg.beginPath();
-      cg.moveTo(-110, -230);
-      cg.lineTo(-120, -290);
-      cg.lineTo(-60, -255);
-      cg.lineTo(0, -300);
-      cg.lineTo(60, -255);
-      cg.lineTo(120, -290);
-      cg.lineTo(110, -230);
-      cg.closePath();
-      cg.fill();
-      for (const x of [-120, 0, 120]) {
-        cg.beginPath();
-        cg.arc(x, x === 0 ? -300 : -290, 12, 0, Math.PI * 2);
-        cg.fill();
+    const root = new THREE.Group();
+    root.position.set(0, y, 0.02);
+    g.add(root);
+    const shieldPath = (P: T.Path | T.Shape, k: number) => {
+      const cy = -0.08;
+      const q = (x: number, yy: number): [number, number] => [x * k, cy + (yy - cy) * k];
+      P.moveTo(...q(-0.52, 0.58));
+      P.lineTo(...q(0.52, 0.58));
+      P.lineTo(...q(0.52, -0.06));
+      P.quadraticCurveTo(...q(0.49, -0.52), ...q(0, -0.75));
+      P.quadraticCurveTo(...q(-0.49, -0.52), ...q(-0.52, -0.06));
+      P.closePath();
+    };
+    const planarUV = (geo: T.BufferGeometry, x0: number, y0: number, sw: number, shh: number) => {
+      const pos = geo.getAttribute("position") as T.BufferAttribute;
+      const uv = geo.getAttribute("uv") as T.BufferAttribute;
+      for (let i = 0; i < pos.count; i++) uv.setXY(i, (pos.getX(i) - x0) / sw, (pos.getY(i) - y0) / shh);
+      uv.needsUpdate = true;
+    };
+    /* 방패 면 색(바랜 유채)과 해칭 bump */
+    const face = kit.canvas("crest4:face", 512, 640, cg => {
+      const W = 512, H = 640;
+      const toPx = (x: number, yy: number): [number, number] => [((x + 0.6) / 1.2) * W, (1 - (yy + 0.8) / 1.5) * H];
+      const [mx, my] = toPx(0, -0.06);
+      cg.fillStyle = "#721a20";
+      cg.fillRect(0, 0, mx, my);
+      cg.fillRect(mx, my, W, H);
+      cg.fillStyle = "#1b2950";
+      cg.fillRect(mx, 0, W, my);
+      cg.fillRect(0, my, mx, H);
+      const r = mulberry(3);
+      for (let i = 0; i < 3000; i++) {
+        cg.fillStyle = r() > 0.5 ? "rgba(255,240,220,0.06)" : "rgba(0,0,0,0.08)";
+        cg.fillRect(r() * W, r() * H, 2, 2);
       }
-      cg.fillStyle = "#f3ead6";
-      cg.fillRect(-230, 270, 460, 54);
-      cg.strokeStyle = "#c2a15a";
-      cg.lineWidth = 4;
-      cg.strokeRect(-230, 270, 460, 54);
-      cg.fillStyle = "#3a2410";
-      cg.font = `600 34px ${SERIF}`;
-      cg.textAlign = "center";
-      cg.fillText("SEMPER HOSPITES", 0, 308);
+      const v = cg.createRadialGradient(W / 2, H * 0.4, 40, W / 2, H * 0.45, W * 0.6);
+      v.addColorStop(0, "rgba(255,240,220,0.08)");
+      v.addColorStop(1, "rgba(0,0,0,0.25)");
+      cg.fillStyle = v;
+      cg.fillRect(0, 0, W, H);
     }, { repeat: false });
-    const m = std({ map: tex, transparent: true, alphaTest: 0.1, roughness: 0.4, metalness: 0.2 });
-    plane(1.5, 1.875, m, g, 0, y, 0.02);
+    const hatch = kit.canvas("crest4:hatch", 512, 640, cg => {
+      const W = 512, H = 640;
+      const mx = W / 2;
+      const my = (1 - (-0.06 + 0.8) / 1.5) * H;
+      cg.fillStyle = "#808080";
+      cg.fillRect(0, 0, W, H);
+      cg.fillStyle = "#3a3a3a";
+      /* 빨강(왼위·오른아래)=세로선, 남색(오른위·왼아래)=가로선 */
+      for (let x = 0; x < W; x += 9) {
+        cg.fillRect(x, 0, 3, my);
+        cg.fillRect(x, my, 0, 0);
+      }
+      cg.fillStyle = "#808080";
+      cg.fillRect(mx, 0, W, my);
+      cg.fillStyle = "#3a3a3a";
+      for (let yy = 0; yy < my; yy += 9) cg.fillRect(mx, yy, W - mx, 3);
+      for (let yy = my; yy < H; yy += 9) cg.fillRect(0, yy, mx, 3);
+      for (let x = mx; x < W; x += 9) cg.fillRect(x, my, 3, H - my);
+    }, { repeat: false, srgb: false });
+    const paint = std({ map: face, bumpMap: hatch, bumpScale: 0.7, roughness: 0.66, metalness: 0 });
+    const gilt = std({ color: 0xb8913f, metalness: 0.85, roughness: 0.34 });
+    const oak = std({ color: 0x8a5a34, roughness: 0.55, map: kit.texture(`${TEX}dark_paneled_wood_diff.webp`) });
+
+    /* 참나무 카르투슈 틀 */
+    const fr = new THREE.Shape();
+    shieldPath(fr, 1.2);
+    const hole = new THREE.Path();
+    shieldPath(hole, 1.03);
+    fr.holes.push(hole);
+    const frGeo = track(new THREE.ExtrudeGeometry(fr, { depth: 0.05, bevelEnabled: true, bevelThickness: 0.03, bevelSize: 0.03, bevelSegments: 2, curveSegments: 6 }));
+    mesh(frGeo, oak, root, 0, 0, 0);
+    /* 틀 안쪽 금박 테 */
+    const rim = new THREE.Shape();
+    shieldPath(rim, 1.06);
+    const rimHole = new THREE.Path();
+    shieldPath(rimHole, 1.03);
+    rim.holes.push(rimHole);
+    mesh(track(new THREE.ExtrudeGeometry(rim, { depth: 0.09, bevelEnabled: false, curveSegments: 6 })), gilt, root, 0, 0, 0);
+
+    /* 방패(앞면 유채, 경사면 금박) */
+    const sh = new THREE.Shape();
+    shieldPath(sh, 1);
+    const shGeo = track(new THREE.ExtrudeGeometry(sh, { depth: 0.04, bevelEnabled: true, bevelThickness: 0.025, bevelSize: 0.028, bevelSegments: 2, curveSegments: 7 }));
+    planarUV(shGeo, -0.6, -0.8, 1.2, 1.5);
+    const shield = new THREE.Mesh(shGeo, [paint, gilt]);
+    shield.position.z = 0.03;
+    root.add(shield);
+    const front = 0.03 + 0.04 + 0.025;
+
+    /* 셰브런 */
+    const ch = new THREE.Shape();
+    ch.moveTo(-0.47, -0.26);
+    ch.lineTo(0, 0.116);
+    ch.lineTo(0.47, -0.26);
+    ch.lineTo(0.43, -0.37);
+    ch.lineTo(0, -0.03);
+    ch.lineTo(-0.43, -0.37);
+    ch.closePath();
+    mesh(track(new THREE.ExtrudeGeometry(ch, { depth: 0.012, bevelEnabled: true, bevelThickness: 0.01, bevelSize: 0.012, bevelSegments: 2, curveSegments: 2 })), gilt, root, 0, 0, front);
+    /* 별(오각, 피라미드처럼 깎은 면) */
+    const starMat = std({ color: 0xd4bf86, metalness: 0.7, roughness: 0.32 });
+    const star = (sx: number, sy: number, rr: number) => {
+      const st = new THREE.Shape();
+      for (let i = 0; i < 10; i++) {
+        const a = Math.PI / 2 + (i / 10) * Math.PI * 2;
+        const r2 = i % 2 === 0 ? rr : rr * 0.45;
+        if (i === 0) st.moveTo(sx + Math.cos(a) * r2, sy + Math.sin(a) * r2);
+        else st.lineTo(sx + Math.cos(a) * r2, sy + Math.sin(a) * r2);
+      }
+      st.closePath();
+      mesh(track(new THREE.ExtrudeGeometry(st, { depth: 0.006, bevelEnabled: true, bevelThickness: 0.014, bevelSize: rr * 0.3, bevelSegments: 1, curveSegments: 1 })), starMat, root, 0, 0, front + 0.004);
+    };
+    star(-0.26, 0.32, 0.1);
+    star(0.26, 0.32, 0.1);
+    star(0, -0.45, 0.11);
+
+    /* 관(coronet): 금박 띠 + 다섯 꼭지 + 구슬 */
+    const cr = new THREE.Shape();
+    cr.moveTo(-0.34, 0.66);
+    cr.lineTo(0.34, 0.66);
+    cr.lineTo(0.37, 0.86);
+    cr.lineTo(0.18, 0.76);
+    cr.lineTo(0, 0.92);
+    cr.lineTo(-0.18, 0.76);
+    cr.lineTo(-0.37, 0.86);
+    cr.closePath();
+    mesh(track(new THREE.ExtrudeGeometry(cr, { depth: 0.04, bevelEnabled: true, bevelThickness: 0.015, bevelSize: 0.015, bevelSegments: 2, curveSegments: 2 })), gilt, root, 0, 0.02, 0.02);
+    for (const [x, yy] of [[-0.37, 0.88], [0, 0.95], [0.37, 0.88], [-0.18, 0.79], [0.18, 0.79]]) sphere(0.03, gilt, root, x, yy + 0.02, 0.06, 8, 6);
+    box(0.72, 0.05, 0.08, gilt, root, 0, 0.67, 0.05);
+
+    /* 아래 까치발(corbel)과 양옆 소용돌이 */
+    const cb = new THREE.Shape();
+    cb.moveTo(-0.22, -0.86);
+    cb.lineTo(0.22, -0.86);
+    cb.quadraticCurveTo(0.14, -1.05, 0, -1.12);
+    cb.quadraticCurveTo(-0.14, -1.05, -0.22, -0.86);
+    mesh(track(new THREE.ExtrudeGeometry(cb, { depth: 0.12, bevelEnabled: true, bevelThickness: 0.02, bevelSize: 0.02, bevelSegments: 2, curveSegments: 6 })), oak, root, 0, 0, 0);
+    for (const sx of [-1, 1]) {
+      const vol = mesh(track(new THREE.TorusGeometry(0.09, 0.028, 5, 10, Math.PI * 1.5)), oak, root, sx * 0.68, 0.18, 0.06);
+      vol.rotation.z = sx > 0 ? -Math.PI / 4 : Math.PI * 0.75;
+      sphere(0.035, gilt, root, sx * 0.68, 0.18, 0.08, 8, 6);
+    }
+
+    /* 표어 두루마리: 물결 띠(입체) + 글씨 */
+    const scrollTex = kit.canvas("crest4:scroll", 1024, 128, cg => {
+      cg.fillStyle = "#e2d6b8";
+      cg.fillRect(0, 0, 1024, 128);
+      const gr = cg.createLinearGradient(0, 0, 0, 128);
+      gr.addColorStop(0, "rgba(0,0,0,0.18)");
+      gr.addColorStop(0.5, "rgba(255,255,255,0.05)");
+      gr.addColorStop(1, "rgba(0,0,0,0.22)");
+      cg.fillStyle = gr;
+      cg.fillRect(0, 0, 1024, 128);
+      cg.fillStyle = "#3a2410";
+      cg.font = `600 64px ${SERIF}`;
+      cg.textAlign = "center";
+      cg.textBaseline = "middle";
+      cg.fillText("SEMPER HOSPITES", 512, 68);
+    }, { repeat: false });
+    const sg = track(new THREE.PlaneGeometry(1.5, 0.19, 24, 1));
+    const sp = sg.getAttribute("position") as T.BufferAttribute;
+    for (let i = 0; i < sp.count; i++) {
+      const x = sp.getX(i);
+      sp.setZ(i, 0.05 * Math.cos((x / 0.75) * Math.PI * 1.5));
+      sp.setY(i, sp.getY(i) + 0.05 * Math.sin((x / 0.75) * Math.PI));
+    }
+    sp.needsUpdate = true;
+    sg.computeVertexNormals();
+    const scroll = mesh(sg, std({ map: scrollTex, roughness: 0.7, side: THREE.DoubleSide }), root, 0, -0.98, 0.2);
+    void scroll;
+    for (const sx of [-1, 1]) {
+      const end = cyl(0.04, 0.04, 0.2, 10, std({ color: 0xcfc2a0, roughness: 0.7 }), root, sx * 0.78, -0.98 + sx * 0.0, 0.17);
+      void end;
+    }
   };
 
   B.longcaseClock = g => {
@@ -5141,8 +5475,14 @@ function makeProps(k: Tools) {
   };
 
   /* ---------- 벽 촛대(스콘스): 금빛 받침판, 팔 두 개, 초, 벽 빛무리, 바닥 빛웅덩이 ---------- */
-  B.sconce = (g, p) => {
+  B.sconce = (g0, p) => {
     const y = Number(p.opts?.y ?? 2.4);
+    /* opts.scale: 큰 방(대홀)에서 멀리서도 읽히도록 등기구만 키웁니다(벽 높이 y 기준). */
+    const sc = Number(p.opts?.scale ?? 1);
+    const g = new THREE.Group();
+    g.scale.setScalar(sc);
+    g.position.y = y * (1 - sc);
+    g0.add(g);
     if (p.opts?.gas) {
       /* 가스 벽등(브래킷): 벽 장미 판, 굽은 놋쇠 가스관, 꼭지, 젖빛 유리 갓 */
       lathe([[0, 0], [0.07, 0], [0.06, 0.02], [0.03, 0.04], [0, 0.045]], 8, brass, g, 0, y - 0.06, 0.0).rotation.x = Math.PI / 2;
@@ -5163,9 +5503,9 @@ function makeProps(k: Tools) {
     }
     const wallGlow = radialTexture(kit, "sconceglow", "rgba(255,206,140,0.75)", "rgba(255,206,140,0)");
     const wgm = basic({ map: wallGlow, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, opacity: 0.7 });
-    const gl = plane(1.5, 1.5, wgm, g, 0, y + 0.18, 0.012);
+    const gl = plane(1.5 * sc, 1.5 * sc, wgm, g0, 0, y + 0.18 * sc, 0.012);
     gl.renderOrder = 2;
-    const pool = plane(2.2, 1.6, basic({ map: wallGlow, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, opacity: 0.22 }), g, 0, 0.014, 0.75);
+    const pool = plane(2.2, 1.6, basic({ map: wallGlow, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, opacity: 0.22 }), g0, 0, 0.014, 0.75);
     pool.rotation.x = -Math.PI / 2;
     const ph = rnd() * 5;
     animators.push(t => {
@@ -5250,14 +5590,159 @@ function makeProps(k: Tools) {
   };
 
   B.libraryDesk = g => {
-    box(1.8, 0.06, 0.9, walnut, g, 0, 0.78, 0, 1);
-    const green = std({ color: 0x2f5a3c, roughness: 0.6, map: kit.texture(`${TEX}brown_leather_diff.webp`) });
-    plane(1.5, 0.66, green, g, 0, 0.812, 0).rotation.x = -Math.PI / 2;
-    for (const x of [-0.62, 0.62]) {
-      box(0.5, 0.74, 0.84, walnut, g, x, 0.37, 0, 0.8);
+    /* 4차: 이스트레이크(Charles Eastlake, Hints on Household Taste 1868)식 양수(兩袖) 책상.
+       곧은 직선 몸체, 굽 받침(plinth), 크기가 아래로 커지는 서랍, 금박을 메운 음각선(incised lines),
+       놋쇠 고리 손잡이(bail)와 열쇠 판, 가죽 상판(금박 압형 테두리), 가운데 얕은 서랍과 뒤판. */
+    const wal = std({ color: 0x6a4428, roughness: 0.5, map: kit.texture(`${TEX}black_walnut_veneer_01_diff.webp`) });
+    const walDark = std({ color: 0x3e2716, roughness: 0.55, map: kit.texture(`${TEX}black_walnut_veneer_01_diff.webp`) });
+    const drawerTex = kit.canvas("eastlake:drawer", 256, 128, cg => {
+      cg.fillStyle = "#5a3820";
+      cg.fillRect(0, 0, 256, 128);
+      const r = mulberry(12);
+      for (let i = 0; i < 40; i++) {
+        cg.strokeStyle = r() > 0.5 ? "rgba(30,16,6,0.25)" : "rgba(140,96,60,0.18)";
+        cg.lineWidth = 1 + r() * 2;
+        cg.beginPath();
+        const y = r() * 128;
+        cg.moveTo(0, y);
+        cg.bezierCurveTo(80, y + (r() - 0.5) * 14, 170, y + (r() - 0.5) * 14, 256, y + (r() - 0.5) * 10);
+        cg.stroke();
+      }
+      /* 덧댄 테 몰딩(위·왼쪽 밝게, 아래·오른쪽 어둡게) */
+      cg.fillStyle = "rgba(255,220,170,0.16)";
+      cg.fillRect(0, 0, 256, 10);
+      cg.fillRect(0, 0, 10, 128);
+      cg.fillStyle = "rgba(0,0,0,0.35)";
+      cg.fillRect(0, 118, 256, 10);
+      cg.fillRect(246, 0, 10, 128);
+      cg.strokeStyle = "rgba(0,0,0,0.5)";
+      cg.lineWidth = 2;
+      cg.strokeRect(12, 12, 232, 104);
+      /* 금박 음각선: 안쪽 사각 + 모서리 꺾임 + 가운데 해바라기 */
+      cg.strokeStyle = "#c9a24e";
+      cg.lineWidth = 2;
+      cg.beginPath();
+      cg.moveTo(30, 26);
+      cg.lineTo(226, 26);
+      cg.moveTo(30, 102);
+      cg.lineTo(226, 102);
+      cg.moveTo(24, 32);
+      cg.lineTo(24, 96);
+      cg.moveTo(232, 32);
+      cg.lineTo(232, 96);
+      for (const [x, y, sx, sy] of [[24, 26, 1, 1], [232, 26, -1, 1], [24, 102, 1, -1], [232, 102, -1, -1]]) {
+        cg.moveTo(x, y + sy * 6);
+        cg.lineTo(x + sx * 6, y + sy * 6);
+        cg.lineTo(x + sx * 6, y);
+      }
+      cg.stroke();
+      cg.lineWidth = 1.5;
+      for (let k = 0; k < 12; k++) {
+        const a = (k / 12) * Math.PI * 2;
+        cg.beginPath();
+        cg.moveTo(128 + Math.cos(a) * 6, 64 + Math.sin(a) * 6);
+        cg.lineTo(128 + Math.cos(a) * 14, 64 + Math.sin(a) * 14);
+        cg.stroke();
+      }
+      cg.beginPath();
+      cg.arc(128, 64, 5, 0, Math.PI * 2);
+      cg.stroke();
+      for (const sx of [-1, 1]) {
+        cg.beginPath();
+        cg.moveTo(128 + sx * 20, 64);
+        cg.lineTo(128 + sx * 70, 64);
+        cg.moveTo(128 + sx * 70, 58);
+        cg.lineTo(128 + sx * 70, 70);
+        cg.stroke();
+      }
+      /* 패인 선 그늘 */
+      cg.strokeStyle = "rgba(0,0,0,0.25)";
+      cg.lineWidth = 1;
+      cg.strokeRect(25, 27, 207, 76);
+    }, { repeat: false });
+    const drawerMat = std({ map: drawerTex, roughness: 0.48 });
+    const stileTex = kit.canvas("eastlake:stile", 32, 256, cg => {
+      cg.fillStyle = "#4a2e1a";
+      cg.fillRect(0, 0, 32, 256);
+      cg.strokeStyle = "#c9a24e";
+      cg.lineWidth = 2;
+      cg.beginPath();
+      cg.moveTo(11, 20);
+      cg.lineTo(11, 236);
+      cg.moveTo(21, 20);
+      cg.lineTo(21, 236);
+      cg.stroke();
+      for (const y of [14, 242]) {
+        cg.beginPath();
+        cg.arc(16, y, 4, 0, Math.PI * 2);
+        cg.stroke();
+      }
+    }, { repeat: false });
+    const stileMat = std({ map: stileTex, roughness: 0.5 });
+    const leatherTex = kit.canvas("eastlake:leather", 512, 256, cg => {
+      cg.fillStyle = "#2c4630";
+      cg.fillRect(0, 0, 512, 256);
+      const r = mulberry(21);
+      for (let i = 0; i < 5000; i++) {
+        cg.fillStyle = r() > 0.5 ? "rgba(255,255,230,0.04)" : "rgba(0,0,0,0.07)";
+        cg.fillRect(r() * 512, r() * 256, 2, 2);
+      }
+      const v = cg.createRadialGradient(256, 128, 40, 256, 128, 300);
+      v.addColorStop(0, "rgba(255,255,230,0.06)");
+      v.addColorStop(1, "rgba(0,0,0,0.25)");
+      cg.fillStyle = v;
+      cg.fillRect(0, 0, 512, 256);
+      cg.strokeStyle = "#b8923e";
+      cg.lineWidth = 3;
+      cg.strokeRect(14, 14, 484, 228);
+      cg.lineWidth = 1.5;
+      cg.strokeRect(22, 22, 468, 212);
+      cg.fillStyle = "#b8923e";
+      for (let x = 30; x < 484; x += 12) {
+        cg.fillRect(x, 17, 4, 2);
+        cg.fillRect(x, 237, 4, 2);
+      }
+      for (const [x, y] of [[22, 22], [490, 22], [22, 234], [490, 234]]) {
+        cg.beginPath();
+        cg.arc(x, y, 6, 0, Math.PI * 2);
+        cg.fill();
+      }
+    }, { repeat: false });
+
+    /* 상판: 두 단 몰딩 + 가죽 */
+    box(1.86, 0.035, 0.96, wal, g, 0, 0.7925, 0, 1);
+    box(1.8, 0.03, 0.9, walDark, g, 0, 0.76, 0, 1);
+    plane(1.6, 0.72, std({ map: leatherTex, roughness: 0.62 }), g, 0, 0.8105, 0).rotation.x = -Math.PI / 2;
+    /* 가운데 얕은 서랍과 뒤판 */
+    const fd = box(0.66, 0.1, 0.02, drawerMat, g, 0, 0.69, 0.43);
+    void fd;
+    box(0.74, 0.12, 0.8, walDark, g, 0, 0.69, 0);
+    box(0.74, 0.5, 0.02, walDark, g, 0, 0.42, -0.38);
+    const bail = (x: number, yy: number, z: number) => {
+      box(0.09, 0.028, 0.004, brass, g, x, yy + 0.008, z);
+      for (const sx of [-1, 1]) sphere(0.008, brass, g, x + sx * 0.035, yy + 0.008, z + 0.006, 5, 4);
+      const h2 = mesh(track(new THREE.TorusGeometry(0.035, 0.0035, 4, 10, Math.PI)), brass, g, x, yy + 0.008, z + 0.012);
+      h2.rotation.x = Math.PI * 0.62;
+      h2.rotation.z = Math.PI;
+    };
+    bail(0, 0.69, 0.44);
+    /* 양쪽 서랍장 */
+    for (const x of [-0.6, 0.6]) {
+      box(0.58, 0.1, 0.9, walDark, g, x, 0.05, 0);
+      box(0.56, 0.02, 0.88, wal, g, x, 0.11, 0);
+      box(0.52, 0.62, 0.84, wal, g, x, 0.43, 0, 0.8);
+      box(0.56, 0.025, 0.88, wal, g, x, 0.7325, 0);
+      for (const sx of [-1, 1]) box(0.05, 0.6, 0.02, stileMat, g, x + sx * 0.235, 0.43, 0.425);
+      /* 위에서 아래로 커지는 서랍 셋 */
+      const hs = [0.14, 0.18, 0.22];
+      let top = 0.725;
       for (let j = 0; j < 3; j++) {
-        box(0.42, 0.2, 0.02, darkWood, g, x, 0.14 + j * 0.23, 0.425);
-        sphere(0.018, brass, g, x, 0.14 + j * 0.23, 0.44, 6, 4);
+        const hh = hs[j];
+        const cy = top - 0.012 - hh / 2;
+        box(0.4, hh, 0.022, drawerMat, g, x, cy, 0.428);
+        bail(x, cy, 0.44);
+        if (j === 0) box(0.012, 0.02, 0.003, brass, g, x, cy - 0.04, 0.44);
+        top = cy - hh / 2;
       }
     }
     /* 황동 학생용 기름 램프(1880년대). 초록 은행원 램프는 1909년 특허라 시대에 맞지 않아 바꿨습니다. */
@@ -6061,7 +6546,7 @@ function makeProps(k: Tools) {
     const rw = Number(p.opts?.w ?? 3);
     const rd = Number(p.opts?.d ?? 2);
     const tex = k.rug(kit, String(p.opts?.style ?? "persian"));
-    const r = plane(rw, rd, std({ map: tex, roughness: 0.95, color: RUGS4.has(String(p.opts?.style)) ? 0xd8cfc4 : 0xffffff }), g, 0, 0.018, 0);
+    const r = plane(rw, rd, std({ map: tex, roughness: 0.95, color: RUGS4.has(String(p.opts?.style)) ? 0xc4bab0 : 0xffffff }), g, 0, 0.018, 0);
     r.rotation.x = -Math.PI / 2;
     const fringe = std({ color: 0xece0c4, roughness: 1 });
     /* 술은 날실이 끝나는 짧은 두 변(x 끝)에 */

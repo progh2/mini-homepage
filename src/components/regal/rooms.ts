@@ -202,10 +202,11 @@ export const ROOMS: Room[] = [
       { kind: "hallStand", at: [-5.72, -2.2], rot: 90 },
       { kind: "umbrellaStand", at: [-5.64, -3.2], rot: 90 },
       { kind: "vitrine", at: [-3.3, 2.5], rot: 55, opts: { item: "keys", title: "대저택 열쇠 꾸러미", sub: "Keys of the House · c. 1840" } },
-      { kind: "sconce", at: [-5.97, 2.1], rot: 90, opts: { y: 2.75, gas: true } },
-      { kind: "sconce", at: [-5.97, 5.3], rot: 90, opts: { y: 2.75, gas: true } },
-      { kind: "sconce", at: [5.97, -1.9], rot: -90, opts: { y: 2.75, gas: true } },
-      { kind: "sconce", at: [5.97, 4.6], rot: -90, opts: { y: 2.75, gas: true } },
+      /* 4차: 서쪽 문 양옆에 한 쌍(기본 시점에서 보이는 쪽은 z -1.5), 크기 1.35배 */
+      { kind: "sconce", at: [-5.97, -1.5], rot: 90, opts: { y: 2.8, gas: true, scale: 1.35 } },
+      { kind: "sconce", at: [-5.97, 1.5], rot: 90, opts: { y: 2.8, gas: true, scale: 1.35 } },
+      { kind: "sconce", at: [5.97, -1.9], rot: -90, opts: { y: 2.8, gas: true, scale: 1.35 } },
+      { kind: "sconce", at: [5.97, 4.6], rot: -90, opts: { y: 2.8, gas: true, scale: 1.35 } },
       { kind: "rug", at: [0.4, 1.4], opts: { w: 3.4, d: 2.3, style: "ushak" } }
     ],
     paintings: [

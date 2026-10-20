@@ -313,6 +313,13 @@ export function createManorStage(opts: {
         return out;
       },
       secret: (u: number) => current?.openSecret?.(u),
+      /* 점검용: 카메라를 임의 위치에 두고 가까이 봅니다(다음 시선 조작 전까지). */
+      view: (x: number, y: number, z: number, lx: number, ly: number, lz: number, fov = 40) => {
+        camera.position.set(x, y, z);
+        camera.fov = fov;
+        camera.updateProjectionMatrix();
+        camera.lookAt(lx, ly, lz);
+      },
       /* 점검용: 제한 없이 시선을 돌립니다(도 단위). */
       look: (yd: number, pd: number) => {
         yaw = yd * DEG;
